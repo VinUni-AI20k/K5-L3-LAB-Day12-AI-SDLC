@@ -313,10 +313,61 @@ Scenario folders: `tests/scenarios/p3-*/`, marked `pending` until built. Release
 
 ---
 
-## Phase 4: Ticket-04 (release, measurements)
-_(filled by `/phase kickoff 4`)_
+## Phase 4: Ticket-04 (spec: `docs/spec/ticket-04.md`, Contract v1.3)
+
 ### Measured requirements (threshold, command, machine)
+| Requirement | Threshold | Command | Evidence |
+|---|---|---|---|
+| Bench `avg_fps` | ≥ 60 | `npx electron . --bench --seed 42 --duration 30 --out bench.json` | `bench.json` (committed) + machine spec in `docs/proof/phase-4/summary.md` |
+| Bench `p1_low_fps` | ≥ 30 | same | same |
+| Bench `load_ms` | ≤ 10000 | same | same |
+| Soak | crashes 0; `mem_end` ≤ 1.2 × `mem_start` | `node dist/soak.js --seed 7 --nights 10 --out soak.json` | `soak.json` (committed) |
+
 ### New or updated assumptions
+- **Desktop shell: Electron.** It wraps the existing `dist/web` and is pinned as an exact devDependency at least 2 weeks old. Reasons:
+  - It gives a real 1280×720 window that a command can start and stop.
+  - It can turn vsync off with the `disable-gpu-vsync` and `disable-frame-rate-limit` switches, so `vsync_off: true`.
+  - It reports real memory through `app.getAppMetrics()`, so `peak_mem_mb` isn't `null`.
+  - It can store the leaderboard on disk in `userData`.
+  - `--export-leaderboard` works with no window.
+  
+  The web build (`npm run dev`) keeps working, using `localStorage`.
+- **Commands:**
+  - `run_cmd` = `npx electron .`
+  - `bench_cmd` = `npx electron . --bench`
+  - `soak_cmd` = `node dist/soak.js`
+  - `headless_cmd` is unchanged.
+- **`peak_mem_mb`:** the sum of `workingSetSize` over all Electron processes, polled every 250 ms. This is documented in README.
+- **`load_ms`:** `Date.now()` at the first rendered bench frame, minus the process start time (`Date.now() − process.uptime()×1000`, taken in the main process at startup).
+- **Bench scene:**
+  - Uses a sim option `bench: true` that the contract can't reach. It isn't parsed from scenario files, so headless output is unchanged.
+  - Shades are spread over the island disc with `r = R·√u`, angle `2πu`, from `createRng(42)`.
+  - The camera angle is `θ = 2π·t/15`, giving the position `(30cosθ, 15, 30sinθ)`. This is the same angle convention as the map points, so it starts at (30,15,0).
+  - Creative extras are off.
+- **Soak:**
+  - Uses the same `Sim` as headless, in one process, with no file output per night.
+  - Input comes from `createRng(seed + i)`. Each 30-tick block picks a random unit move direction.
+  - `crashes` counts nights that threw an exception. They are caught, and the soak continues.
+  - Each night ends at `game_over` or at its standard length: 240/270/300 s, i.e. 14,400/16,200/18,000 ticks.
+- **Leaderboard:**
+  - Names allow `[A-Za-z0-9_]` plus Vietnamese letters (bonus), 3–12 code points.
+  - Equal scores are ordered by `achieved_at` ascending, then by insertion order.
+  - `achieved_at` uses local time with offset, e.g. `2026-11-20T15:04:05+07:00`.
+
 ### Acceptance criteria → verification
 | ID | Criterion | Verified by |
 |---|---|---|
+| P4-01 | `game.contract.json` v1.3 has `bench_cmd` and `soak_cmd`; earlier keys unchanged | `tests/contract.test.ts` |
+| P4-02 | Bench stats follow the ticket's formulas (avg, p1-low with k = max(1, ceil(0.01N)), p95) | `tests/bench-stats.test.ts` (pure function, hand-computed cases) |
+| P4-03 | Bench run writes a valid `bench.json` and exits 0; the thresholds are met on our machine | committed `bench.json` + proof |
+| P4-04 | The bench scene has 200 wander shades, 100 motes, L1–L3 lit at fuel 100; spawns, damage, pickup, decay and the end are off | `tests/bench-scene.test.ts` (sim with `bench: true`, 600 ticks) |
+| P4-05 | Soak: 10 nights, 0 crashes, memory ratio ≤ 1.2; the same seed gives the same `results` | committed `soak.json` + `tests/soak.test.ts` (2-night quick run, deterministic results) |
+| P4-06 | Leaderboard: name validation, top 10, sort by score desc then earlier first, export format | `tests/leaderboard.test.ts` (pure module) + `--export-leaderboard` run |
+| P4-07 | Leaderboard persists across a restart (Electron `userData` file) | proof: export before and after a restart |
+| P4-08 | Key rebinding for all 10 actions; duplicates reported; restore defaults; saved | `tests/keymap.test.ts` (conflict detection) + screenshot |
+| P4-09 | Captions: shade appears + edge arrow, wind warning, last 10 s, lantern < 30 | screenshots |
+| P4-10 | Reduced motion turns off shake and flashes; UI ≥ 18 px; large text ×1.25 | screenshots / code review |
+| P4-11 | Clean clone → 3 commands → playable; README has all the sections | fresh-clone run in the proof |
+| P4-12 | Release v1.0.0 with a static web zip + instructions; tag `phase-4` | GitHub release page |
+| P4-13 | Hidden Phase 1–3 tests still pass | every `p1`/`p2`/`p3` scenario green, zero pending |
+| P4-D1 | Retro (1–2 pages), demo video < 5 min, CHANGELOG has all 4 phases, CREDITS complete | `docs/notes/retro.md`, release asset |

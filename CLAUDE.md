@@ -14,7 +14,7 @@
 - `tests/` vitest; `tests/scenarios/` headless scenario fixtures with assertions.
 - Spec, newest wins: `docs/spec/ticket-03.md` (v1.2) > `ticket-02.md` (v1.1) > `contract-v1.md` (v1.0). Numbers are fixed by
   the customer. Do not re-fetch the lab board. Design decisions: `docs/adr/`. Assumptions: `docs/notes/assumptions.md`.
-  Current phase plan: `docs/notes/handoff-phase3.md`. Breaking changes go in `CHANGELOG.md`.
+  Current phase plan: `docs/notes/handoff-phase4.md`. Breaking changes go in `CHANGELOG.md`.
 - Per-night data (maps, spawn points, lanterns, pads) lives in `src/sim/maps.ts`; headless takes `--night 1|2|3`.
 
 ## Hard rules

@@ -1,5 +1,5 @@
 // All sound is synthesised with WebAudio (no audio files, nothing to license). Volume comes from the saved settings.
-type Sfx = "pickup" | "lit" | "pulse" | "hit" | "jump" | "dash" | "win" | "lose" | "shade" | "tick" | "charm" | "steal";
+type Sfx = "wind" | "pickup" | "lit" | "pulse" | "hit" | "jump" | "dash" | "win" | "lose" | "shade" | "tick" | "charm" | "steal";
 
 const PENTA = [0, 2, 4, 7, 9]; // major pentatonic degrees
 const ROOTS: Record<1 | 2 | 3, number> = { 1: 220, 2: 196, 3: 174.61 }; // A3, G3, F3
@@ -65,6 +65,7 @@ export class GameAudio {
   sfx(name: Sfx): void {
     if (!this.ctx) return;
     switch (name) {
+      case "wind": this.noise(1.6, 0.16, 900); this.tone(180, 1.6, "sine", 0.05, 320); break;
       case "pickup": this.tone(880, 0.12, "sine", 0.25, 1320); break;
       case "lit": [523, 659, 784, 1047].forEach((f, i) => this.tone(f, 0.5, "triangle", 0.25, undefined, i * 0.09)); break;
       case "pulse": this.tone(300, 0.45, "sine", 0.35, 1200); this.noise(0.3, 0.12, 3000); break;

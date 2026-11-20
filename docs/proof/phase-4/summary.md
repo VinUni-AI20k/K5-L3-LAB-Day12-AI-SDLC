@@ -1,7 +1,7 @@
 # Phase 4 evidence (Ticket-04, Contract v1.3), release v1.0.0
 
 - Commit `f2b7129` + release notes, 2026-11-20. Machine: MacBook Air, Apple M1 (8 cores: 4 performance + 4 efficiency), 16 GB, macOS 15.0 (Darwin 24.0.0 arm64), Node v21.6.1, Electron 39.8.10 (Chromium 142).
-- `npm run verify`: green, 134 tests in 8 files (79 scenario folders, **0 pending**, unit tests for bench stats/scene, soak, leaderboard, keymap, contract hygiene, perf). Raw log: `vitest.txt`.
+- `npm run verify`: green, 135 tests in 9 files (79 scenario folders, **0 pending**, unit tests for bench stats/scene, soak, leaderboard, keymap, contract hygiene, perf). Raw log: `vitest.txt`.
 - Phase 1-3 regression: `git diff 0725404..HEAD -- tests/scenarios` is empty: no scenario was edited in this phase, and all 79 pass.
 - Determinism: full nights (seed 7, 18000 ticks) on Night 1, 2 and 3 identical across two runs; the soak `results` array is identical across two runs.
 - Independent review: `contract-reviewer`; findings and actions in `docs/notes/changes.md` ("Phase 4 release").
@@ -32,13 +32,13 @@
 | P4-09 | captions (shade appears + edge arrow, wind, last 10 s, lantern < 30) | screenshots | `img/p4-a11y-caption*` | PASS (states set with the debug handle) |
 | P4-10 | reduced motion; text >= 18 px; large text x1.25 | measured in browser + code | `accessibility.md` | PASS; the hit flash and shake were not triggered in the browser |
 | P4-11 | clean clone -> 3 commands -> playable; README sections | fresh clone | `fresh-clone.md`, `README.md` | PASS (window not looked at) |
-| P4-12 | Release v1.0.0 with a runnable build; tag `phase-4` | zip built and served | `release/dao-den-long-web-v1.0.0.zip` (git-ignored) | zip PASS; **GitHub Release and tag: author to do** |
+| P4-12 | Release v1.0.0 with a runnable build; tag `phase-4` | zip built and served | `release/dao-den-long-web-v1.0.0.zip` (git-ignored) | zip PASS; **GitHub Release: author to do**; tag `phase-4` is pushed but predates the post-release fixes |
 | P4-13 | hidden Phase 1-3 tests still pass | scenarios | 79 green, 0 pending, no scenario edited | PASS |
-| P4-D1 | retro, demo video < 5 min, CHANGELOG all 4 phases, CREDITS | docs | `CHANGELOG.md`, `CREDITS.md` | CHANGELOG/CREDITS PASS; **retro and demo video: author to do** |
+| P4-D1 | retro, demo video < 5 min, CHANGELOG all 4 phases, CREDITS | docs | `CHANGELOG.md`, `CREDITS.md` | retro drafted by Claude (author to check), CHANGELOG/CREDITS PASS; **demo video not recorded (author)** |
 
 ## Not done / honest notes
 - Soak memory passes only with V8's optimizing compiler turned off inside the soak; the margin (1.165 vs 1.2) is small.
-- Retro, demo video and the GitHub Release are the author's (handoff: "the human finishes").
+- Demo video and the GitHub Release are the author's: an agent cannot record the screen or sign in to GitHub (`gh` is not installed). Prepared: `docs/demo/DEMO-SCRIPT.md`, `docs/release/RELEASE-NOTES-v1.0.0.md`, and the zip from `npm run release:zip`.
 - Screenshots of accessibility states used the debug handle (`window.__ddl.sim`), not play; no human play-through of Phase 4 features is recorded.
 - Bench numbers depend on machine load; only one machine was used; no Linux run.
 - Electron is pinned to 39.8.10 because newer installers fail on Node 21; behaviour on other Node versions was not tested.

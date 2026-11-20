@@ -1,6 +1,6 @@
 # Đảo Đèn Lồng
 
-> **Demo video:** _(added by the author at release, see the GitHub Release v1.0.0)_
+> **Demo video:** not recorded yet (script: [docs/demo/DEMO-SCRIPT.md](docs/demo/DEMO-SCRIPT.md)); it will be attached to the GitHub Release v1.0.0.
 
 ![Đảo Đèn Lồng: night 1 with the HUD, captions and a low lantern](docs/proof/phase-4/img/p4-a11y-captions-lantern-low-shade.jpg)
 
@@ -109,7 +109,6 @@ Nothing is added beyond the ticket's requirements. Web-only polish that does not
 
 ## Known gaps
 - Colour-blind palette: the torn-paper look on unlit lanterns is subtle at normal distance (the 20% squash is clear).
-- No gust warning (leaves) is drawn before a wind gust.
 
 ## Project notes
 - Assumptions: [docs/notes/assumptions.md](docs/notes/assumptions.md)

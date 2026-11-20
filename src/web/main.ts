@@ -191,7 +191,7 @@ const $ = (id: string) => document.getElementById(id)!;
 const flamesEl = $("flames"), clockEl = $("clock"), topRight = $("topright"), moteBar = $("motebar"), cdsEl = $("cds"), promptEl = $("prompt"), arrowEl = $("arrow"), fpsEl = $("fps"), toast = $("toast"), flash = $("flash"), overlay = $("overlay"), card = overlay.firstElementChild as HTMLElement;
 
 // ---------- captions and visual cues (Ticket-04 section 4) ----------
-const captionsEl = $("captions"), arrow2El = $("arrow2"), helpEl = $("help");
+const leavesEl = $("leaves"), captionsEl = $("captions"), arrow2El = $("arrow2"), helpEl = $("help");
 const caps: Array<{ key: string; text: string; until: number }> = [];
 function caption(key: string, text: string, ms = 4000): void {
   const until = performance.now() + ms;
@@ -216,9 +216,11 @@ function updateCaptions(): void {
   if (sim.def.wind) {
     const warn = st >= 1680 && st % 1800 >= 1680; // 2 s before each gust (gusts start at ticks 1800k)
     const gust = Math.floor(st / 1800);
-    if (warn && gust !== lastWindWarn) { lastWindWarn = gust; caption("wind", "⚠ 🌬 Gió sắp nổi trong 2 giây!", 2200); }
+    if (warn && gust !== lastWindWarn) { lastWindWarn = gust; caption("wind", "⚠ 🌬 Gió sắp nổi trong 2 giây!", 2200); audio.sfx("wind"); }
     if (sim.windActive) caption("wind", "🌬 Gió đang thổi, hãy bám chắc!", 700);
-  }
+    // leaves blow across the screen from the warning until the gust ends (not with reduced motion)
+    leavesEl.style.display = (warn || sim.windActive) && !settings.reducedMotion ? "block" : "none";
+  } else leavesEl.style.display = "none";
   const left = Math.ceil(sim.timeLeft);
   if (left <= 10 && left >= 1) caption("time", `⏳ Còn ${left} giây tới bình minh!`, 1200);
   for (const l of sim.lanterns) {
@@ -704,6 +706,7 @@ renderer.setAnimationLoop((now) => {
   sync(now, dt);
   renderHud(now);
   if (mode === "playing") updateCaptions();
+  else leavesEl.style.display = "none";
   renderCaptions(now);
   updateSpawnArrow(now);
   renderer.render(scene, camera);

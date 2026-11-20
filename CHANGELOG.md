@@ -12,6 +12,7 @@
 - `game.contract.json` v1.3 adds `bench_cmd` and `soak_cmd`.
 
 ### Changed
+- Wind: the 2 s gust warning now also has a sound and blowing leaves (not with reduced motion), as Ticket-02 asked.
 - `run_cmd` was `npm run play` and is now `npx electron .` (`npm run play` also starts Electron).
 - All UI text sizes are rem-based with an 18 px minimum.
 

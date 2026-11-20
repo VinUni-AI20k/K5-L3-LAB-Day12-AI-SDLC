@@ -29,6 +29,9 @@
       #prompt { position: absolute; bottom: 110px; left: 50%; transform: translateX(-50%); font-size: 1.11111rem; color: #F2C14E; display: none; padding: 6px 14px; background: rgba(20,10,35,0.7); border: 1px solid #F2C14E; border-radius: 10px; }
       #captions { position: absolute; top: 5.2rem; left: 50%; transform: translateX(-50%); display: grid; gap: 6px; justify-items: center; }
       .cap { background: rgba(20,10,35,0.88); border: 2px solid var(--danger); color: #F5F1E6; padding: 4px 14px; border-radius: 10px; font-size: 1.05rem; }
+      #leaves { position: fixed; inset: 0; pointer-events: none; overflow: hidden; display: none; }
+      #leaves span { position: absolute; font-size: 1.6rem; opacity: 0.85; animation: leaf 2.4s linear infinite; }
+      @keyframes leaf { from { transform: translate(-10vw, 0) rotate(0deg); } to { transform: translate(110vw, 12vh) rotate(540deg); } }
       #arrow2 { position: absolute; font-size: 2rem; color: var(--danger); display: none; text-shadow: 0 0 8px #000; }
       #arrow { position: absolute; font-size: 1.88889rem; color: #FFB347; display: none; text-shadow: 0 0 8px #FFB347; }
       #fps { position: absolute; top: 90px; left: 12px; font: 14px monospace; color: #F5F1E6; background: rgba(0,0,0,0.6); padding: 4px 8px; border-radius: 6px; display: none; }
@@ -64,6 +67,7 @@
       <div id="toast" class="panel"></div>
       <div id="help" class="panel">WASD đi · Space nhảy · Shift lướt · E nạp đèn · F tỏa sáng · Esc/P tạm dừng · F3 FPS · ← → / kéo chuột xoay camera</div>
     </div>
+    <div id="leaves"><span style="top:12%;animation-delay:0s">🍃</span><span style="top:28%;animation-delay:.5s">🍂</span><span style="top:46%;animation-delay:1.1s">🍃</span><span style="top:62%;animation-delay:.2s">🍂</span><span style="top:78%;animation-delay:1.6s">🍃</span></div>
     <div id="flash"></div>
     <div id="overlay"><div class="card"></div></div>
     <script type="module" src="/src/web/main.ts"></script>

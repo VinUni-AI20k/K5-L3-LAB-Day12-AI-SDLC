@@ -1,5 +1,5 @@
 // The whole game rules. Pure and deterministic: shared by the web build and the headless CLI.
-// Step order (docs/notes/assumptions.md): input, move, pickup, interact, pulse, shade spawn, shade move, hits, mote respawn, time, end check.
+// Tick order (docs/spec/ticket-02.md): 1 input, 2 timers, 3 move, 4 pickup, 5 interact, 6 safe zones, 7 pulse, 8 move shades, 9 touch, 10 spawn, 11 end check.
 import { DT, TICK_RATE, TUNING, WORLD, toTicks } from "./config";
 import { NIGHTS, groundHeight, type NightDef } from "./maps";
 import { createRng, r3 } from "./rng";
@@ -40,7 +40,7 @@ export class Sim {
   private spawnShades: boolean;
   private moteSeq = 1;
   private shadeSeq = 1;
-  private spawned = 0;
+  private spawned = 0; // scheduled shades spawned so far
   private invulnUntil = 0; // player cannot be hit on steps whose resulting tick is < this
   private pulseReadyAt = 0; // next pulse allowed on a step whose resulting tick is >= this
   private prev = { jump: false, dash: false, interact: false, pulse: false };
@@ -94,7 +94,9 @@ export class Sim {
     if (sc.player?.charm_ticks !== undefined) this.charmTicks = sc.player.charm_ticks;
 
     for (const s of sc.shades ?? []) if (s.id) this.reservedIds.add(s.id);
-    for (const s of sc.shades ?? []) this.shades.push({ id: s.id ?? this.freeShadeId(), pos: [...s.pos], stunUntil: 0 });
+    for (const s of sc.shades ?? []) {
+      this.shades.push({ ...this.newShade(s.id ?? this.freeShadeId(), s.pos, s.state ?? "wander"), ticks: s.state_ticks_left ?? 0 });
+    }
   }
 
   get timeLeft(): number {
@@ -102,7 +104,22 @@ export class Sim {
   }
 
   shadeState(s: Shade): ShadeState {
-    return this.tick < s.stunUntil ? "stunned" : "chase";
+    return s.state;
+  }
+
+  private newShade(id: string, pos: Vec3, state: ShadeState): Shade {
+    return { id, pos: [...pos], state, ticks: 0, pushLeft: 0, pushDir: [1, 0], recoilDir: [1, 0] };
+  }
+
+  /** Walkable for a flying shade: there is ground, and it is not inside the Night 3 bell tower (r 2). */
+  private shadeFree(x: number, z: number): boolean {
+    if (groundHeight(this.night, x, z) === null) return false;
+    return !(this.night === 3 && Math.hypot(x, z) < 2);
+  }
+
+  private shadeY(x: number, z: number, fallback: number): number {
+    const h = groundHeight(this.night, x, z);
+    return h === null ? fallback : h + 1;
   }
 
   private reservedIds = new Set<string>(); // explicit scenario ids, so generated ids never collide with them
@@ -122,44 +139,40 @@ export class Sim {
     this.motes.push({ id: `M${this.moteSeq++}`, pos: [...this.def.moteSpawns[i]!], kind: "random", ttl: null, spawn: i });
   }
 
-  /**
-   * Shades never stand inside safe_radius of a LIT lantern. A shade inside is moved to the nearest point that is outside
-   * every lit zone: its radial projection onto one zone edge, or (when zones overlap) an intersection of two edges.
-   * If no such point exists (three or more mutually covering zones) it stays put; the default ring cannot do that.
-   */
-  private enforceSafeZones(): void {
+  /** Nearest point outside every lit zone: radial projection onto one zone edge, or the intersection of two edges when zones overlap. */
+  private nearestOutside(x: number, z: number): [number, number] | undefined {
     const R = TUNING.safe_radius;
-    const EPS = 1e-9;
     const lit = this.lanterns.filter((l) => l.lit);
-    if (lit.length === 0) return;
-    const outside = (x: number, z: number): boolean => lit.every((l) => Math.hypot(x - l.pos[0], z - l.pos[2]) >= R - EPS);
-    for (const s of this.shades) {
-      if (outside(s.pos[0], s.pos[2])) continue;
-      const cands: Array<[number, number]> = [];
-      for (const l of lit) {
-        const d = dist2d(s.pos, l.pos);
-        cands.push(d === 0 ? [l.pos[0] + R, l.pos[2]] : [l.pos[0] + ((s.pos[0] - l.pos[0]) / d) * R, l.pos[2] + ((s.pos[2] - l.pos[2]) / d) * R]);
-      }
-      for (let i = 0; i < lit.length; i++) {
-        for (let j = i + 1; j < lit.length; j++) {
-          const a = lit[i]!.pos, b = lit[j]!.pos;
-          const d = Math.hypot(b[0] - a[0], b[2] - a[2]);
-          if (d === 0 || d > 2 * R) continue;
-          const h = Math.sqrt(Math.max(0, R * R - (d / 2) * (d / 2)));
-          const mx = (a[0] + b[0]) / 2, mz = (a[2] + b[2]) / 2;
-          const ux = (b[0] - a[0]) / d, uz = (b[2] - a[2]) / d;
-          cands.push([mx - uz * h, mz + ux * h], [mx + uz * h, mz - ux * h]);
-        }
-      }
-      let best: [number, number] | undefined;
-      let bestD = Infinity;
-      for (const c of cands) {
-        if (!outside(c[0], c[1])) continue;
-        const d = Math.hypot(c[0] - s.pos[0], c[1] - s.pos[2]);
-        if (d < bestD) { best = c; bestD = d; }
-      }
-      if (best) s.pos = [best[0], s.pos[1], best[1]];
+    const outside = (px: number, pz: number): boolean => lit.every((l) => Math.hypot(px - l.pos[0], pz - l.pos[2]) >= R - 1e-9);
+    if (outside(x, z)) return [x, z];
+    const cands: Array<[number, number]> = [];
+    for (const l of lit) {
+      const d = Math.hypot(x - l.pos[0], z - l.pos[2]);
+      cands.push(d === 0 ? [l.pos[0] + R, l.pos[2]] : [l.pos[0] + ((x - l.pos[0]) / d) * R, l.pos[2] + ((z - l.pos[2]) / d) * R]);
     }
+    for (let i = 0; i < lit.length; i++) {
+      for (let j = i + 1; j < lit.length; j++) {
+        const a = lit[i]!.pos, b = lit[j]!.pos;
+        const d = Math.hypot(b[0] - a[0], b[2] - a[2]);
+        if (d === 0 || d > 2 * R) continue;
+        const h = Math.sqrt(Math.max(0, R * R - (d / 2) * (d / 2)));
+        const mx = (a[0] + b[0]) / 2, mz = (a[2] + b[2]) / 2;
+        const ux = (b[0] - a[0]) / d, uz = (b[2] - a[2]) / d;
+        cands.push([mx - uz * h, mz + ux * h], [mx + uz * h, mz - ux * h]);
+      }
+    }
+    let best: [number, number] | undefined;
+    let bestD = Infinity;
+    for (const c of cands) {
+      if (!outside(c[0], c[1])) continue;
+      const d = Math.hypot(c[0] - x, c[1] - z);
+      if (d < bestD) { best = c; bestD = d; }
+    }
+    return best;
+  }
+
+  private insideLitZone(pos: Vec3): boolean {
+    return this.lanterns.some((l) => l.lit && dist2d(pos, l.pos) < TUNING.safe_radius - 1e-9);
   }
 
   /** Night 3 gusts: every 30 s a 5 s gust (ticks 1800k .. 1800k+299 for k >= 1; Q2-8). */
@@ -185,6 +198,8 @@ export class Sim {
     const emit = (name: SimEvent["name"], data: Record<string, unknown>) => ev.push({ type: "event", tick: T, name, data });
     const p = this.player;
 
+    if (T === 1) emit("night_start", { night: this.night }); // tick 0 has no events, so the first step announces the night
+
     // 1. input edges
     const jumpEdge = inp.jump && !this.prev.jump;
     const dashEdge = inp.dash && !this.prev.dash;
@@ -199,6 +214,9 @@ export class Sim {
     if (this.charmTicks > 0) this.charmTicks--;
     for (const c of this.charms) if (!c.available && --c.respawn <= 0) { c.available = true; c.respawn = 0; }
     this.motes = this.motes.filter((m) => m.ttl === null || --m.ttl > 0);
+    for (const sh of this.shades) {
+      if (sh.ticks > 0 && --sh.ticks === 0 && (sh.state === "spawning" || sh.state === "stunned" || sh.state === "recoil")) sh.state = "wander";
+    }
     if (this.fallWait > 0) {
       this.fallWait--;
       if (this.fallWait === 0) this.respawnPlayer(T);
@@ -334,77 +352,129 @@ export class Sim {
       }
     }
 
-    // 5. pulse: costs carried motes; stuns + pushes shades in range
+    // 6. safe zones: a shade inside a lit zone is pushed radially out at 0.2 m per tick, harmless meanwhile
+    const pushedOut = new Set<Shade>();
+    for (const sh of this.shades) {
+      const l = this.lanterns.find((x) => x.lit && dist2d(sh.pos, x.pos) < TUNING.safe_radius - 1e-9);
+      if (!l) continue;
+      const d = dist2d(sh.pos, l.pos);
+      const nd = Math.min(TUNING.safe_radius, d + WORLD.safe_push_per_tick);
+      const ux = d === 0 ? 1 : (sh.pos[0] - l.pos[0]) / d;
+      const uz = d === 0 ? 0 : (sh.pos[2] - l.pos[2]) / d;
+      sh.pos = [l.pos[0] + ux * nd, sh.pos[1], l.pos[2] + uz * nd];
+      pushedOut.add(sh);
+    }
+
+    // 7. pulse: costs 3 motes, 3D range from feet + 0.8, targets locked now; stun 120 ticks, push 4 m over 15 ticks
     if (pulseEdge && T >= this.pulseReadyAt && p.carried >= TUNING.pulse_cost) {
       p.carried -= TUNING.pulse_cost;
       this.pulseReadyAt = T + toTicks(TUNING.pulse_cooldown_s);
       const stunned: string[] = [];
-      for (const s of this.shades) {
-        const d = dist2d(p.pos, s.pos);
-        if (d > TUNING.pulse_radius) continue;
-        const ux = d === 0 ? 1 : (s.pos[0] - p.pos[0]) / d; // standing on the player: pushed towards +X
-        const uz = d === 0 ? 0 : (s.pos[2] - p.pos[2]) / d;
-        let sx = s.pos[0] + ux * TUNING.pulse_push_m;
-        let sz = s.pos[2] + uz * TUNING.pulse_push_m;
-        const sr = Math.hypot(sx, sz);
-        if (sr > WORLD.island_radius) { sx = (sx / sr) * WORLD.island_radius; sz = (sz / sr) * WORLD.island_radius; }
-        s.pos = [sx, s.pos[1], sz];
-        s.stunUntil = T + toTicks(TUNING.pulse_stun_s);
-        stunned.push(s.id);
+      for (const sh of this.shades) {
+        const dx = sh.pos[0] - p.pos[0], dz = sh.pos[2] - p.pos[2];
+        const dy = sh.pos[1] - (p.pos[1] + WORLD.pulse_center_y);
+        if (Math.hypot(dx, dy, dz) > TUNING.pulse_radius) continue;
+        const dh = Math.hypot(dx, dz);
+        sh.pushDir = dh === 0 ? [1, 0] : [dx / dh, dz / dh]; // on the same spot: towards +X
+        sh.pushLeft = WORLD.pulse_push_ticks;
+        sh.state = "stunned";
+        sh.ticks = toTicks(TUNING.pulse_stun_s);
+        stunned.push(sh.id);
         this.score += TUNING.score.per_stun;
       }
       emit("pulse", { stunned_ids: stunned });
     }
 
-    // 6. shade spawn: first at 5 s, then every 30 s, up to 5, at the island edge
-    if (this.spawnShades && this.spawned < WORLD.shade_max) {
-      const due = toTicks(WORLD.shade_first_s) + this.spawned * toTicks(WORLD.shade_interval_s);
-      if (T === due) {
-        const a = 2 * Math.PI * this.rng();
-        const id = this.freeShadeId();
-        this.shades.push({ id, pos: [WORLD.shade_spawn_r * Math.sin(a), WORLD.shade_y, WORLD.shade_spawn_r * Math.cos(a)], stunUntil: 0 });
-        this.spawned++;
-        emit("shade_spawned", { id });
+    // 8. move shades
+    const R = TUNING.safe_radius;
+    for (const sh of this.shades) {
+      let nx = sh.pos[0], nz = sh.pos[2];
+      if (!pushedOut.has(sh)) {
+        if (sh.pushLeft > 0) {
+          sh.pushLeft--;
+          const step = TUNING.pulse_push_m / WORLD.pulse_push_ticks;
+          if (this.shadeFree(nx + sh.pushDir[0] * step, nz + sh.pushDir[1] * step)) { nx += sh.pushDir[0] * step; nz += sh.pushDir[1] * step; }
+        }
+        if (sh.state === "recoil") {
+          const step = WORLD.shade_recoil_m / WORLD.shade_recoil_ticks;
+          if (this.shadeFree(nx + sh.recoilDir[0] * step, nz + sh.recoilDir[1] * step)) { nx += sh.recoilDir[0] * step; nz += sh.recoilDir[1] * step; }
+        } else if (sh.state === "wander" || sh.state === "chase") {
+          const d = this.fallWait > 0 ? Infinity : Math.hypot(p.pos[0] - nx, p.pos[2] - nz);
+          if (sh.state === "wander" && d <= WORLD.shade_chase_start_m) sh.state = "chase";
+          else if (sh.state === "chase" && d > WORLD.shade_chase_stop_m) sh.state = "wander";
+          if (sh.state === "chase") {
+            const stepLen = this.def.shadeSpeed * DT;
+            const tx = d <= stepLen ? p.pos[0] : nx + ((p.pos[0] - nx) / d) * stepLen;
+            const tz = d <= stepLen ? p.pos[2] : nz + ((p.pos[2] - nz) / d) * stepLen;
+            if (this.shadeFree(tx, tz)) { nx = tx; nz = tz; }
+          }
+        }
+        // shades outside a lit zone are blocked at its edge
+        const out = this.nearestOutside(nx, nz);
+        if (out) { nx = out[0]; nz = out[1]; }
+        else { nx = sh.pos[0]; nz = sh.pos[2]; }
+        void R;
+        sh.pos = [nx, nx === sh.pos[0] && nz === sh.pos[2] ? sh.pos[1] : this.shadeY(nx, nz, sh.pos[1]), nz];
       }
     }
 
-    // 7. shade move: chase in XZ unless stunned; then keep them out of lit lanterns' safe zones
-    for (const s of this.shades) {
-      if (T < s.stunUntil) continue;
-      const d = dist2d(s.pos, p.pos);
-      const stepLen = TUNING.shade_speed * DT;
-      if (d <= stepLen) { s.pos = [p.pos[0], s.pos[1], p.pos[2]]; continue; }
-      s.pos = [s.pos[0] + ((p.pos[0] - s.pos[0]) / d) * stepLen, s.pos[1], s.pos[2] + ((p.pos[2] - s.pos[2]) / d) * stepLen];
-    }
-    this.enforceSafeZones();
-
-    // 8. hits: first non-stunned shade in reach, unless invulnerable
+    // 9. touch: shades hit in ascending id order, at most one flame per tick
     if (T >= this.invulnUntil && this.fallWait === 0) {
-      const hitter = this.shades.find((s) => T >= s.stunUntil && dist2d(s.pos, p.pos) <= TUNING.shade_hit_radius);
+      const order = [...this.shades].sort((a, b) => (a.id < b.id ? -1 : a.id > b.id ? 1 : 0));
+      const hitter = order.find((sh) =>
+        (sh.state === "wander" || sh.state === "chase") && !pushedOut.has(sh) && !this.insideLitZone(sh.pos) &&
+        dist2d(sh.pos, p.pos) <= TUNING.shade_hit_radius && Math.abs(sh.pos[1] - p.pos[1]) <= WORLD.touch_height_tol);
       if (hitter) {
         const dropped = Math.floor(p.carried * TUNING.hit_drop_ratio);
         p.carried -= dropped;
         p.flames -= 1;
         this.invulnUntil = T + toTicks(TUNING.invuln_s);
+        const dx = hitter.pos[0] - p.pos[0], dz = hitter.pos[2] - p.pos[2];
+        const dh = Math.hypot(dx, dz);
+        hitter.recoilDir = dh === 0 ? [1, 0] : [dx / dh, dz / dh];
+        hitter.state = "recoil";
+        hitter.ticks = WORLD.shade_recoil_ticks;
+        const baseY = this.grounded ? p.pos[1] : (groundHeight(this.night, p.pos[0], p.pos[2]) ?? 0);
+        for (let i = 0; i < dropped; i++) {
+          const r = WORLD.drop_ring_min + WORLD.drop_ring_width * this.rng();
+          const a = 2 * Math.PI * this.rng();
+          const x = p.pos[0] + r * Math.cos(a), z = p.pos[2] + r * Math.sin(a);
+          const y = groundHeight(this.night, x, z) ?? baseY;
+          this.motes.push({ id: `M${this.moteSeq++}`, pos: [x, y, z], kind: "dropped", ttl: WORLD.dropped_ttl_ticks, spawn: -1 });
+        }
         emit("player_hit", { by: "shade", flames: p.flames, dropped });
       }
     }
 
-    // 9. mote respawn (only when random_motes): +1 every 4 s up to 30
+    // 10. spawn: motes, then shades on schedule (2 at the first time, then one per interval, up to the night's max)
     if (this.respawnMotes && T % toTicks(WORLD.mote_respawn_s) === 0 && this.motes.filter((m) => m.kind === "random").length < WORLD.mote_cap) this.respawnMote();
+    if (this.spawnShades && this.spawned < this.def.shadeMax) {
+      let count = 0;
+      if (T === this.def.shadeFirstTick) count = WORLD.shade_first_count;
+      else if (T > this.def.shadeFirstTick && (T - this.def.shadeFirstTick) % this.def.shadeInterval === 0) count = 1;
+      for (let i = 0; i < count && this.spawned < this.def.shadeMax; i++) {
+        const valid = this.def.shadeSpawns.filter((pt) =>
+          Math.hypot(pt[0] - p.pos[0], pt[2] - p.pos[2]) >= WORLD.shade_spawn_min_dist && !this.shades.some((sh) => dist2d(sh.pos, pt) < 1));
+        if (valid.length === 0) continue; // no valid point: skip
+        const pt = valid[Math.floor(this.rng() * valid.length)]!;
+        const sh = this.newShade(this.freeShadeId(), [pt[0], this.shadeY(pt[0], pt[2], 1), pt[2]], "spawning");
+        sh.ticks = WORLD.shade_spawning_ticks;
+        this.shades.push(sh);
+        this.spawned++;
+        emit("shade_spawned", { id: sh.id });
+      }
+    }
 
-    // 10. time
+    // 11. end check: no_flames, then all_lit (even on the dawn tick), then dawn
     this.tick = T;
-
-    // 11. end check: all_lit, then no_flames, then dawn
     const left = this.timeLeft;
-    if (this.lanterns.every((l) => l.lit)) {
+    if (p.flames <= 0) {
+      this.state = "lost";
+      emit("game_over", { result: "lost", reason: "no_flames" });
+    } else if (this.lanterns.every((l) => l.lit)) {
       this.state = "won";
       this.score += Math.floor(left + 1e-9) * TUNING.score.per_second_left + Math.max(0, p.flames) * TUNING.score.per_flame_left;
       emit("game_over", { result: "won", reason: "all_lit" });
-    } else if (p.flames <= 0) {
-      this.state = "lost";
-      emit("game_over", { result: "lost", reason: "no_flames" });
     } else if (left <= 1e-9) {
       this.state = "lost";
       emit("game_over", { result: "lost", reason: "dawn" });

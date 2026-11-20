@@ -30,7 +30,7 @@ export interface Scenario {
 export interface SimEvent {
   type: "event";
   tick: number;
-  name: "dash" | "charm_picked" | "mote_picked" | "deposit" | "lantern_lit" | "pulse" | "player_hit" | "shade_spawned" | "game_over";
+  name: "night_start" | "dash" | "charm_picked" | "mote_picked" | "deposit" | "lantern_lit" | "pulse" | "player_hit" | "shade_spawned" | "game_over";
   data: Record<string, unknown>;
 }
 
@@ -38,5 +38,13 @@ export type GameState = "playing" | "won" | "lost";
 
 export interface Mote { id: string; pos: Vec3; kind: "random" | "dropped"; ttl: number | null; spawn: number }
 export interface Charm { id: string; pos: Vec3; available: boolean; respawn: number }
-export interface Shade { id: string; pos: Vec3; stunUntil: number }
+export interface Shade {
+  id: string;
+  pos: Vec3;
+  state: ShadeState;
+  ticks: number; // ticks left in spawning / stunned / recoil
+  pushLeft: number; // pulse push steps left
+  pushDir: [number, number];
+  recoilDir: [number, number];
+}
 export interface Lantern { id: string; pos: Vec3; deposited: number; lit: boolean }

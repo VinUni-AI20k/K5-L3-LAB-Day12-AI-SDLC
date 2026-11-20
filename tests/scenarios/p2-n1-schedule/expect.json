@@ -88,6 +88,5 @@
   ],
   "absent_events": [
     "player_hit"
-  ],
-  "pending": "Phase 2 kickoff: written before implementation (v1.1). Remove this flag when the feature is built."
+  ]
 }

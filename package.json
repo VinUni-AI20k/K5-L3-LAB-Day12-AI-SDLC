@@ -1,0 +1,30 @@
+{
+  "name": "dao-den-long",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "engines": {
+    "node": ">=20"
+  },
+  "scripts": {
+    "dev": "vite",
+    "build": "npm run build:headless && npm run build:web",
+    "build:headless": "esbuild src/headless/cli.ts --bundle --platform=node --format=esm --target=node20 --outfile=dist/headless.js --log-level=warning",
+    "build:web": "vite build --logLevel warn",
+    "play": "vite preview --open",
+    "typecheck": "tsc --noEmit",
+    "test": "vitest run --reporter=dot",
+    "verify": "npm run typecheck && npm run build:headless && npm test"
+  },
+  "dependencies": {
+    "three": "^0.187.0"
+  },
+  "devDependencies": {
+    "@types/node": "^22.20.5",
+    "@types/three": "^0.187.0",
+    "esbuild": "^0.28.2",
+    "typescript": "^5.9.3",
+    "vite": "^6.4.6",
+    "vitest": "^3.2.7"
+  }
+}

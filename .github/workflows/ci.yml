@@ -1,0 +1,23 @@
+name: ci
+on:
+  push:
+  pull_request:
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci
+      - run: npm run verify
+      - run: npm run build:web
+      - name: Headless smoke + determinism
+        run: |
+          mkdir -p out
+          node dist/headless.js --seed 42 --night 1 --ticks 3600 --out out/a.jsonl
+          node dist/headless.js --seed 42 --night 1 --ticks 3600 --out out/b.jsonl
+          cmp out/a.jsonl out/b.jsonl
+          tail -n 1 out/a.jsonl

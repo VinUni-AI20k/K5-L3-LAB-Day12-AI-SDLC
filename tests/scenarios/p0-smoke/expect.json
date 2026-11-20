@@ -1,0 +1,9 @@
+{
+  "requirement": "P0-01 contract shape: tick-0 snapshot is the initial state (player at origin, full flames, carrying nothing), last line is end",
+  "seed": 1,
+  "ticks": 60,
+  "snapshots": [
+    { "tick": 0, "sim_tick": 0, "state": "playing", "score": 0, "player": { "pos": [0, 0, 0], "flames": 3, "carried": 0 } }
+  ],
+  "end": { "type": "end" }
+}

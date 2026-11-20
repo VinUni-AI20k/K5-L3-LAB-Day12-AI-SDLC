@@ -1,0 +1,24 @@
+{
+  "requirement": "P1-30 PENDING Q2: pulse with no shade in range still emits pulse {stunned_ids: []} and still pays the cost (carried 2->1)",
+  "seed": 1,
+  "ticks": 10,
+  "snapshot_every": 1,
+  "events": [
+    {
+      "name": "pulse",
+      "tick": 1,
+      "data": {
+        "stunned_ids": []
+      }
+    }
+  ],
+  "snapshots": [
+    {
+      "tick": 1,
+      "score": 0,
+      "player": {
+        "carried": 1
+      }
+    }
+  ]
+}

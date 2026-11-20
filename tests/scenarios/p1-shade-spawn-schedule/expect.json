@@ -1,0 +1,32 @@
+{
+  "requirement": "P1-45 default shade schedule: first at 5 s = t300, second 30 s later = t2100 (300+1800). Player has 99 flames to survive; ids S1 then S2",
+  "seed": 1,
+  "ticks": 2100,
+  "snapshot_every": 100,
+  "events": [
+    {
+      "name": "shade_spawned",
+      "tick": 300,
+      "data": {
+        "id": "S1"
+      }
+    },
+    {
+      "name": "shade_spawned",
+      "tick": 2100,
+      "data": {
+        "id": "S2"
+      }
+    }
+  ],
+  "snapshots": [
+    {
+      "tick": 200,
+      "shades": []
+    },
+    {
+      "tick": 2100,
+      "state": "playing"
+    }
+  ]
+}

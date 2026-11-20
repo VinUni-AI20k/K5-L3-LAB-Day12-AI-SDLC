@@ -1,0 +1,17 @@
+{
+  "requirement": "P1-05 move [1,1] has length>1 so it is normalised: speed stays 6 m/s. 60 steps = 6 m along (1,1)/sqrt2 -> x=z=6/sqrt2=4.243",
+  "seed": 1,
+  "ticks": 60,
+  "snapshots": [
+    {
+      "tick": 60,
+      "player": {
+        "pos": [
+          4.243,
+          0,
+          4.243
+        ]
+      }
+    }
+  ]
+}

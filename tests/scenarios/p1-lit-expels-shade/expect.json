@@ -1,0 +1,14 @@
+{
+  "requirement": "P1-21 TA rule (CP1 answer 7): a shade inside safe_radius of a lantern that was just lit is moved out radially, so it cannot hit in the same step. S1 (0,1,0.5) first chases 1/15 m to z=0.433, then is pushed on the line from lantern (0,0,1) through it to dist 6: z = 1-6 = -5 -> (0,1,-5). Dist to player 5 > 1, so no player_hit even with 1 flame; the last lantern lit -> won/all_lit",
+  "seed": 1,
+  "ticks": 600,
+  "snapshot_every": 1,
+  "events": [
+    { "name": "deposit", "tick": 1, "data": { "lantern_id": "L1", "amount": 5, "deposited": 5 } },
+    { "name": "lantern_lit", "tick": 1, "data": { "lantern_id": "L1" } },
+    { "name": "game_over", "tick": 1, "data": { "result": "won", "reason": "all_lit" } }
+  ],
+  "snapshots": [ { "tick": 1, "state": "won", "player": { "flames": 1 }, "shades": [ { "id": "S1", "pos": [0, 1, -5] } ] } ],
+  "end": { "ticks": 1, "state": "won" },
+  "absent_events": ["player_hit"]
+}

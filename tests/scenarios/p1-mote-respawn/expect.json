@@ -1,0 +1,36 @@
+{
+  "requirement": "P1-11 PENDING Q6. random_motes:true + one listed mote [1,0,0]: picked at t1, motes_active 0 at t230; respawn clock every 4 s = 240 steps -> motes_active 1 at t250 (assumption: global clock, +1 per 240 steps up to 30). Tiny seed risk: respawn lands within 1.5 m of the origin",
+  "seed": 1,
+  "ticks": 250,
+  "snapshot_every": 10,
+  "snapshots": [
+    {
+      "tick": 0,
+      "motes_active": 1
+    },
+    {
+      "tick": 10,
+      "motes_active": 0,
+      "player": {
+        "carried": 1
+      }
+    },
+    {
+      "tick": 230,
+      "motes_active": 0
+    },
+    {
+      "tick": 250,
+      "motes_active": 1
+    }
+  ],
+  "events": [
+    {
+      "name": "mote_picked",
+      "tick": 1,
+      "data": {
+        "carried": 1
+      }
+    }
+  ]
+}

@@ -1,0 +1,21 @@
+{
+  "requirement": "P1-40 (review finding) no shade may be inside a lit zone after a step, even when two lit zones overlap. L1 (20,0,0), L2 (28,0,0) lit, safe_radius 6; S1 (24,1,1) chases 1/15 m towards the origin, then every on-axis exit lies in the other zone, so it goes to the nearest point on both boundaries: x=24, z=sqrt(6^2-4^2)=sqrt(20)=4.472 -> (24,1,4.472)",
+  "seed": 1,
+  "ticks": 1,
+  "snapshot_every": 1,
+  "snapshots": [
+    {
+      "tick": 1,
+      "shades": [
+        {
+          "id": "S1",
+          "pos": [
+            24,
+            1,
+            4.472
+          ]
+        }
+      ]
+    }
+  ]
+}

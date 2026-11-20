@@ -1,0 +1,7 @@
+{
+  "requirement": "P1-33 inputs file that is not valid JSON -> exit 2 + stderr",
+  "seed": 1,
+  "ticks": 10,
+  "exit_code": 2,
+  "stderr_match": ".+"
+}

@@ -1,0 +1,33 @@
+{
+  "requirement": "P1-22 losing the last flame ends the game at t1: player_hit {shade, flames 0, dropped floor(0*0.5)=0}, game_over lost/no_flames, end ticks 1, score 0 (no bonuses on a loss, assumption Q3). Game ends at t1, which is off the default every-10 schedule, so there is no snapshot at t1 (TA answer 5)",
+  "seed": 1,
+  "ticks": 300,
+  "events": [
+    {
+      "name": "player_hit",
+      "tick": 1,
+      "data": {
+        "by": "shade",
+        "flames": 0,
+        "dropped": 0
+      }
+    },
+    {
+      "name": "game_over",
+      "tick": 1,
+      "data": {
+        "result": "lost",
+        "reason": "no_flames"
+      }
+    }
+  ],
+  "end": {
+    "type": "end",
+    "ticks": 1,
+    "state": "lost",
+    "score": 0
+  },
+  "absent_snapshots": [
+    1
+  ]
+}

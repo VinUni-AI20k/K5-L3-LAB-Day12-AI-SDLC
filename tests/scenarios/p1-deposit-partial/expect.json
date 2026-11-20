@@ -1,0 +1,47 @@
+{
+  "requirement": "P1-15 carried 3 into an empty lantern (cost 5): amount 3, deposited 3, NOT lit, carried 0, score 3*10 = 30",
+  "seed": 1,
+  "ticks": 10,
+  "events": [
+    {
+      "name": "deposit",
+      "tick": 1,
+      "data": {
+        "lantern_id": "L1",
+        "amount": 3,
+        "deposited": 3
+      }
+    }
+  ],
+  "snapshots": [
+    {
+      "tick": 10,
+      "score": 30,
+      "player": {
+        "carried": 0
+      },
+      "lanterns": [
+        {
+          "id": "L1",
+          "lit": false,
+          "deposited": 3
+        },
+        {
+          "id": "L2"
+        },
+        {
+          "id": "L3"
+        },
+        {
+          "id": "L4"
+        },
+        {
+          "id": "L5"
+        }
+      ]
+    }
+  ],
+  "absent_events": [
+    "lantern_lit"
+  ]
+}

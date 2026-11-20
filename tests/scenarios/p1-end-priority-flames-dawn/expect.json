@@ -1,0 +1,27 @@
+{
+  "requirement": "P1-44 end-check order no_flames > dawn: time_left_s 1/60 reaches 0 at t1 in the same step the last flame is lost -> lost/no_flames, not dawn",
+  "seed": 1,
+  "ticks": 10,
+  "events": [
+    {
+      "name": "player_hit",
+      "tick": 1,
+      "data": {
+        "flames": 0
+      }
+    },
+    {
+      "name": "game_over",
+      "tick": 1,
+      "data": {
+        "result": "lost",
+        "reason": "no_flames"
+      }
+    }
+  ],
+  "end": {
+    "ticks": 1,
+    "state": "lost",
+    "score": 0
+  }
+}

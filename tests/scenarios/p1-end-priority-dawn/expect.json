@@ -1,0 +1,20 @@
+{
+  "requirement": "P1-20 end-check order all_lit > no_flames > dawn. Last lantern lit in the same step time reaches 0 (T=1, interact t59): result won/all_lit, not lost/dawn. Score = 50 + 100 + 2*0 + 50*3 = 300",
+  "seed": 1,
+  "ticks": 600,
+  "events": [
+    {
+      "name": "game_over",
+      "tick": 60,
+      "data": {
+        "result": "won",
+        "reason": "all_lit"
+      }
+    }
+  ],
+  "end": {
+    "ticks": 60,
+    "state": "won",
+    "score": 300
+  }
+}

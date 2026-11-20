@@ -1,0 +1,30 @@
+{
+  "requirement": "P1-08 jump is vertical only and the player lands: after jump at t0 the player is back at ground y=0 at the same XZ by t120 (2 s). Apex height is not in the contract, so it is not asserted here",
+  "seed": 1,
+  "ticks": 120,
+  "snapshots": [
+    {
+      "tick": 0,
+      "player": {
+        "pos": [
+          0,
+          0,
+          0
+        ]
+      }
+    },
+    {
+      "tick": 120,
+      "player": {
+        "pos": [
+          0,
+          0,
+          0
+        ]
+      }
+    }
+  ],
+  "absent_events": [
+    "player_hit"
+  ]
+}

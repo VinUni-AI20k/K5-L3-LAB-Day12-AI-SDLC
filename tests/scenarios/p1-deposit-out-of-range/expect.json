@@ -1,0 +1,18 @@
+{
+  "requirement": "P1-17 lantern at 3.001 > interact_radius 3: interact does nothing (no deposit, carried stays 5)",
+  "seed": 1,
+  "ticks": 10,
+  "snapshots": [
+    {
+      "tick": 10,
+      "score": 0,
+      "player": {
+        "carried": 5
+      }
+    }
+  ],
+  "absent_events": [
+    "deposit",
+    "lantern_lit"
+  ]
+}

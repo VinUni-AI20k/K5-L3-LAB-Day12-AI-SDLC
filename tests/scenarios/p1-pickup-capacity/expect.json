@@ -1,0 +1,27 @@
+{
+  "requirement": "P1-13 carry_capacity 10: carried 9 and three motes in range -> exactly one pickup (carried 10), the other two stay on the ground",
+  "seed": 1,
+  "ticks": 10,
+  "events": [
+    {
+      "name": "mote_picked",
+      "tick": 1,
+      "data": {
+        "carried": 10
+      }
+    }
+  ],
+  "snapshots": [
+    {
+      "tick": 0,
+      "motes_active": 3
+    },
+    {
+      "tick": 10,
+      "motes_active": 2,
+      "player": {
+        "carried": 10
+      }
+    }
+  ]
+}

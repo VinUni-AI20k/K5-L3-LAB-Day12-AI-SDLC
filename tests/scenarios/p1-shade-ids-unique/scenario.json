@@ -1,0 +1,22 @@
+{
+  "random_motes": false,
+  "random_shades": false,
+  "motes": [],
+  "shades": [
+    {
+      "pos": [
+        5,
+        1,
+        5
+      ]
+    },
+    {
+      "id": "S1",
+      "pos": [
+        9,
+        1,
+        9
+      ]
+    }
+  ]
+}

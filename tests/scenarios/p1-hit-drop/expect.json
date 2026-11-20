@@ -1,0 +1,62 @@
+{
+  "requirement": "P1-26 shade within hit radius 1: -1 flame (3->2), drops floor(5*0.5)=2 (carried 3, lost: motes_active stays 0, Q4), no score change; then 1.5 s invulnerability = 90 ticks: still flames 2 at t80 even though the shade sits on the player. Both edges (review finding): invulnerability counted from hit tick 1 for 90 ticks, so t90 still flames 2 and the next hit lands at t91: flames 1, dropped floor(3*0.5)=1, carried 2",
+  "seed": 1,
+  "ticks": 91,
+  "snapshot_every": 1,
+  "events": [
+    {
+      "name": "player_hit",
+      "tick": 1,
+      "data": {
+        "by": "shade",
+        "flames": 2,
+        "dropped": 2
+      }
+    },
+    {
+      "name": "player_hit",
+      "tick": 91,
+      "data": {
+        "by": "shade",
+        "flames": 1,
+        "dropped": 1
+      }
+    }
+  ],
+  "snapshots": [
+    {
+      "tick": 1,
+      "score": 0,
+      "motes_active": 0,
+      "player": {
+        "flames": 2,
+        "carried": 3
+      }
+    },
+    {
+      "tick": 80,
+      "state": "playing",
+      "player": {
+        "flames": 2,
+        "carried": 3
+      }
+    },
+    {
+      "tick": 90,
+      "player": {
+        "flames": 2,
+        "carried": 3
+      }
+    },
+    {
+      "tick": 91,
+      "player": {
+        "flames": 1,
+        "carried": 2
+      }
+    }
+  ],
+  "end": {
+    "state": "playing"
+  }
+}

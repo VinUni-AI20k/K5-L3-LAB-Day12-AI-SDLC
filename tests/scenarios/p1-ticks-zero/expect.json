@@ -1,0 +1,19 @@
+{
+  "requirement": "P1-03 --ticks 0 = exactly 0 steps: tick-0 snapshot then end with ticks 0",
+  "seed": 1,
+  "ticks": 0,
+  "snapshots": [
+    {
+      "tick": 0,
+      "state": "playing",
+      "time_left_s": 300,
+      "score": 0
+    }
+  ],
+  "end": {
+    "type": "end",
+    "ticks": 0,
+    "state": "playing",
+    "score": 0
+  }
+}

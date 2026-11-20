@@ -1,0 +1,80 @@
+{
+  "requirement": "P1-10 defaults (no scenario): tick0 has 30 motes (picked up only in step 0, after the snapshot), 5 lanterns L1..L5 unlit with L1 at (0,0,25), no shades; first shade_spawned at 5 s = tick 300 (assumption Q7); time_left t100 = 300-100/60 = 298.333, t300 = 295. Seed 1",
+  "seed": 1,
+  "ticks": 300,
+  "snapshots": [
+    {
+      "tick": 0,
+      "state": "playing",
+      "motes_active": 30,
+      "shades": [],
+      "time_left_s": 300,
+      "score": 0,
+      "player": {
+        "pos": [
+          0,
+          0,
+          0
+        ],
+        "flames": 3,
+        "carried": 0
+      },
+      "lanterns": [
+        {
+          "id": "L1",
+          "pos": [
+            0,
+            0,
+            25
+          ],
+          "lit": false,
+          "deposited": 0
+        },
+        {
+          "id": "L2",
+          "lit": false,
+          "deposited": 0
+        },
+        {
+          "id": "L3",
+          "lit": false,
+          "deposited": 0
+        },
+        {
+          "id": "L4",
+          "lit": false,
+          "deposited": 0
+        },
+        {
+          "id": "L5",
+          "lit": false,
+          "deposited": 0
+        }
+      ]
+    },
+    {
+      "tick": 100,
+      "time_left_s": 298.333,
+      "shades": []
+    },
+    {
+      "tick": 300,
+      "time_left_s": 295,
+      "shades": [
+        {
+          "state": "chase"
+        }
+      ]
+    }
+  ],
+  "events": [
+    {
+      "name": "shade_spawned",
+      "tick": 300
+    }
+  ],
+  "absent_events": [
+    "player_hit",
+    "game_over"
+  ]
+}

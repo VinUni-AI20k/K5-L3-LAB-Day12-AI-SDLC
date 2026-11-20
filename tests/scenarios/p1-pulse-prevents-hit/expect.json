@@ -1,0 +1,47 @@
+{
+  "requirement": "P1-32 pulse (step 5) runs before hits (step 8): shade at 0.5 m is stunned and pushed to 4.5 so there is no hit; flames stay 3 through t60",
+  "seed": 1,
+  "ticks": 60,
+  "snapshot_every": 1,
+  "events": [
+    {
+      "name": "pulse",
+      "tick": 1,
+      "data": {
+        "stunned_ids": [
+          "S1"
+        ]
+      }
+    }
+  ],
+  "snapshots": [
+    {
+      "tick": 1,
+      "score": 20,
+      "player": {
+        "flames": 3,
+        "carried": 0
+      },
+      "shades": [
+        {
+          "id": "S1",
+          "pos": [
+            4.5,
+            1,
+            0
+          ],
+          "state": "stunned"
+        }
+      ]
+    },
+    {
+      "tick": 60,
+      "player": {
+        "flames": 3
+      }
+    }
+  ],
+  "absent_events": [
+    "player_hit"
+  ]
+}

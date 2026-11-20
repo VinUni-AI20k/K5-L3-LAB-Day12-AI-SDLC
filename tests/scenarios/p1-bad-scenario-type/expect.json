@@ -1,0 +1,7 @@
+{
+  "requirement": "P1-36 scenario with wrong type (motes is a string) -> exit 2",
+  "seed": 1,
+  "ticks": 10,
+  "exit_code": 2,
+  "stderr_match": ".+"
+}

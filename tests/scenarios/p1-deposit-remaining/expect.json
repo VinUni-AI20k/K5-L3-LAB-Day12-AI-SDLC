@@ -1,0 +1,32 @@
+{
+  "requirement": "P1-16 amount = min(carried, cost - deposited): L1 already has 2, carried 10 -> amount 3, deposited 5, lit, carried 7. Score = 3*10 + 100 = 130 (pre-set deposit earned nothing)",
+  "seed": 1,
+  "ticks": 10,
+  "events": [
+    {
+      "name": "deposit",
+      "tick": 1,
+      "data": {
+        "lantern_id": "L1",
+        "amount": 3,
+        "deposited": 5
+      }
+    },
+    {
+      "name": "lantern_lit",
+      "tick": 1,
+      "data": {
+        "lantern_id": "L1"
+      }
+    }
+  ],
+  "snapshots": [
+    {
+      "tick": 10,
+      "score": 130,
+      "player": {
+        "carried": 7
+      }
+    }
+  ]
+}

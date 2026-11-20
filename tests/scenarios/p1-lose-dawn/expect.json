@@ -1,0 +1,29 @@
+{
+  "requirement": "P1-23 time_left_s 1 -> 60 steps -> 0 at t60: game_over lost/dawn, end ticks 60 although --ticks is 600, score 0",
+  "seed": 1,
+  "ticks": 600,
+  "snapshot_every": 60,
+  "events": [
+    {
+      "name": "game_over",
+      "tick": 60,
+      "data": {
+        "result": "lost",
+        "reason": "dawn"
+      }
+    }
+  ],
+  "snapshots": [
+    {
+      "tick": 60,
+      "state": "lost",
+      "time_left_s": 0
+    }
+  ],
+  "end": {
+    "type": "end",
+    "ticks": 60,
+    "state": "lost",
+    "score": 0
+  }
+}

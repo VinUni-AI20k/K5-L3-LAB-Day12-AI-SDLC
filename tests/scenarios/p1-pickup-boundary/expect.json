@@ -1,0 +1,38 @@
+{
+  "requirement": "P1-12 pickup uses dist <= pickup_radius(1.5): mote at exactly 1.5 is picked at t1; mote at 1.501 is not",
+  "seed": 1,
+  "ticks": 10,
+  "snapshot_every": 1,
+  "events": [
+    {
+      "name": "mote_picked",
+      "tick": 1,
+      "data": {
+        "carried": 1
+      }
+    }
+  ],
+  "snapshots": [
+    {
+      "tick": 0,
+      "motes_active": 2,
+      "player": {
+        "carried": 0
+      }
+    },
+    {
+      "tick": 1,
+      "motes_active": 1,
+      "player": {
+        "carried": 1
+      }
+    },
+    {
+      "tick": 10,
+      "motes_active": 1,
+      "player": {
+        "carried": 1
+      }
+    }
+  ]
+}

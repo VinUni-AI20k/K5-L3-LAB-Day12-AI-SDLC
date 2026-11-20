@@ -1,0 +1,7 @@
+{
+  "requirement": "P1-34 frame ticks must be strictly increasing (5,5) -> exit 2",
+  "seed": 1,
+  "ticks": 10,
+  "exit_code": 2,
+  "stderr_match": ".+"
+}

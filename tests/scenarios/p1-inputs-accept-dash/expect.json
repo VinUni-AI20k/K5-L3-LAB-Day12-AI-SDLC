@@ -1,0 +1,17 @@
+{
+  "requirement": "P1-09 inputs may contain dash (no dash in our game): accepted, no effect, exit 0, player stays at the origin",
+  "seed": 1,
+  "ticks": 30,
+  "snapshots": [
+    {
+      "tick": 30,
+      "player": {
+        "pos": [
+          0,
+          0,
+          0
+        ]
+      }
+    }
+  ]
+}

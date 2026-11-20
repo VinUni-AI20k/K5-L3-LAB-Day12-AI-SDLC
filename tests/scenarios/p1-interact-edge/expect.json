@@ -1,0 +1,96 @@
+{
+  "requirement": "P1-18 interact fires on the false->true edge only and targets the nearest UNLIT lantern. L1 at 1 m, L2 at 2 m, carried 10. Held t0..t4: one deposit into L1 (5), nothing into L2 while held (t10: carried 5, L2 deposited 0). Re-press at t10: L1 is lit so L2 gets 5 (t11 carried 0). Score 2*(5*10+100) = 300",
+  "seed": 1,
+  "ticks": 20,
+  "snapshot_every": 1,
+  "events": [
+    {
+      "name": "deposit",
+      "tick": 1,
+      "data": {
+        "lantern_id": "L1",
+        "amount": 5,
+        "deposited": 5
+      }
+    },
+    {
+      "name": "lantern_lit",
+      "tick": 1,
+      "data": {
+        "lantern_id": "L1"
+      }
+    },
+    {
+      "name": "deposit",
+      "tick": 11,
+      "data": {
+        "lantern_id": "L2",
+        "amount": 5,
+        "deposited": 5
+      }
+    },
+    {
+      "name": "lantern_lit",
+      "tick": 11,
+      "data": {
+        "lantern_id": "L2"
+      }
+    }
+  ],
+  "snapshots": [
+    {
+      "tick": 10,
+      "score": 150,
+      "player": {
+        "carried": 5
+      },
+      "lanterns": [
+        {
+          "id": "L1",
+          "lit": true
+        },
+        {
+          "id": "L2",
+          "lit": false,
+          "deposited": 0
+        },
+        {
+          "id": "L3"
+        },
+        {
+          "id": "L4"
+        },
+        {
+          "id": "L5"
+        }
+      ]
+    },
+    {
+      "tick": 11,
+      "score": 300,
+      "player": {
+        "carried": 0
+      },
+      "lanterns": [
+        {
+          "id": "L1",
+          "lit": true
+        },
+        {
+          "id": "L2",
+          "lit": true,
+          "deposited": 5
+        },
+        {
+          "id": "L3"
+        },
+        {
+          "id": "L4"
+        },
+        {
+          "id": "L5"
+        }
+      ]
+    }
+  ]
+}

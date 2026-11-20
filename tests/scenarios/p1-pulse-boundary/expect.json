@@ -1,0 +1,46 @@
+{
+  "requirement": "P1-28 pulse radius is dist <= 6: S1 at exactly 6 is stunned and pushed to 10; S2 at 6.001 is not (stunned_ids [S1]) and moves 1/15 m toward the player: 6.001-0.06667=5.934. Score 20, carried 1->0",
+  "seed": 1,
+  "ticks": 10,
+  "snapshot_every": 1,
+  "events": [
+    {
+      "name": "pulse",
+      "tick": 1,
+      "data": {
+        "stunned_ids": [
+          "S1"
+        ]
+      }
+    }
+  ],
+  "snapshots": [
+    {
+      "tick": 1,
+      "score": 20,
+      "player": {
+        "carried": 0
+      },
+      "shades": [
+        {
+          "id": "S1",
+          "pos": [
+            10,
+            1,
+            0
+          ],
+          "state": "stunned"
+        },
+        {
+          "id": "S2",
+          "pos": [
+            0,
+            1,
+            5.934
+          ],
+          "state": "chase"
+        }
+      ]
+    }
+  ]
+}

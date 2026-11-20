@@ -1,0 +1,36 @@
+{
+  "requirement": "P1-24 shades chase in XZ at 4 m/s (1/15 m per tick), y stays 1. S1 (10,1,0): 60 steps = 4 m -> (6,1,0). S2 (6,1,8): dist 10, unit (0.6,0.8), after 4 m -> (3.6,1,4.8). Neither within hit radius 1 -> no hit",
+  "seed": 1,
+  "ticks": 60,
+  "snapshots": [
+    {
+      "tick": 60,
+      "player": {
+        "flames": 3
+      },
+      "shades": [
+        {
+          "id": "S1",
+          "pos": [
+            6,
+            1,
+            0
+          ],
+          "state": "chase"
+        },
+        {
+          "id": "S2",
+          "pos": [
+            3.6,
+            1,
+            4.8
+          ],
+          "state": "chase"
+        }
+      ]
+    }
+  ],
+  "absent_events": [
+    "player_hit"
+  ]
+}

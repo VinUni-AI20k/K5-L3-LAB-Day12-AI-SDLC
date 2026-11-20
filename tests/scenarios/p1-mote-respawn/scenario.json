@@ -1,0 +1,12 @@
+{
+  "random_motes": true,
+  "random_shades": false,
+  "motes": [
+    [
+      1,
+      0,
+      0
+    ]
+  ],
+  "shades": []
+}

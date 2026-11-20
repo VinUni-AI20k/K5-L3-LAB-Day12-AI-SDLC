@@ -1,0 +1,28 @@
+{
+  "requirement": "P1-42 (review finding) shade ids stay unique: an id-less shade next to an explicit S1 gets S2, list order is kept",
+  "seed": 1,
+  "ticks": 0,
+  "snapshots": [
+    {
+      "tick": 0,
+      "shades": [
+        {
+          "id": "S2",
+          "pos": [
+            5,
+            1,
+            5
+          ]
+        },
+        {
+          "id": "S1",
+          "pos": [
+            9,
+            1,
+            9
+          ]
+        }
+      ]
+    }
+  ]
+}

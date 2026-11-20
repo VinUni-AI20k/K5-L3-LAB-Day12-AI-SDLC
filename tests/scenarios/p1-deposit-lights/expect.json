@@ -1,0 +1,66 @@
+{
+  "requirement": "P1-14 interact with carried 5 at dist 3 (== interact_radius, <=) deposits min(5, 5-0)=5 and lights L1. Score = 5*per_mote(10) + per_lantern(100) = 150 (assumption Q5: per_mote at deposit)",
+  "seed": 1,
+  "ticks": 30,
+  "events": [
+    {
+      "name": "deposit",
+      "tick": 1,
+      "data": {
+        "lantern_id": "L1",
+        "amount": 5,
+        "deposited": 5
+      }
+    },
+    {
+      "name": "lantern_lit",
+      "tick": 1,
+      "data": {
+        "lantern_id": "L1"
+      }
+    }
+  ],
+  "snapshots": [
+    {
+      "tick": 0,
+      "score": 0
+    },
+    {
+      "tick": 10,
+      "score": 150,
+      "player": {
+        "carried": 0
+      },
+      "lanterns": [
+        {
+          "id": "L1",
+          "lit": true,
+          "deposited": 5
+        },
+        {
+          "id": "L2",
+          "lit": false
+        },
+        {
+          "id": "L3",
+          "lit": false
+        },
+        {
+          "id": "L4",
+          "lit": false
+        },
+        {
+          "id": "L5",
+          "lit": false
+        }
+      ]
+    }
+  ],
+  "end": {
+    "state": "playing",
+    "score": 150
+  },
+  "absent_events": [
+    "game_over"
+  ]
+}

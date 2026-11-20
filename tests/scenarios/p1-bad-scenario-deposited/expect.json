@@ -1,0 +1,1 @@
+{ "requirement": "P1-46 (review finding) deposited may not exceed lantern_cost (5): deposited 9 -> exit 2", "seed": 1, "ticks": 10, "exit_code": 2, "stderr_match": ".+" }

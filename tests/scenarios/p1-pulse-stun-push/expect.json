@@ -1,0 +1,113 @@
+{
+  "requirement": "P1-27 pulse costs pulse_cost 1 carried (3->2), stuns shades within pulse_radius 6 for 2 s, pushes them 4 m away (x 4->8), score per_stun 20. Stunned shade does not move (t60 still x=8); chase again at t130 (stun lasted 120 ticks, boundary Q9). No hit afterwards (dist ~7.3). Both edges (review finding): stunned through t120 (120 ticks counted from the pulse tick 1), chase at t121 and moving again: 8-1/15 = 7.933",
+  "seed": 1,
+  "ticks": 130,
+  "snapshot_every": 1,
+  "events": [
+    {
+      "name": "pulse",
+      "tick": 1,
+      "data": {
+        "stunned_ids": [
+          "S1"
+        ]
+      }
+    }
+  ],
+  "snapshots": [
+    {
+      "tick": 0,
+      "player": {
+        "carried": 3
+      },
+      "shades": [
+        {
+          "id": "S1",
+          "pos": [
+            4,
+            1,
+            0
+          ],
+          "state": "chase"
+        }
+      ]
+    },
+    {
+      "tick": 1,
+      "score": 20,
+      "player": {
+        "carried": 2
+      },
+      "shades": [
+        {
+          "id": "S1",
+          "pos": [
+            8,
+            1,
+            0
+          ],
+          "state": "stunned"
+        }
+      ]
+    },
+    {
+      "tick": 60,
+      "shades": [
+        {
+          "id": "S1",
+          "pos": [
+            8,
+            1,
+            0
+          ],
+          "state": "stunned"
+        }
+      ]
+    },
+    {
+      "tick": 130,
+      "score": 20,
+      "player": {
+        "carried": 2,
+        "flames": 3
+      },
+      "shades": [
+        {
+          "id": "S1",
+          "state": "chase"
+        }
+      ]
+    },
+    {
+      "tick": 120,
+      "shades": [
+        {
+          "id": "S1",
+          "pos": [
+            8,
+            1,
+            0
+          ],
+          "state": "stunned"
+        }
+      ]
+    },
+    {
+      "tick": 121,
+      "shades": [
+        {
+          "id": "S1",
+          "pos": [
+            7.933,
+            1,
+            0
+          ],
+          "state": "chase"
+        }
+      ]
+    }
+  ],
+  "absent_events": [
+    "player_hit"
+  ]
+}

@@ -1,0 +1,27 @@
+{
+  "requirement": "P1-06 theta=90deg: x'=x*cos+z*sin, z'=-x*sin+z*cos. move [1,0] -> (0,-1): 30 steps = 3 m -> [0,0,-3]. Frame t30 sets only move [0,1] (cam_yaw persists at 90) -> (1,0): +3 m in X -> t60 [3,0,-3]",
+  "seed": 1,
+  "ticks": 60,
+  "snapshots": [
+    {
+      "tick": 30,
+      "player": {
+        "pos": [
+          0,
+          0,
+          -3
+        ]
+      }
+    },
+    {
+      "tick": 60,
+      "player": {
+        "pos": [
+          3,
+          0,
+          -3
+        ]
+      }
+    }
+  ]
+}

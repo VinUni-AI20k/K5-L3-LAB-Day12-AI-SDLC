@@ -1,0 +1,45 @@
+{
+  "requirement": "P1-19 last lantern lit at t60 (interact at t59) -> won / all_lit, sim stops. time_left = 101-60/60 = 100. Score = 5*10 + 100 + per_second_left 2*100 + per_flame_left 50*3 = 500 (assumption Q3: bonuses on win at game_over)",
+  "seed": 1,
+  "ticks": 600,
+  "events": [
+    {
+      "name": "deposit",
+      "tick": 60,
+      "data": {
+        "lantern_id": "L1",
+        "amount": 5,
+        "deposited": 5
+      }
+    },
+    {
+      "name": "lantern_lit",
+      "tick": 60,
+      "data": {
+        "lantern_id": "L1"
+      }
+    },
+    {
+      "name": "game_over",
+      "tick": 60,
+      "data": {
+        "result": "won",
+        "reason": "all_lit"
+      }
+    }
+  ],
+  "snapshots": [
+    {
+      "tick": 60,
+      "state": "won",
+      "time_left_s": 100,
+      "score": 500
+    }
+  ],
+  "end": {
+    "type": "end",
+    "ticks": 60,
+    "state": "won",
+    "score": 500
+  }
+}

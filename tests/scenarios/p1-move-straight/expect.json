@@ -1,0 +1,47 @@
+{
+  "requirement": "P1-04 speed 6 m/s = 0.1 m/tick: t10 x=1.0, t30 x=3.0 (6*0.5). Frame at t30 move [0.5,0] (length<1, not normalised, 3 m/s) -> +1.5 m -> t60 x=4.5. Frame at t60 move [0,0] -> t90 still 4.5",
+  "seed": 1,
+  "ticks": 90,
+  "snapshots": [
+    {
+      "tick": 10,
+      "player": {
+        "pos": [
+          1,
+          0,
+          0
+        ]
+      }
+    },
+    {
+      "tick": 30,
+      "player": {
+        "pos": [
+          3,
+          0,
+          0
+        ]
+      }
+    },
+    {
+      "tick": 60,
+      "player": {
+        "pos": [
+          4.5,
+          0,
+          0
+        ]
+      }
+    },
+    {
+      "tick": 90,
+      "player": {
+        "pos": [
+          4.5,
+          0,
+          0
+        ]
+      }
+    }
+  ]
+}

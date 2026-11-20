@@ -1,0 +1,12 @@
+{
+  "contract_version": "1.3",
+  "avg_fps": 211.555,
+  "p1_low_fps": 124.127,
+  "frame_ms_p95": 6.3,
+  "frames": 6347,
+  "load_ms": 357,
+  "peak_mem_mb": 411.6,
+  "vsync_off": true,
+  "renderer": "ANGLE (Apple, ANGLE Metal Renderer: Apple M1, Unspecified Version)",
+  "os": "Darwin 24.0.0 arm64 (darwin), Electron 39.8.10, Chromium 142.0.7444.265"
+}

@@ -6,11 +6,12 @@ import { Sim } from "../sim/sim";
 import type { InputState, SimEvent } from "../sim/types";
 import { GameAudio } from "./audio";
 import { PALETTE, ambientIntensity, css } from "./palette";
+import { createBenchSim, benchCamera } from "../bench/scene";
 import { buildNight, buildSea } from "./scene";
 import { loadSettings, saveSettings, type Settings } from "./settings";
 
 type Night = 1 | 2 | 3;
-type Mode = "menu" | "intro" | "playing" | "paused" | "result" | "dawn";
+type Mode = "menu" | "intro" | "playing" | "paused" | "result" | "dawn" | "bench";
 
 const NIGHT_INFO: Record<Night, { name: string; line: string }> = {
   1: { name: "Đảo Bến", line: "Mây à, đảo Bến tối rồi. Gom đom đóm, thắp năm ngọn đèn lồng trước bình minh nhé." },
@@ -543,14 +544,62 @@ renderer.setAnimationLoop((now) => {
     lastCountdown = left;
   }
   if (toastTimer > 0 && (toastTimer -= dt) <= 0) toast.style.opacity = "0";
-  $("hud").style.display = mode === "menu" || mode === "intro" ? "none" : "block";
+  $("hud").style.display = mode === "menu" || mode === "intro" || mode === "bench" ? "none" : "block";
+  if (mode === "bench") {
+    benchFrame(now, dt);
+    return;
+  }
   sync(now, dt);
   renderHud(now);
   renderer.render(scene, camera);
 });
 
-// the menu is shown over the Night 1 island
-loadNightScene(1);
-showMenu();
+// ---------- benchmark mode (Electron --bench, Ticket-04 section 1) ----------
+interface DdlBridge { benchConfig: { seed: number; duration: number; out: string } | null; benchFirstFrame(): void; benchMeasureStart(): void; benchResult(p: { dts: number[]; renderer: string }): void }
+const ddl = (window as unknown as { ddl?: DdlBridge }).ddl;
+const benchCfg = ddl?.benchConfig ?? null;
+const bench = { t0: 0, last: 0, measureStart: 0, dts: [] as number[], started: false, done: false, acc: 0 };
+
+function benchFrame(now: number, dt: number): void {
+  if (!ddl || !benchCfg || bench.done) return;
+  if (bench.t0 === 0) { bench.t0 = now; bench.last = now; }
+  const t = (now - bench.t0) / 1000;
+  // game logic at its normal fixed step: the shades wander
+  bench.acc += dt;
+  let n = 0;
+  while (bench.acc >= DT && n++ < 6) { bench.acc -= DT; sim.step(idleInput()); }
+  sync(now, dt);
+  const [cx, cy, cz] = benchCamera(t); // circle r 30 at Y 15 around the origin, one lap per 15 s, from (30,15,0)
+  camera.position.set(cx, cy, cz);
+  camera.lookAt(0, 0, 0);
+  renderer.render(scene, camera);
+  const frameMs = now - bench.last;
+  bench.last = now;
+  if (!bench.started) {
+    if (t === 0) ddl.benchFirstFrame(); // first rendered bench frame
+    if (t >= 3) { bench.started = true; bench.measureStart = now; ddl.benchMeasureStart(); } // 3 s warm-up, not measured
+    return;
+  }
+  bench.dts.push(frameMs);
+  if ((now - bench.measureStart) / 1000 >= benchCfg.duration) {
+    bench.done = true;
+    const gl = renderer.getContext();
+    const ext = gl.getExtension("WEBGL_debug_renderer_info");
+    const name = ext ? String(gl.getParameter(ext.UNMASKED_RENDERER_WEBGL)) : String(gl.getParameter(gl.RENDERER));
+    ddl.benchResult({ dts: bench.dts, renderer: name });
+  }
+}
+
+if (benchCfg) {
+  sim = createBenchSim(benchCfg.seed);
+  (window as unknown as { __ddl: unknown }).__ddl = { get sim() { return sim; } };
+  loadNightScene(1);
+  mode = "bench";
+  hideOverlay();
+} else {
+  // the menu is shown over the Night 1 island
+  loadNightScene(1);
+  showMenu();
+}
 const startAt = Number(new URLSearchParams(location.search).get("night")); // ?night=2 opens that night's intro (handy for testing)
-if (startAt === 1 || startAt === 2 || startAt === 3) showIntro(startAt);
+if (!benchCfg && (startAt === 1 || startAt === 2 || startAt === 3)) showIntro(startAt);

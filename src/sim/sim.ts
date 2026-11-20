@@ -52,7 +52,11 @@ export class Sim {
   private pulseReadyAt = 0; // next pulse allowed on a step whose resulting tick is >= this
   private prev = { jump: false, dash: false, interact: false, pulse: false, pause: false };
 
-  constructor(seed: number, sc: Scenario = {}, night: 1 | 2 | 3 = 1) {
+  /** Benchmark scene only (Ticket-04): 200 wander shades and 100 motes; no spawning, damage, pickup, fuel decay, chase or end of night. Not reachable from files. */
+  private readonly bench: boolean;
+
+  constructor(seed: number, sc: Scenario = {}, night: 1 | 2 | 3 = 1, opts: { bench?: boolean } = {}) {
+    this.bench = opts.bench === true;
     this.night = night;
     this.def = NIGHTS[night];
     this.rng = createRng(seed);
@@ -121,6 +125,7 @@ export class Sim {
         stoleOnce: state === "flee" || (d.stolen ?? 0) > 0, ticks: state === "flee" ? WORLD.drifter_flee_ticks : 0, target: null,
       });
     }
+    if (this.bench) this.initBench();
     for (const s of sc.shades ?? []) if (s.id) this.reservedIds.add(s.id);
     for (const s of sc.shades ?? []) {
       this.shades.push({ ...this.newShade(s.id ?? this.freeShadeId(), s.pos, s.state ?? "wander"), ticks: s.state_ticks_left ?? 0, target: s.target_lantern_id ?? null, sticky: s.target_lantern_id !== undefined });
@@ -149,6 +154,24 @@ export class Sim {
   /** A lit lantern keeps its safe zone from 30 fuel up; below that it is weak. */
   hasZone(l: Lantern): boolean {
     return l.lit && l.fuelU >= TUNING.low_fuel_threshold * 60;
+  }
+
+  /** 200 shades and 100 motes spread over the island disc: r = R*sqrt(u), angle = 2*pi*u, from the seeded rng. */
+  private initBench(): void {
+    const R = 40;
+    const point = (): [number, number] => {
+      const r = R * Math.sqrt(this.rng());
+      const a = 2 * Math.PI * this.rng();
+      return [r * Math.cos(a), r * Math.sin(a)];
+    };
+    for (let i = 0; i < 200; i++) {
+      const [x, z] = point();
+      this.shades.push(this.newShade(`S${i + 1}`, [x, 1, z], "wander"));
+    }
+    for (let i = 0; i < 100; i++) {
+      const [x, z] = point();
+      this.motes.push({ id: `M${this.moteSeq++}`, pos: [x, 0, z], kind: "random", ttl: null, spawn: -1 });
+    }
   }
 
   get timeLeft(): number {
@@ -298,7 +321,7 @@ export class Sim {
     }
     // fuel: every lit lantern loses 1 unit per tick plus 5 per shade draining it; then lights out, in id order
     for (const l of this.lanterns) {
-      if (!l.lit) continue;
+      if (!l.lit || this.bench) continue; // bench: no fuel decay
       const draining = this.shades.filter((sh) => sh.state === "drain" && sh.target === l.id).length;
       l.fuelU -= 1 + draining * TUNING.drain_per_s;
     }
@@ -401,7 +424,7 @@ export class Sim {
     }
 
     // 4. pickup: motes and charms, XZ <= pickup_radius and |feet Y - item Y| <= 1.5 (id order, only while there is room)
-    if (!inert) {
+    if (!inert && !this.bench) {
       const reach = (pos: Vec3): boolean => dist2d(p.pos, pos) <= TUNING.pickup_radius && Math.abs(p.pos[1] - pos[1]) <= WORLD.mote_height_tol;
       for (const m of [...this.motes]) {
         if (p.carried >= this.capacity) break;
@@ -541,7 +564,7 @@ export class Sim {
         }
         if (sh.state === "wander" || sh.state === "chase") {
           const d = this.fallWait > 0 ? Infinity : Math.hypot(p.pos[0] - nx, p.pos[2] - nz);
-          if (sh.state === "wander" && d <= WORLD.shade_chase_start_m) { sh.state = "chase"; sh.target = null; sh.sticky = false; }
+          if (sh.state === "wander" && !this.bench && d <= WORLD.shade_chase_start_m) { sh.state = "chase"; sh.target = null; sh.sticky = false; }
           else if (sh.state === "chase" && d > WORLD.shade_chase_stop_m) sh.state = "wander";
           if (sh.state === "wander") {
             // only wander shades pick a target: nearest weak lit lantern, else nearest unlit one (ties: smaller id)
@@ -616,7 +639,7 @@ export class Sim {
         emit("drifter_steal", { drifter_id: d.id, amount, carried: p.carried });
       }
     }
-    if (T >= this.invulnUntil && this.fallWait === 0) {
+    if (T >= this.invulnUntil && this.fallWait === 0 && !this.bench) {
       const num = (id: string): number => Number(id.replace(/\D/g, "")) || 0;
       const order = [...this.shades].sort((a, b) => num(a.id) - num(b.id) || (a.id < b.id ? -1 : a.id > b.id ? 1 : 0)); // ascending id, numerically (S2 before S10)
       const hitter = order.find((sh) =>
@@ -669,6 +692,7 @@ export class Sim {
 
     // 11. end check: no_flames always wins; otherwise the night is decided only at dawn (no early win)
     const left = this.timeLeft;
+    if (this.bench) return ev; // bench: the night never ends
     if (p.flames <= 0) {
       this.state = "lost";
       emit("game_over", { result: "lost", reason: "no_flames" });

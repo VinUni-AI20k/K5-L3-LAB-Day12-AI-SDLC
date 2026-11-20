@@ -31,7 +31,7 @@ export function parseScenario(raw: unknown): Scenario {
     if (p.pos !== undefined) sc.player.pos = vec3(p.pos, "player.pos");
     if (p.carried !== undefined) sc.player.carried = count(p.carried, "player.carried");
     if (p.flames !== undefined) sc.player.flames = count(p.flames, "player.flames");
-    for (const k of ["invuln_ticks", "dash_cd_ticks", "pulse_cd_ticks", "charm_ticks"] as const) {
+    for (const k of ["invuln_ticks", "dash_cd_ticks", "pulse_cd_ticks", "charm_ticks", "successful_lights"] as const) {
       if (p[k] !== undefined) sc.player[k] = count(p[k], `player.${k}`);
     }
   }
@@ -72,6 +72,14 @@ export function parseScenario(raw: unknown): Scenario {
       if (l.deposited !== undefined) {
         out.deposited = count(l.deposited, `lanterns[${i}].deposited`);
         if (out.deposited > TUNING.lantern_cost) throw new BadFileError(`lanterns[${i}].deposited cannot exceed lantern_cost (${TUNING.lantern_cost})`);
+      }
+      if (l.fuel !== undefined) {
+        if (!num(l.fuel) || l.fuel < 0 || l.fuel > TUNING.fuel_max) throw new BadFileError(`lanterns[${i}].fuel must be a number in 0..${TUNING.fuel_max}`);
+        out.fuel = l.fuel;
+      }
+      if (l.ever_lit !== undefined) {
+        if (typeof l.ever_lit !== "boolean") throw new BadFileError(`lanterns[${i}].ever_lit must be a boolean`);
+        out.ever_lit = l.ever_lit;
       }
       if (l.lit !== undefined) {
         if (typeof l.lit !== "boolean") throw new BadFileError(`lanterns[${i}].lit must be a boolean`);

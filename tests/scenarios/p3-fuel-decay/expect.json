@@ -80,6 +80,5 @@
   ],
   "absent_events": [
     "lantern_out"
-  ],
-  "pending": "Phase 3 kickoff: written before implementation (v1.2). Remove this flag when the feature is built."
+  ]
 }

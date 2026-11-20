@@ -10,11 +10,11 @@ export interface InputState {
   dash: boolean;
 }
 
-export type ShadeState = "spawning" | "wander" | "chase" | "recoil" | "stunned";
+export type ShadeState = "spawning" | "wander" | "chase" | "recoil" | "stunned" | "drain";
 export type DrifterState = "idle" | "chase" | "flee" | "removed";
 
 export interface Scenario {
-  player?: { pos?: Vec3; carried?: number; flames?: number; invuln_ticks?: number; dash_cd_ticks?: number; pulse_cd_ticks?: number; charm_ticks?: number };
+  player?: { pos?: Vec3; carried?: number; flames?: number; successful_lights?: number; invuln_ticks?: number; dash_cd_ticks?: number; pulse_cd_ticks?: number; charm_ticks?: number };
   random_drifters?: boolean;
   wind_enabled?: boolean;
   drifters?: Array<{ id?: string; pos: Vec3; state?: Exclude<DrifterState, "removed">; stolen?: number }>;
@@ -23,14 +23,14 @@ export interface Scenario {
   random_shades?: boolean;
   motes?: Vec3[];
   shades?: Array<{ pos: Vec3; id?: string; state?: ShadeState; state_ticks_left?: number }>;
-  lanterns?: Array<{ id: string; pos?: Vec3; deposited?: number; lit?: boolean }>;
+  lanterns?: Array<{ id: string; pos?: Vec3; deposited?: number; lit?: boolean; fuel?: number; ever_lit?: boolean }>;
   time_left_s?: number;
 }
 
 export interface SimEvent {
   type: "event";
   tick: number;
-  name: "paused" | "resumed" | "drifter_steal" | "drifter_drop" | "night_start" | "dash" | "charm_picked" | "mote_picked" | "deposit" | "lantern_lit" | "pulse" | "player_hit" | "shade_spawned" | "game_over";
+  name: "refuel" | "lantern_out" | "fuel_drain" | "paused" | "resumed" | "drifter_steal" | "drifter_drop" | "night_start" | "dash" | "charm_picked" | "mote_picked" | "deposit" | "lantern_lit" | "pulse" | "player_hit" | "shade_spawned" | "game_over";
   data: Record<string, unknown>;
 }
 
@@ -55,5 +55,15 @@ export interface Shade {
   pushLeft: number; // pulse push steps left
   pushDir: [number, number];
   recoilDir: [number, number];
+  target: string | null; // lantern a wandering shade is heading for / draining
+  drainTicks: number; // ticks of continuous draining (for fuel_drain events)
 }
-export interface Lantern { id: string; pos: Vec3; deposited: number; lit: boolean }
+export interface Lantern {
+  id: string;
+  pos: Vec3;
+  deposited: number;
+  lit: boolean;
+  fuelU: number; // fuel in 1/60 units: 6000 = 100 fuel (integers, so long runs never drift)
+  everLit: boolean;
+  relitCount: number;
+}

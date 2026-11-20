@@ -4,7 +4,7 @@
   "motes": [],
   "shades": [],
   "player": {
-    "carried": 5
+    "carried": 10
   },
   "lanterns": [
     {
@@ -18,22 +18,22 @@
     {
       "id": "L2",
       "lit": true,
-      "deposited": 5
+      "deposited": 10
     },
     {
       "id": "L3",
       "lit": true,
-      "deposited": 5
+      "deposited": 10
     },
     {
       "id": "L4",
       "lit": true,
-      "deposited": 5
+      "deposited": 10
     },
     {
       "id": "L5",
       "lit": true,
-      "deposited": 5
+      "deposited": 10
     }
   ],
   "time_left_s": 101

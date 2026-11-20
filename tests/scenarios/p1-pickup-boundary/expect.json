@@ -1,5 +1,5 @@
 {
-  "requirement": "P1-12 pickup uses dist <= pickup_radius(1.5): mote at exactly 1.5 is picked at t1; mote at 1.501 is not",
+  "requirement": "P1-12 (v1.1) pickup uses dist <= pickup_radius (1.0) and height within 1.5: mote at exactly 1.0 is picked at t1; mote at 1.001 is not",
   "seed": 1,
   "ticks": 10,
   "snapshot_every": 1,

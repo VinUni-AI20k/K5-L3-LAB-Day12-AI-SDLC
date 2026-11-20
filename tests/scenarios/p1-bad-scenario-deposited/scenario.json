@@ -1,1 +1,8 @@
-{ "lanterns": [ { "id": "L1", "deposited": 9 } ] }
+{
+  "lanterns": [
+    {
+      "id": "L1",
+      "deposited": 11
+    }
+  ]
+}

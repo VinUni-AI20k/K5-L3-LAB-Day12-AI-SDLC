@@ -1,7 +1,7 @@
 {
-  "requirement": "P1-31 pulse_cooldown 1 s = 60 ticks: pulse at t0 works (3->2); attempt at t10 is blocked and costs nothing (t20 carried 2); attempt at t100 works (t110 carried 1). Events at t1 and t101 (cooldown boundary Q10 not tested)",
+  "requirement": "P1-31 (v1.1) pulse costs 3, cooldown 3 s = 180 ticks: pulse at t0 works (9->6); attempts at step 10 and step 100 are blocked and cost nothing (t20 and t110 carried 6); the attempt at step 200 (>= 180) works (t210 carried 3). Events at t1 and t201 (the exact 180 edge is our counter convention, not tested)",
   "seed": 1,
-  "ticks": 110,
+  "ticks": 210,
   "events": [
     {
       "name": "pulse",
@@ -12,7 +12,7 @@
     },
     {
       "name": "pulse",
-      "tick": 101,
+      "tick": 201,
       "data": {
         "stunned_ids": []
       }
@@ -22,13 +22,19 @@
     {
       "tick": 20,
       "player": {
-        "carried": 2
+        "carried": 6
       }
     },
     {
       "tick": 110,
       "player": {
-        "carried": 1
+        "carried": 6
+      }
+    },
+    {
+      "tick": 210,
+      "player": {
+        "carried": 3
       }
     }
   ]

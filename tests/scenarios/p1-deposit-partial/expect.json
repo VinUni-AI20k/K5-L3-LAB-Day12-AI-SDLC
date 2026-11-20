@@ -1,5 +1,5 @@
 {
-  "requirement": "P1-15 carried 3 into an empty lantern (cost 5): amount 3, deposited 3, NOT lit, carried 0, score 3*10 = 30",
+  "requirement": "P1-15 (v1.1) carried 3 into an empty lantern (cost 10) at dist 2 (<= 2): amount 3, deposited 3, NOT lit, carried 0, score 3*10 = 30",
   "seed": 1,
   "ticks": 10,
   "events": [

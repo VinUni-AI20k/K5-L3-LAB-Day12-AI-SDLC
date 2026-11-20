@@ -1,5 +1,5 @@
 {
-  "requirement": "P1-09 inputs may contain dash (no dash in our game): accepted, no effect, exit 0, player stays at the origin",
+  "requirement": "P1-09 (v1.1) dash is real now: dash at t0 from standing, facing +Z: 12 steps x 14/60 = 2.8 m -> pos [0,0,2.8] at t30 (the false at t5 is not an edge)",
   "seed": 1,
   "ticks": 30,
   "snapshots": [
@@ -9,7 +9,7 @@
         "pos": [
           0,
           0,
-          0
+          2.8
         ]
       }
     }

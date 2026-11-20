@@ -19,6 +19,14 @@
     {
       "tick": 100,
       "pulse": true
+    },
+    {
+      "tick": 101,
+      "pulse": false
+    },
+    {
+      "tick": 200,
+      "pulse": true
     }
   ]
 }

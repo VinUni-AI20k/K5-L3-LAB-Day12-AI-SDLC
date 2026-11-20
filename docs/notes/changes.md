@@ -44,3 +44,29 @@ One entry per change: phase, what changed in the ticket, design decision (one li
 
 ### Phase 2 build: p1 scenario re-derivations
 _(one line per scenario: old → new value, arithmetic)_
+
+## Phase 2 build: Ticket-02 replaces Phase 1 numbers (Contract v1.1)
+The ticket fixes every number, so all Phase 1 tuning is replaced (list in `assumptions.md` → Phase 2). Expected values below were re-derived by arithmetic from the v1.1 numbers (shown in each `expect.json` → `requirement`), never copied from program output.
+
+**Deleted**
+- `p1-island-clamp`: `fall_enabled` is now true; walking off the island is a fall (replaced by `p2-fall`).
+
+**Re-derived (rule replaced → new expected values)**
+| Scenario | Why it changed |
+|---|---|
+| `p1-default-world` | 20 motes on fixed points, fixed lantern positions, 2 shades at t300 in `spawning` |
+| `p1-deposit-lights`, `-remaining`, `-out-of-range`, `-partial` (text), `p1-interact-edge` | lantern cost 10, interact radius 2 |
+| `p1-win-score`, `p1-end-priority-dawn`, `p1-win-bonus-fraction` | cost 10 (carried 10 to finish a lantern), so scores are 550 / 350 / 360 |
+| `p1-pickup-boundary`, `p1-pickup-capacity` (text) | pickup radius 1.0 (+ height rule) |
+| `p1-pulse-stun-push`, `-boundary`, `-cooldown`, `-empty`, `-prevents-hit`, `-push-into-zone`, `-no-light` (text) | pulse cost 3, 3D radius 5 from feet+0.8, push 4 m over 15 ticks, cooldown 180 ticks, +5 per stun |
+| `p1-hit-drop` | dropped motes now stay as a ring (motes_active 2/3), shade recoils; second hit still lands at t91 |
+| `p1-lit-expels-shade`, `p1-safe-zone-overlap`, `p1-shade-safe-radius` | zone push-out is 0.2 m/tick (not instant); a shade starts in `wander` and only chases within 12 m (18 to give up) |
+| `p1-shade-spawn-schedule` | 2 shades at t300 then every 8 s (Night 1) on fixed points |
+| `p1-inputs-accept-dash` | dash exists now: a dash from standing is 2.8 m |
+
+**Unchanged and still green:** movement, diagonal, camera yaw, jump, setup/time model, ticks-zero, lose-no-flames, lose-dawn, shade-chase, shade ids, bad-file cases, `p1-end-priority-flames-dawn`, `p1-mote-respawn`, `p1-pulse-no-light`, `p0-smoke`.
+
+**Order change:** the end check is now no_flames → all_lit → dawn (was all_lit first). No p1 scenario depended on the old order (`p1-lit-expels-shade` replaced the impossible case earlier).
+
+**Handoff note:** `p2-n1-schedule` (step 4) expects `night_start` at tick 1, which the handoff lists under step 7. I implemented only that one event in step 4 so the scenario's expected values stayed untouched.
+

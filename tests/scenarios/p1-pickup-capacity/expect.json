@@ -1,5 +1,5 @@
 {
-  "requirement": "P1-13 carry_capacity 10: carried 9 and three motes in range -> exactly one pickup (carried 10), the other two stay on the ground",
+  "requirement": "P1-13 (v1.1) carry_capacity 10: carried 9 with two motes within 1.0 m (the third is 1.414 m away) -> exactly one pickup (carried 10), the other stays on the ground: motes_active 3 -> 2",
   "seed": 1,
   "ticks": 10,
   "events": [

@@ -1,5 +1,5 @@
 {
-  "requirement": "P1-27 pulse costs pulse_cost 1 carried (3->2), stuns shades within pulse_radius 6 for 2 s, pushes them 4 m away (x 4->8), score per_stun 20. Stunned shade does not move (t60 still x=8); chase again at t130 (stun lasted 120 ticks, boundary Q9). No hit afterwards (dist ~7.3). Both edges (review finding): stunned through t120 (120 ticks counted from the pulse tick 1), chase at t121 and moving again: 8-1/15 = 7.933",
+  "requirement": "P1-27 (v1.1) pulse costs 3 (3->0), 3D distance from (0,0.8,0) to (4,1,0) = 4.005 <= 5 -> hit: +5 per_stun, stunned 120 ticks, pushed 4 m over 15 ticks (t1 x = 4+4/15 = 4.267; x = 8 from t15). Stunned shade does not move: still 8 at t60 and t120. At t121 the stun is over and it chases (8 <= 12): 8-1/15 = 7.933; t130 chase again. No hit afterwards",
   "seed": 1,
   "ticks": 130,
   "snapshot_every": 1,
@@ -28,21 +28,21 @@
             1,
             0
           ],
-          "state": "chase"
+          "state": "wander"
         }
       ]
     },
     {
       "tick": 1,
-      "score": 20,
+      "score": 5,
       "player": {
-        "carried": 2
+        "carried": 0
       },
       "shades": [
         {
           "id": "S1",
           "pos": [
-            8,
+            4.267,
             1,
             0
           ],
@@ -61,20 +61,6 @@
             0
           ],
           "state": "stunned"
-        }
-      ]
-    },
-    {
-      "tick": 130,
-      "score": 20,
-      "player": {
-        "carried": 2,
-        "flames": 3
-      },
-      "shades": [
-        {
-          "id": "S1",
-          "state": "chase"
         }
       ]
     },
@@ -102,6 +88,20 @@
             1,
             0
           ],
+          "state": "chase"
+        }
+      ]
+    },
+    {
+      "tick": 130,
+      "score": 5,
+      "player": {
+        "carried": 0,
+        "flames": 3
+      },
+      "shades": [
+        {
+          "id": "S1",
           "state": "chase"
         }
       ]

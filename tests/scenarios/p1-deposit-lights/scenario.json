@@ -4,7 +4,7 @@
   "motes": [],
   "shades": [],
   "player": {
-    "carried": 5
+    "carried": 10
   },
   "lanterns": [
     {
@@ -12,7 +12,7 @@
       "pos": [
         0,
         0,
-        3
+        2
       ]
     }
   ]

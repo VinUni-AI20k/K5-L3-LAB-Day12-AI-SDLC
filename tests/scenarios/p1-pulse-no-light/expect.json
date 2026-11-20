@@ -1,5 +1,5 @@
 {
-  "requirement": "P1-29 carried 0 < pulse_cost 1: pulse does nothing (no event, no stun, no score); shade keeps chasing: 4-1/15 = 3.933",
+  "requirement": "P1-29 (v1.1) carried 0 < pulse_cost 3: pulse does nothing (no event, no stun, no score); the shade (wander, 4 m away <= 12) starts chasing: 4-1/15 = 3.933",
   "seed": 1,
   "ticks": 10,
   "snapshot_every": 1,

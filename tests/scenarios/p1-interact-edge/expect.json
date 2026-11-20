@@ -1,5 +1,5 @@
 {
-  "requirement": "P1-18 interact fires on the false->true edge only and targets the nearest UNLIT lantern. L1 at 1 m, L2 at 2 m, carried 10. Held t0..t4: one deposit into L1 (5), nothing into L2 while held (t10: carried 5, L2 deposited 0). Re-press at t10: L1 is lit so L2 gets 5 (t11 carried 0). Score 2*(5*10+100) = 300",
+  "requirement": "P1-18 (v1.1) interact fires on the false->true edge only and targets the nearest UNLIT lantern. L1 (1 m, holds 5 of 10) and L2 (2 m == interact_radius), carried 10. Held t0..t4: one deposit min(10, 10-5)=5 into L1 (lit, score 5*10+100=150); nothing into L2 while held (t10: carried 5, L2 deposited 0). Re-press at t10: L1 is lit, so L2 gets min(5, 10)=5 (t11: carried 0, L2 deposited 5, not lit, score 150+50=200)",
   "seed": 1,
   "ticks": 20,
   "snapshot_every": 1,
@@ -10,7 +10,7 @@
       "data": {
         "lantern_id": "L1",
         "amount": 5,
-        "deposited": 5
+        "deposited": 10
       }
     },
     {
@@ -27,13 +27,6 @@
         "lantern_id": "L2",
         "amount": 5,
         "deposited": 5
-      }
-    },
-    {
-      "name": "lantern_lit",
-      "tick": 11,
-      "data": {
-        "lantern_id": "L2"
       }
     }
   ],
@@ -67,7 +60,7 @@
     },
     {
       "tick": 11,
-      "score": 300,
+      "score": 200,
       "player": {
         "carried": 0
       },
@@ -78,7 +71,7 @@
         },
         {
           "id": "L2",
-          "lit": true,
+          "lit": false,
           "deposited": 5
         },
         {

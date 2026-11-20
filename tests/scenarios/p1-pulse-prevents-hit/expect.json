@@ -1,5 +1,5 @@
 {
-  "requirement": "P1-32 pulse (step 5) runs before hits (step 8): shade at 0.5 m is stunned and pushed to 4.5 so there is no hit; flames stay 3 through t60",
+  "requirement": "P1-32 (v1.1) pulse (phase 7) runs before touch (phase 9): shade at 0.5 m (3D 0.54 <= 5) is stunned and starts its 4 m push: t1 x = 0.5+4/15 = 0.767; a stunned shade cannot hit, so flames stay 3 through t60; push done by t15: x = 4.5. Score 5, carried 3->0",
   "seed": 1,
   "ticks": 60,
   "snapshot_every": 1,
@@ -17,10 +17,27 @@
   "snapshots": [
     {
       "tick": 1,
-      "score": 20,
+      "score": 5,
       "player": {
         "flames": 3,
         "carried": 0
+      },
+      "shades": [
+        {
+          "id": "S1",
+          "pos": [
+            0.767,
+            1,
+            0
+          ],
+          "state": "stunned"
+        }
+      ]
+    },
+    {
+      "tick": 60,
+      "player": {
+        "flames": 3
       },
       "shades": [
         {
@@ -33,12 +50,6 @@
           "state": "stunned"
         }
       ]
-    },
-    {
-      "tick": 60,
-      "player": {
-        "flames": 3
-      }
     }
   ],
   "absent_events": [

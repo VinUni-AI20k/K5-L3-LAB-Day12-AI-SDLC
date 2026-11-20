@@ -1,5 +1,5 @@
 {
-  "requirement": "P1-17 lantern at 3.001 > interact_radius 3: interact does nothing (no deposit, carried stays 5)",
+  "requirement": "P1-17 (v1.1) lantern at 2.001 > interact_radius 2: interact does nothing (no deposit, carried stays 5)",
   "seed": 1,
   "ticks": 10,
   "snapshots": [

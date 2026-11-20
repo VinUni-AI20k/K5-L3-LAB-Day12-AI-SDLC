@@ -1,12 +1,12 @@
 {
-  "requirement": "P1-10 defaults (no scenario): tick0 has 30 motes (picked up only in step 0, after the snapshot), 5 lanterns L1..L5 unlit with L1 at (0,0,25), no shades; first shade_spawned at 5 s = tick 300 (assumption Q7); time_left t100 = 300-100/60 = 298.333, t300 = 295. Seed 1",
+  "requirement": "P1-10 (v1.1) defaults, Night 1: tick 0 has 20 motes on fixed spawn points (none within 1.0 m of the start, so none picked in step 0), 5 unlit lanterns at the ticket positions, no shades; 2 shades at t300 (state spawning); time_left t100 = 300-100/60 = 298.333, t300 = 295. Seed 1",
   "seed": 1,
   "ticks": 300,
   "snapshots": [
     {
       "tick": 0,
       "state": "playing",
-      "motes_active": 30,
+      "motes_active": 20,
       "shades": [],
       "time_left_s": 300,
       "score": 0,
@@ -32,21 +32,41 @@
         },
         {
           "id": "L2",
+          "pos": [
+            23.8,
+            0,
+            7.7
+          ],
           "lit": false,
           "deposited": 0
         },
         {
           "id": "L3",
+          "pos": [
+            14.7,
+            0,
+            -20.2
+          ],
           "lit": false,
           "deposited": 0
         },
         {
           "id": "L4",
+          "pos": [
+            -14.7,
+            0,
+            -20.2
+          ],
           "lit": false,
           "deposited": 0
         },
         {
           "id": "L5",
+          "pos": [
+            -23.8,
+            0,
+            7.7
+          ],
           "lit": false,
           "deposited": 0
         }
@@ -62,7 +82,10 @@
       "time_left_s": 295,
       "shades": [
         {
-          "state": "chase"
+          "state": "spawning"
+        },
+        {
+          "state": "spawning"
         }
       ]
     }
@@ -70,7 +93,17 @@
   "events": [
     {
       "name": "shade_spawned",
-      "tick": 300
+      "tick": 300,
+      "data": {
+        "id": "S1"
+      }
+    },
+    {
+      "name": "shade_spawned",
+      "tick": 300,
+      "data": {
+        "id": "S2"
+      }
     }
   ],
   "absent_events": [

@@ -201,6 +201,21 @@ Scenario folders live in `tests/scenarios/`. Expected values are derived by hand
 - **Charms snapshot:** `respawn_s` is 0 while available.
 - **Score** is per night in headless runs. The web game sums the nights won.
 
+**Phase 2 build decisions (the ticket is silent; simplest option chosen):**
+- `night_start` is emitted by the first step (tick 1), also on Nights 2 and 3.
+- Shade schedule: every night starts with 2 shades at tick 300, then one every 8 / 7 / 6 s; the cap (6 / 8 / 10) counts shades spawned in total (shades never die). Spawn point = random point ≥ 15 m (XZ) from Mây with no shade within 1 m; none free: that spawn is skipped.
+- Shade timers: `spawning` 60 ticks, `stunned` 120, `recoil` 60; a counter set at step k is 0 again at step k+N (so `recoil` moves on 59 steps ≈ 1.97 m, the charm boosts 599 steps).
+- A shade being pushed out of a lit zone moves straight towards the nearest point outside every lit zone (the edge, or the crossing of two edges when zones overlap) at 0.2 m/tick, cannot hit, and does not chase meanwhile.
+- A pulse hits shades in any state (spawning, recoil included) and always restarts stun and push; a drifter is hit only in `chase` or `flee`.
+- Shades in `wander` do not move. During a fall wait they treat Mây as absent (they wander).
+- Drifters: a `removed` drifter shows `stolen: 0`; idle glide targets are seeded picks from the night's shade spawn points; spawn points for new drifters are the same points. A chase that no longer meets "carried ≥ 5 and ≤ 15 m" goes back to idle.
+- Dropped motes from a drifter appear on the drifter's spot at ground height; from a shade hit on the 1.5–2.5 m ring (seeded).
+- Scenario `lanterns` with an id the night does not have (e.g. L6 on Night 1) are ignored. `deposited` above `lantern_cost` is exit 2. A lantern with `deposited >= cost` is lit.
+- Scenario `player.invuln_ticks`, `pulse_cd_ticks`, `dash_cd_ticks`, `charm_ticks` are counters at tick 0 (same convention as the Timers rule).
+- `end.state` is never `paused` (only snapshots show it). Pause is a toggle on the `pause` false→true edge.
+- Wind: while active it adds 2 m/s in `dir_deg` (from +X, counter-clockwise) to Mây's displacement; `dir_deg` stays the next gust's direction when inactive.
+- Perf: a full Night 3 (21,600 ticks, 999 flames so nothing ends early) runs in about 0.4 s (`tests/perf.test.ts`).
+
 ### Acceptance criteria → verification
 Scenario folders: `tests/scenarios/p2-*/`. A folder with `"pending"` in `expect.json` is skipped until built. **Release requires zero pending.**
 

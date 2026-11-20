@@ -1,5 +1,5 @@
 {
-  "requirement": "P1-25 shades cannot enter safe_radius 6 of a LIT lantern (Q1, boundary Q8). Lantern L1 lit at (20,0,0); S1 starts (30,1,0) chasing the origin along X: reaches dist 6 = (26,1,0) after 4 m (t60) and stays there at t120 (would be 22)",
+  "requirement": "P1-25 (v1.1) shades cannot enter safe_radius 6 of a LIT lantern. L1 lit at (10,0,0), edge at x = 16. S1 (16.5,1,0), chase (16.5 <= 18), moves 1/15 m per tick: t7 x = 16.033 (outside), the next step would be 15.967 (inside) so it is held at x = 16 for the rest of the run (t60, t120); still chase (16 <= 18)",
   "seed": 1,
   "ticks": 120,
   "snapshots": [
@@ -9,10 +9,11 @@
         {
           "id": "S1",
           "pos": [
-            26,
+            16,
             1,
             0
-          ]
+          ],
+          "state": "chase"
         }
       ]
     },
@@ -22,7 +23,7 @@
         {
           "id": "S1",
           "pos": [
-            26,
+            16,
             1,
             0
           ],

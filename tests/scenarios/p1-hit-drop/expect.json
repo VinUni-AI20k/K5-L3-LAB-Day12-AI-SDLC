@@ -1,5 +1,5 @@
 {
-  "requirement": "P1-26 shade within hit radius 1: -1 flame (3->2), drops floor(5*0.5)=2 (carried 3, lost: motes_active stays 0, Q4), no score change; then 1.5 s invulnerability = 90 ticks: still flames 2 at t80 even though the shade sits on the player. Both edges (review finding): invulnerability counted from hit tick 1 for 90 ticks, so t90 still flames 2 and the next hit lands at t91: flames 1, dropped floor(3*0.5)=1, carried 2",
+  "requirement": "P1-26 (v1.1) shade (starts in wander) within hit radius 1: -1 flame (3->2), drops floor(5/2)=2 as dropped motes on a 1.5-2.5 m ring (out of pickup reach: motes_active 2), carried 3, no score change; shade recoils 2 m over 60 ticks, then chases back. Invulnerability 90 ticks counted from the hit tick: t90 still flames 2; the shade is touching again by t91, so the next hit lands at t91: flames 1, dropped floor(3/2)=1, carried 2, motes_active 3",
   "seed": 1,
   "ticks": 91,
   "snapshot_every": 1,
@@ -27,7 +27,7 @@
     {
       "tick": 1,
       "score": 0,
-      "motes_active": 0,
+      "motes_active": 2,
       "player": {
         "flames": 2,
         "carried": 3
@@ -53,7 +53,8 @@
       "player": {
         "flames": 1,
         "carried": 2
-      }
+      },
+      "motes_active": 3
     }
   ],
   "end": {

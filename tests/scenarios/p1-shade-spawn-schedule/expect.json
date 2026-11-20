@@ -1,7 +1,7 @@
 {
-  "requirement": "P1-45 default shade schedule: first at 5 s = t300, second 30 s later = t2100 (300+1800). Player has 99 flames to survive; ids S1 then S2",
+  "requirement": "P1-45 (v1.1) Night 1 shade schedule: 2 at 5 s = t300 (S1, S2), then one every 8 s: t780 (S3), t1260 (S4) (300 + 480k). Player has 99 flames to survive; spawn points are 37 m from the start, so always valid (>= 15 m)",
   "seed": 1,
-  "ticks": 2100,
+  "ticks": 1300,
   "snapshot_every": 100,
   "events": [
     {
@@ -13,9 +13,23 @@
     },
     {
       "name": "shade_spawned",
-      "tick": 2100,
+      "tick": 300,
       "data": {
         "id": "S2"
+      }
+    },
+    {
+      "name": "shade_spawned",
+      "tick": 780,
+      "data": {
+        "id": "S3"
+      }
+    },
+    {
+      "name": "shade_spawned",
+      "tick": 1260,
+      "data": {
+        "id": "S4"
       }
     }
   ],
@@ -25,7 +39,7 @@
       "shades": []
     },
     {
-      "tick": 2100,
+      "tick": 1300,
       "state": "playing"
     }
   ]

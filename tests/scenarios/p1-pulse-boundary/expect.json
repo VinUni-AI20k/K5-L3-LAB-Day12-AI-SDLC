@@ -1,8 +1,7 @@
 {
-  "requirement": "P1-28 pulse radius is dist <= 6: S1 at exactly 6 is stunned and pushed to 10; S2 at 6.001 is not (stunned_ids [S1]) and moves 1/15 m toward the player: 6.001-0.06667=5.934. Score 20, carried 1->0",
+  "requirement": "P1-28 (v1.1) pulse range is 3D <= 5 from feet+0.8: shades at the centre height 0.8, so 3D = XZ. S1 at exactly 5 is hit (stunned_ids [S1]), pushed 4 m over 15 ticks -> x = 5+4 = 9 at t20 (y becomes ground+1 = 1), stunned (120 ticks). S2 at 5.001 is not hit: it chases at 4/60 m per tick for 20 ticks: 5.001 - 1.3333 = 3.668. Score 5 (per_stun), carried 3->0",
   "seed": 1,
-  "ticks": 10,
-  "snapshot_every": 1,
+  "ticks": 20,
   "events": [
     {
       "name": "pulse",
@@ -16,8 +15,8 @@
   ],
   "snapshots": [
     {
-      "tick": 1,
-      "score": 20,
+      "tick": 20,
+      "score": 5,
       "player": {
         "carried": 0
       },
@@ -25,7 +24,7 @@
         {
           "id": "S1",
           "pos": [
-            10,
+            9,
             1,
             0
           ],
@@ -36,7 +35,7 @@
           "pos": [
             0,
             1,
-            5.934
+            3.668
           ],
           "state": "chase"
         }

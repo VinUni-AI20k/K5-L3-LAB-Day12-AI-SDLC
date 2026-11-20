@@ -70,6 +70,8 @@ export class Sim {
     if (sc.player?.carried !== undefined) this.player.carried = sc.player.carried;
     if (sc.player?.flames !== undefined) this.player.flames = sc.player.flames;
     if (sc.player?.dash_cd_ticks !== undefined) this.dashCd = sc.player.dash_cd_ticks;
+    if (sc.player?.invuln_ticks !== undefined) this.invulnUntil = sc.player.invuln_ticks; // counters at tick 0
+    if (sc.player?.pulse_cd_ticks !== undefined) this.pulseReadyAt = sc.player.pulse_cd_ticks;
 
     // lanterns: the night's fixed positions, then per-id overrides
     this.def.lanterns.forEach((pos, i) => this.lanterns.push({ id: `L${i + 1}`, pos: [...pos], deposited: 0, lit: false }));
@@ -394,16 +396,25 @@ export class Sim {
       }
     }
 
-    // 6. safe zones: a shade inside a lit zone is pushed radially out at 0.2 m per tick, harmless meanwhile
+    // 6. safe zones: a shade inside a lit zone is pushed towards the nearest point outside every lit zone at 0.2 m per tick, harmless meanwhile
     const pushedOut = new Set<Shade>();
     for (const sh of this.shades) {
-      const l = this.lanterns.find((x) => x.lit && dist2d(sh.pos, x.pos) < TUNING.safe_radius - 1e-9);
-      if (!l) continue;
-      const d = dist2d(sh.pos, l.pos);
-      const nd = Math.min(TUNING.safe_radius, d + WORLD.safe_push_per_tick);
-      const ux = d === 0 ? 1 : (sh.pos[0] - l.pos[0]) / d;
-      const uz = d === 0 ? 0 : (sh.pos[2] - l.pos[2]) / d;
-      sh.pos = [l.pos[0] + ux * nd, sh.pos[1], l.pos[2] + uz * nd];
+      if (!this.insideLitZone(sh.pos)) continue;
+      const out = this.nearestOutside(sh.pos[0], sh.pos[2]);
+      let tx: number, tz: number;
+      if (out) [tx, tz] = out;
+      else { // no free point (zones cover each other): leave along the radius of the nearest lit lantern
+        const l = this.lanterns.filter((x) => x.lit).sort((m, n) => dist2d(sh.pos, m.pos) - dist2d(sh.pos, n.pos))[0]!;
+        const d = dist2d(sh.pos, l.pos);
+        const ux = d === 0 ? 1 : (sh.pos[0] - l.pos[0]) / d; // on the lantern itself: towards +X
+        const uz = d === 0 ? 0 : (sh.pos[2] - l.pos[2]) / d;
+        tx = l.pos[0] + ux * TUNING.safe_radius;
+        tz = l.pos[2] + uz * TUNING.safe_radius;
+      }
+      const dx = tx - sh.pos[0], dz = tz - sh.pos[2];
+      const dl = Math.hypot(dx, dz);
+      const step = Math.min(WORLD.safe_push_per_tick, dl);
+      if (dl > 0) sh.pos = [sh.pos[0] + (dx / dl) * step, sh.pos[1], sh.pos[2] + (dz / dl) * step];
       pushedOut.add(sh);
     }
 

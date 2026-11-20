@@ -6,22 +6,23 @@
     {
       "id": "S1",
       "pos": [
-        30,
+        16.5,
         1,
         0
-      ]
+      ],
+      "state": "chase"
     }
   ],
   "lanterns": [
     {
       "id": "L1",
       "pos": [
-        20,
+        10,
         0,
         0
       ],
       "lit": true,
-      "deposited": 5
+      "deposited": 10
     }
   ]
 }

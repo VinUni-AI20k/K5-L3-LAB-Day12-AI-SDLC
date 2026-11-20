@@ -1,8 +1,7 @@
 {
-  "requirement": "P1-41 (review finding) a pulse push may not leave a shade inside a lit zone. Lit L1 at (10,0,0): S1 (2,1,0) is in pulse range (2<=6) and is pushed to x=6, which is 4 m from L1 (<6), so it ends on the zone edge x=10-6=4 -> (4,1,0), still stunned",
+  "requirement": "P1-41 (v1.1) a pulse push may not leave a shade inside a lit zone. Lit L1 at (10,0,0): S1 (2,1,0) is in 3D range (2.01 <= 5), pushed 4/15 m per tick towards +X. The zone edge is x = 10-6 = 4: pushes up to x = 3.87 (t7) are free, the next would be 4.13 (inside) so it is held on the edge x = 4 for the rest of the push -> (4,1,0) at t20, still stunned",
   "seed": 1,
-  "ticks": 1,
-  "snapshot_every": 1,
+  "ticks": 20,
   "events": [
     {
       "name": "pulse",
@@ -16,7 +15,7 @@
   ],
   "snapshots": [
     {
-      "tick": 1,
+      "tick": 20,
       "shades": [
         {
           "id": "S1",

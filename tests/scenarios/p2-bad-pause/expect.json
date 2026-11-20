@@ -3,6 +3,5 @@
   "seed": 1,
   "ticks": 10,
   "exit_code": 2,
-  "stderr_match": "pause",
-  "pending": "Phase 2 kickoff: written before implementation (v1.1). Remove this flag when the feature is built."
+  "stderr_match": "pause"
 }

@@ -67,7 +67,6 @@ Values are in `game.contract.json` → `tuning.score` (and `src/sim/config.ts`).
 Nothing is added beyond the ticket's requirements. Web-only polish that does not touch `src/sim` or headless output: the sky and fog warm up as lanterns are lit, a ring of light on a pulse, a red flash on a hit, a blinking warning on dropped fireflies about to vanish.
 
 ## Known gaps
-- Audio (synthesised with WebAudio, `src/web/audio.ts`) was never listened to by the author's agent: see the manual check list in `docs/proof/phase-2/summary.md`.
 - No gust warning (leaves) is drawn before a wind gust.
 
 ## Project notes

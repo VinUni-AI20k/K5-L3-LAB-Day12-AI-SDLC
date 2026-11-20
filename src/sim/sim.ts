@@ -8,7 +8,9 @@ import type { Charm, Drifter, GameState, InputState, Lantern, Mote, Scenario, Sh
 const dist2d = (a: Vec3, b: Vec3): number => Math.hypot(a[0] - b[0], a[2] - b[2]);
 
 export class Sim {
-  tick = 0;
+  tick = 0; // wall ticks: every step counts, also while paused
+  st = 0; // sim ticks: only steps that ran the game (time, timers and spawns are counted in these)
+  paused = false;
   state: GameState = "playing";
   score = 0;
   readonly duration: number;
@@ -47,7 +49,7 @@ export class Sim {
   private spawned = 0; // scheduled shades spawned so far
   private invulnUntil = 0; // player cannot be hit on steps whose resulting tick is < this
   private pulseReadyAt = 0; // next pulse allowed on a step whose resulting tick is >= this
-  private prev = { jump: false, dash: false, interact: false, pulse: false };
+  private prev = { jump: false, dash: false, interact: false, pulse: false, pause: false };
 
   constructor(seed: number, sc: Scenario = {}, night: 1 | 2 | 3 = 1) {
     this.night = night;
@@ -113,7 +115,7 @@ export class Sim {
   }
 
   get timeLeft(): number {
-    return this.duration - this.tick / TICK_RATE;
+    return this.duration - this.st / TICK_RATE;
   }
 
   shadeState(s: Shade): ShadeState {
@@ -214,18 +216,34 @@ export class Sim {
   step(inp: InputState): SimEvent[] {
     const ev: SimEvent[] = [];
     if (this.state !== "playing") return ev;
-    const T = this.tick + 1;
-    const emit = (name: SimEvent["name"], data: Record<string, unknown>) => ev.push({ type: "event", tick: T, name, data });
+    const W = ++this.tick; // wall tick: events are stamped with it
+    const emit = (name: SimEvent["name"], data: Record<string, unknown>) => ev.push({ type: "event", tick: W, name, data });
     const p = this.player;
+    if (W === 1) emit("night_start", { night: this.night }); // tick 0 has no events, so the first step announces the night
 
-    if (T === 1) emit("night_start", { night: this.night }); // tick 0 has no events, so the first step announces the night
+    // 0. pause first: the pausing step stops here; while paused nothing but the tick count moves; the resuming step runs fully
+    const pauseEdge = !!inp.pause && !this.prev.pause;
+    const wasPaused = this.paused;
+    if (pauseEdge) this.paused = !this.paused;
+    this.prev.pause = !!inp.pause;
+    if (pauseEdge && this.paused) { // just paused
+      this.prev = { ...this.prev, jump: inp.jump, dash: inp.dash, interact: inp.interact, pulse: inp.pulse };
+      emit("paused", {});
+      return ev;
+    }
+    if (this.paused) { // still paused: keep button state in sync so a held button is not an edge on resume
+      this.prev = { ...this.prev, jump: inp.jump, dash: inp.dash, interact: inp.interact, pulse: inp.pulse };
+      return ev;
+    }
+    if (wasPaused) emit("resumed", {});
+    const T = ++this.st; // sim tick used by every rule below
 
     // 1. input edges
     const jumpEdge = inp.jump && !this.prev.jump;
     const dashEdge = inp.dash && !this.prev.dash;
     const interactEdge = inp.interact && !this.prev.interact && this.fallWait === 0;
     const pulseEdge = inp.pulse && !this.prev.pulse && this.fallWait === 0;
-    this.prev = { jump: inp.jump, dash: inp.dash, interact: inp.interact, pulse: inp.pulse };
+    this.prev = { ...this.prev, jump: inp.jump, dash: inp.dash, interact: inp.interact, pulse: inp.pulse };
     this.windActive = this.windEnabled && this.windOn(T);
     if (this.windEnabled && T >= 1800 && T % 1800 === 300) this.windNextDir = r3(this.windRng() * 360); // gust over: pick the next direction
 
@@ -543,7 +561,6 @@ export class Sim {
     }
 
     // 11. end check: no_flames, then all_lit (even on the dawn tick), then dawn
-    this.tick = T;
     const left = this.timeLeft;
     if (p.flames <= 0) {
       this.state = "lost";
@@ -564,9 +581,9 @@ export class Sim {
     return {
       type: "snapshot",
       tick: this.tick,
-      sim_tick: this.tick,
+      sim_tick: this.st,
       night: this.night,
-      state: this.state,
+      state: this.paused ? "paused" : this.state,
       time_left_s: r3(Math.max(0, this.timeLeft)),
       score: r3(this.score),
       wind: { active: this.windActive, dir_deg: this.windNextDir },
@@ -576,10 +593,10 @@ export class Sim {
         grounded: this.grounded,
         flames: this.player.flames,
         carried: this.player.carried,
-        invuln: this.invulnUntil - this.tick > 0,
+        invuln: this.invulnUntil - this.st > 0,
         charm_s: r3(this.charmTicks / TICK_RATE),
         dash_cd_s: r3(this.dashCd / TICK_RATE),
-        pulse_cd_s: r3(Math.max(0, this.pulseReadyAt - this.tick) / TICK_RATE),
+        pulse_cd_s: r3(Math.max(0, this.pulseReadyAt - this.st) / TICK_RATE),
       },
       lanterns: this.lanterns.map((l) => ({ id: l.id, pos: v(l.pos), lit: l.lit, deposited: l.deposited })),
       shades: this.shades.map((s) => ({ id: s.id, pos: v(s.pos), state: this.shadeState(s) })),

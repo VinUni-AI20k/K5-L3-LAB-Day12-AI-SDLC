@@ -30,7 +30,7 @@ export interface Scenario {
 export interface SimEvent {
   type: "event";
   tick: number;
-  name: "drifter_steal" | "drifter_drop" | "night_start" | "dash" | "charm_picked" | "mote_picked" | "deposit" | "lantern_lit" | "pulse" | "player_hit" | "shade_spawned" | "game_over";
+  name: "paused" | "resumed" | "drifter_steal" | "drifter_drop" | "night_start" | "dash" | "charm_picked" | "mote_picked" | "deposit" | "lantern_lit" | "pulse" | "player_hit" | "shade_spawned" | "game_over";
   data: Record<string, unknown>;
 }
 

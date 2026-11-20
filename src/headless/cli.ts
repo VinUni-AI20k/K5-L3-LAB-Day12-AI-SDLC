@@ -47,7 +47,7 @@ export function parseArgs(argv: string[]): Args {
     inputs: m.get("inputs"),
     snapshotEvery: int("snapshot-every", 10),
   };
-  if (args.night !== 1) throw new UsageError("only --night 1 is supported");
+  if (![1, 2, 3].includes(args.night)) throw new UsageError("--night must be 1, 2 or 3");
   if (args.ticks < 0 || args.snapshotEvery <= 0) throw new UsageError("--ticks must be >= 0 and --snapshot-every > 0");
   return args;
 }
@@ -69,7 +69,7 @@ function readJson(path: string, what: string): unknown {
 export function run(args: Args): string {
   const scenario = args.scenario ? parseScenario(readJson(args.scenario, "scenario")) : {};
   const frames = args.inputs ? parseInputs(readJson(args.inputs, "inputs")) : [];
-  const sim = new Sim(args.seed, scenario);
+  const sim = new Sim(args.seed, scenario, args.night as 1 | 2 | 3);
   const timeline = new InputTimeline(frames);
   const lines: string[] = [JSON.stringify(sim.snapshot())];
   for (let k = 0; k < args.ticks && sim.state === "playing"; k++) {

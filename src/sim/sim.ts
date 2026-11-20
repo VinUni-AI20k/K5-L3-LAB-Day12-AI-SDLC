@@ -1,6 +1,7 @@
 // The whole game rules. Pure and deterministic: shared by the web build and the headless CLI.
 // Step order (docs/notes/assumptions.md): input, move, pickup, interact, pulse, shade spawn, shade move, hits, mote respawn, time, end check.
 import { DT, TICK_RATE, TUNING, WORLD, toTicks } from "./config";
+import { NIGHTS, groundHeight, type NightDef } from "./maps";
 import { createRng, r3 } from "./rng";
 import type { GameState, InputState, Lantern, Mote, Scenario, Shade, ShadeState, SimEvent, Vec3 } from "./types";
 
@@ -11,7 +12,23 @@ export class Sim {
   state: GameState = "playing";
   score = 0;
   readonly duration: number;
+  readonly night: 1 | 2 | 3;
+  readonly def: NightDef;
   player: { pos: Vec3; vy: number; carried: number; flames: number } = { pos: [0, 0, 0], vy: 0, carried: 0, flames: TUNING.flames };
+  // movement state (step 2)
+  vh: [number, number] = [0, 0]; // horizontal velocity used on the last step
+  grounded = true;
+  facing: [number, number] = [0, 1];
+  private dashLeft = 0; // dash steps still to move
+  private dashCd = 0; // ticks until the next dash is allowed (counter: blocks the following N-1 steps)
+  private dashDir: [number, number] = [0, 1];
+  private launched = false;
+  private launchV: [number, number] = [0, 0];
+  private fallWait = 0; // ticks of inert waiting after a fall
+  private windRng: () => number;
+  private windNextDir = 0; // degrees: direction of the current or next gust
+  private windEnabled: boolean;
+  windActive = false;
   motes: Mote[] = [];
   shades: Shade[] = [];
   lanterns: Lantern[] = [];
@@ -24,26 +41,32 @@ export class Sim {
   private spawned = 0;
   private invulnUntil = 0; // player cannot be hit on steps whose resulting tick is < this
   private pulseReadyAt = 0; // next pulse allowed on a step whose resulting tick is >= this
-  private prev = { jump: false, interact: false, pulse: false };
+  private prev = { jump: false, dash: false, interact: false, pulse: false };
 
-  constructor(seed: number, sc: Scenario = {}) {
+  constructor(seed: number, sc: Scenario = {}, night: 1 | 2 | 3 = 1) {
+    this.night = night;
+    this.def = NIGHTS[night];
     this.rng = createRng(seed);
-    this.duration = sc.time_left_s ?? TUNING.night1_duration_s;
+    this.windRng = createRng((seed ^ 0x57494e44) >>> 0);
+    this.windNextDir = r3(this.windRng() * 360);
+    this.windEnabled = sc.wind_enabled ?? this.def.wind;
+    this.facing = [...this.def.startFacing];
+    this.dashDir = [...this.def.startFacing];
+    this.player.pos = [...this.def.start];
+    this.duration = sc.time_left_s ?? this.def.duration_s;
     this.respawnMotes = sc.random_motes ?? true;
     this.spawnShades = sc.random_shades ?? true;
 
     if (sc.player?.pos) this.player.pos = [...sc.player.pos];
     if (sc.player?.carried !== undefined) this.player.carried = sc.player.carried;
     if (sc.player?.flames !== undefined) this.player.flames = sc.player.flames;
+    if (sc.player?.dash_cd_ticks !== undefined) this.dashCd = sc.player.dash_cd_ticks;
 
-    // lanterns: ring of 5, then per-id overrides
-    for (let i = 0; i < TUNING.lantern_count_night1; i++) {
-      const a = (i * 2 * Math.PI) / TUNING.lantern_count_night1;
-      this.lanterns.push({ id: `L${i + 1}`, pos: [WORLD.lantern_ring_radius * Math.sin(a), 0, WORLD.lantern_ring_radius * Math.cos(a)], deposited: 0, lit: false });
-    }
+    // lanterns: the night's fixed positions, then per-id overrides
+    this.def.lanterns.forEach((pos, i) => this.lanterns.push({ id: `L${i + 1}`, pos: [...pos], deposited: 0, lit: false }));
     for (const o of sc.lanterns ?? []) {
       const l = this.lanterns.find((x) => x.id === o.id);
-      if (!l) continue;
+      if (!l) continue; // an id this night does not have is ignored
       if (o.pos) l.pos = [...o.pos];
       if (o.deposited !== undefined) l.deposited = o.deposited;
       if (o.lit !== undefined) l.lit = o.lit;
@@ -121,6 +144,21 @@ export class Sim {
     }
   }
 
+  /** Night 3 gusts: every 30 s a 5 s gust (ticks 1800k .. 1800k+299 for k >= 1; Q2-8). */
+  private windOn(T: number): boolean {
+    return T >= 1800 && T % 1800 < 300;
+  }
+
+  private respawnPlayer(T: number): void {
+    this.player.pos = [...this.def.start];
+    this.player.vy = 0;
+    this.grounded = true;
+    this.launched = false;
+    this.dashLeft = 0;
+    this.facing = [...this.def.startFacing];
+    this.invulnUntil = T + toTicks(TUNING.invuln_s);
+  }
+
   /** One fixed step (1/60 s). Returns the events of this step, stamped tick = k+1. */
   step(inp: InputState): SimEvent[] {
     const ev: SimEvent[] = [];
@@ -131,32 +169,104 @@ export class Sim {
 
     // 1. input edges
     const jumpEdge = inp.jump && !this.prev.jump;
-    const interactEdge = inp.interact && !this.prev.interact;
-    const pulseEdge = inp.pulse && !this.prev.pulse;
-    this.prev = { jump: inp.jump, interact: inp.interact, pulse: inp.pulse };
+    const dashEdge = inp.dash && !this.prev.dash;
+    const interactEdge = inp.interact && !this.prev.interact && this.fallWait === 0;
+    const pulseEdge = inp.pulse && !this.prev.pulse && this.fallWait === 0;
+    this.prev = { jump: inp.jump, dash: inp.dash, interact: inp.interact, pulse: inp.pulse };
+    this.windActive = this.windEnabled && this.windOn(T);
+    if (this.windEnabled && T >= 1800 && T % 1800 === 300) this.windNextDir = r3(this.windRng() * 360); // gust over: pick the next direction
 
-    // 2. player move (XZ by camera yaw) + vertical
-    let [mx, mz] = inp.move;
-    const len = Math.hypot(mx, mz);
-    if (len > 1) { mx /= len; mz /= len; }
-    const th = (inp.cam_yaw_deg * Math.PI) / 180;
-    const wx = mx * Math.cos(th) + mz * Math.sin(th);
-    const wz = -mx * Math.sin(th) + mz * Math.cos(th);
-    let nx = p.pos[0] + wx * TUNING.player_speed * DT;
-    let nz = p.pos[2] + wz * TUNING.player_speed * DT;
-    const rr = Math.hypot(nx, nz);
-    if (rr > WORLD.island_radius) { nx = (nx / rr) * WORLD.island_radius; nz = (nz / rr) * WORLD.island_radius; } // fall_enabled=false
-    p.pos[0] = nx;
-    p.pos[2] = nz;
-    if (jumpEdge && p.pos[1] === 0 && p.vy === 0) p.vy = WORLD.jump_speed;
-    if (p.pos[1] > 0 || p.vy > 0) {
-      p.vy -= WORLD.gravity * DT;
-      p.pos[1] += p.vy * DT;
-      if (p.pos[1] <= 0) { p.pos[1] = 0; p.vy = 0; }
+    // 2. timers (counters set at step k block steps k+1..k+N-1; ready again at step k+N)
+    if (this.dashCd > 0) this.dashCd--;
+    if (this.fallWait > 0) {
+      this.fallWait--;
+      if (this.fallWait === 0) this.respawnPlayer(T);
+    }
+    const inert = this.fallWait > 0;
+
+    // 3. move: jump, dash, launch pad, wind; then fall check
+    this.vh = [0, 0];
+    if (!inert) {
+      let [mx, mz] = inp.move;
+      const len = Math.hypot(mx, mz);
+      if (len > 1) { mx /= len; mz /= len; }
+      const th = (inp.cam_yaw_deg * Math.PI) / 180;
+      const wx = mx * Math.cos(th) + mz * Math.sin(th);
+      const wz = -mx * Math.sin(th) + mz * Math.cos(th);
+      const wl = Math.hypot(wx, wz);
+      const moving = wl > 1e-12;
+      if (moving) this.facing = [wx / wl, wz / wl];
+
+      if (jumpEdge && this.grounded) { p.vy = WORLD.jump_speed; this.grounded = false; }
+      if (dashEdge && this.dashCd === 0 && this.dashLeft === 0) {
+        this.dashLeft = toTicks(TUNING.dash_duration_s);
+        this.dashCd = toTicks(TUNING.dash_cooldown_s);
+        this.dashDir = moving ? [wx / wl, wz / wl] : [...this.facing];
+        emit("dash", {});
+      }
+      if (this.grounded && !this.launched) {
+        for (const pad of this.def.pads) {
+          if (Math.hypot(p.pos[0] - pad.center[0], p.pos[2] - pad.center[2]) <= pad.radius && Math.abs(p.pos[1] - pad.center[1]) <= 1) {
+            let dx = 0, dz = -1;
+            if (pad.target !== "minusZ") {
+              const tx = pad.target[0] - p.pos[0], tz = pad.target[1] - p.pos[2];
+              const tl = Math.hypot(tx, tz) || 1;
+              dx = tx / tl; dz = tz / tl;
+            }
+            this.launched = true;
+            this.launchV = [dx * pad.vh, dz * pad.vh];
+            p.vy = pad.vy;
+            this.grounded = false;
+            break;
+          }
+        }
+      }
+      const dashing = this.dashLeft > 0;
+      let vx: number, vz: number;
+      if (dashing) { vx = this.dashDir[0] * TUNING.dash_speed; vz = this.dashDir[1] * TUNING.dash_speed; this.dashLeft--; }
+      else if (this.launched) { vx = this.launchV[0]; vz = this.launchV[1]; }
+      else { vx = wx * TUNING.player_speed; vz = wz * TUNING.player_speed; }
+      this.vh = [vx, vz];
+      let dx = vx * DT, dz = vz * DT;
+      if (this.windActive) {
+        const wd = (this.windNextDir * Math.PI) / 180;
+        dx += Math.cos(wd) * 2 * DT;
+        dz += Math.sin(wd) * 2 * DT;
+      }
+      // horizontal move: a surface more than 0.25 m above the feet blocks (walls, tower); try sliding along one axis
+      const free = (x: number, z: number): boolean => {
+        const h = groundHeight(this.night, x, z);
+        return h === null || h <= p.pos[1] + 0.25;
+      };
+      if (free(p.pos[0] + dx, p.pos[2] + dz)) { p.pos[0] += dx; p.pos[2] += dz; }
+      else if (free(p.pos[0] + dx, p.pos[2])) p.pos[0] += dx;
+      else if (free(p.pos[0], p.pos[2] + dz)) p.pos[2] += dz;
+
+      // vertical
+      const h = groundHeight(this.night, p.pos[0], p.pos[2]);
+      if (this.grounded) {
+        if (h !== null && h >= p.pos[1] - 0.25) { p.pos[1] = h; p.vy = 0; }
+        else this.grounded = false; // stepped off an edge
+      }
+      if (!this.grounded) {
+        if (dashing) p.vy = 0; // a dash keeps the height
+        else { p.vy -= WORLD.gravity * DT; p.pos[1] += p.vy * DT; }
+        if (h !== null && p.vy <= 0 && p.pos[1] <= h) { p.pos[1] = h; p.vy = 0; this.grounded = true; this.launched = false; }
+      }
+
+      // fall: exactly once per fall, ignores invulnerability
+      if (p.pos[1] < -10) {
+        p.flames -= 1;
+        emit("player_hit", { by: "fall", flames: p.flames, dropped: 0, lost: p.carried });
+        p.carried = 0;
+        this.fallWait = toTicks(1);
+        this.vh = [0, 0];
+        p.vy = 0;
+      }
     }
 
-    // 3. pickup (automatic, id order, only while there is room)
-    for (const m of [...this.motes]) {
+    // 4. pickup (automatic, id order, only while there is room)
+    for (const m of inert || this.fallWait > 0 ? [] : [...this.motes]) {
       if (p.carried >= TUNING.carry_capacity) break;
       if (dist2d(p.pos, m.pos) <= TUNING.pickup_radius) {
         this.motes = this.motes.filter((x) => x !== m);
@@ -235,7 +345,7 @@ export class Sim {
     this.enforceSafeZones();
 
     // 8. hits: first non-stunned shade in reach, unless invulnerable
-    if (T >= this.invulnUntil) {
+    if (T >= this.invulnUntil && this.fallWait === 0) {
       const hitter = this.shades.find((s) => T >= s.stunUntil && dist2d(s.pos, p.pos) <= TUNING.shade_hit_radius);
       if (hitter) {
         const dropped = Math.floor(p.carried * TUNING.hit_drop_ratio);
@@ -274,10 +384,21 @@ export class Sim {
       type: "snapshot",
       tick: this.tick,
       sim_tick: this.tick,
+      night: this.night,
       state: this.state,
       time_left_s: r3(Math.max(0, this.timeLeft)),
       score: r3(this.score),
-      player: { pos: v(this.player.pos), flames: this.player.flames, carried: this.player.carried },
+      wind: { active: this.windActive, dir_deg: this.windNextDir },
+      player: {
+        pos: v(this.player.pos),
+        vel: [r3(this.vh[0]), r3(this.player.vy), r3(this.vh[1])],
+        grounded: this.grounded,
+        flames: this.player.flames,
+        carried: this.player.carried,
+        invuln: this.invulnUntil - this.tick > 0,
+        dash_cd_s: r3(this.dashCd / TICK_RATE),
+        pulse_cd_s: r3(Math.max(0, this.pulseReadyAt - this.tick) / TICK_RATE),
+      },
       lanterns: this.lanterns.map((l) => ({ id: l.id, pos: v(l.pos), lit: l.lit, deposited: l.deposited })),
       shades: this.shades.map((s) => ({ id: s.id, pos: v(s.pos), state: this.shadeState(s) })),
       motes_active: this.motes.length,

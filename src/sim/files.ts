@@ -1,7 +1,7 @@
 // Parsing + validation of the scenario and inputs files (Test Contract C and D). Pure: no fs, no DOM.
 // Any malformed content throws BadFileError; the CLI turns that into exit code 2.
 import { TUNING } from "./config";
-import type { InputState, Scenario, Vec3 } from "./types";
+import type { InputState, Scenario, ShadeState, Vec3 } from "./types";
 
 export class BadFileError extends Error {}
 
@@ -17,6 +17,8 @@ function count(v: unknown, what: string): number {
   return v;
 }
 
+const SHADE_STATES: string[] = ["spawning", "wander", "chase", "recoil", "stunned"];
+const DRIFTER_STATES: string[] = ["idle", "chase", "flee"];
 export const LANTERN_IDS = ["L1", "L2", "L3", "L4", "L5"] as const;
 
 export function parseScenario(raw: unknown): Scenario {
@@ -29,8 +31,11 @@ export function parseScenario(raw: unknown): Scenario {
     if (p.pos !== undefined) sc.player.pos = vec3(p.pos, "player.pos");
     if (p.carried !== undefined) sc.player.carried = count(p.carried, "player.carried");
     if (p.flames !== undefined) sc.player.flames = count(p.flames, "player.flames");
+    for (const k of ["invuln_ticks", "dash_cd_ticks", "pulse_cd_ticks", "charm_ticks"] as const) {
+      if (p[k] !== undefined) sc.player[k] = count(p[k], `player.${k}`);
+    }
   }
-  for (const k of ["random_motes", "random_shades"] as const) {
+  for (const k of ["random_motes", "random_shades", "random_drifters", "wind_enabled"] as const) {
     if (raw[k] !== undefined) {
       if (typeof raw[k] !== "boolean") throw new BadFileError(`${k} must be a boolean`);
       sc[k] = raw[k] as boolean;
@@ -45,8 +50,13 @@ export function parseScenario(raw: unknown): Scenario {
     sc.shades = raw.shades.map((s, i) => {
       if (!isObj(s)) throw new BadFileError(`shades[${i}] must be an object`);
       if (s.id !== undefined && (typeof s.id !== "string" || s.id === "")) throw new BadFileError(`shades[${i}].id must be a string`);
-      const out: { pos: Vec3; id?: string } = { pos: vec3(s.pos, `shades[${i}].pos`) };
+      const out: NonNullable<Scenario["shades"]>[number] = { pos: vec3(s.pos, `shades[${i}].pos`) };
       if (typeof s.id === "string") out.id = s.id;
+      if (s.state !== undefined) {
+        if (typeof s.state !== "string" || !SHADE_STATES.includes(s.state)) throw new BadFileError(`shades[${i}].state must be one of ${SHADE_STATES.join(", ")}`);
+        out.state = s.state as ShadeState;
+      }
+      if (s.state_ticks_left !== undefined) out.state_ticks_left = count(s.state_ticks_left, `shades[${i}].state_ticks_left`);
       return out;
     });
     const ids = sc.shades.flatMap((s) => (s.id ? [s.id] : []));
@@ -70,6 +80,35 @@ export function parseScenario(raw: unknown): Scenario {
       return out;
     });
   }
+  if (raw.drifters !== undefined) {
+    if (!Array.isArray(raw.drifters)) throw new BadFileError("drifters must be an array");
+    sc.drifters = raw.drifters.map((d, i) => {
+      if (!isObj(d)) throw new BadFileError(`drifters[${i}] must be an object`);
+      const out: NonNullable<Scenario["drifters"]>[number] = { pos: vec3(d.pos, `drifters[${i}].pos`) };
+      if (d.id !== undefined) {
+        if (typeof d.id !== "string" || d.id === "") throw new BadFileError(`drifters[${i}].id must be a string`);
+        out.id = d.id;
+      }
+      if (d.state !== undefined) {
+        if (typeof d.state !== "string" || !DRIFTER_STATES.includes(d.state)) throw new BadFileError(`drifters[${i}].state must be one of ${DRIFTER_STATES.join(", ")}`);
+        out.state = d.state as "idle" | "chase" | "flee";
+      }
+      if (d.stolen !== undefined) out.stolen = count(d.stolen, `drifters[${i}].stolen`);
+      return out;
+    });
+  }
+  if (raw.charms !== undefined) {
+    if (!Array.isArray(raw.charms)) throw new BadFileError("charms must be an array");
+    sc.charms = raw.charms.map((c, i) => {
+      if (!isObj(c)) throw new BadFileError(`charms[${i}] must be an object`);
+      const out: NonNullable<Scenario["charms"]>[number] = { pos: vec3(c.pos, `charms[${i}].pos`) };
+      if (c.id !== undefined) {
+        if (typeof c.id !== "string" || c.id === "") throw new BadFileError(`charms[${i}].id must be a string`);
+        out.id = c.id;
+      }
+      return out;
+    });
+  }
   if (raw.time_left_s !== undefined) {
     if (!num(raw.time_left_s) || raw.time_left_s < 0) throw new BadFileError("time_left_s must be a number >= 0");
     sc.time_left_s = raw.time_left_s;
@@ -77,7 +116,7 @@ export function parseScenario(raw: unknown): Scenario {
   return sc;
 }
 
-export const IDLE_INPUT: InputState = { move: [0, 0], cam_yaw_deg: 0, jump: false, interact: false, pulse: false, dash: false };
+export const IDLE_INPUT: InputState = { move: [0, 0], cam_yaw_deg: 0, jump: false, interact: false, pulse: false, dash: false, pause: false };
 
 export interface Frame {
   tick: number;
@@ -87,6 +126,7 @@ export interface Frame {
   interact?: boolean;
   pulse?: boolean;
   dash?: boolean;
+  pause?: boolean;
 }
 
 export function parseInputs(raw: unknown): Frame[] {
@@ -108,7 +148,7 @@ export function parseInputs(raw: unknown): Frame[] {
       if (!num(f.cam_yaw_deg)) throw new BadFileError(`frames[${i}].cam_yaw_deg must be a number`);
       out.cam_yaw_deg = f.cam_yaw_deg;
     }
-    for (const b of ["jump", "interact", "pulse", "dash"] as const) {
+    for (const b of ["jump", "interact", "pulse", "dash", "pause"] as const) {
       if (f[b] !== undefined) {
         if (typeof f[b] !== "boolean") throw new BadFileError(`frames[${i}].${b} must be a boolean`);
         out[b] = f[b] as boolean;

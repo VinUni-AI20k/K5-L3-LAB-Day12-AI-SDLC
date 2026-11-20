@@ -101,3 +101,43 @@ const NIGHT3: NightDef = {
 };
 
 export const NIGHTS: Record<1 | 2 | 3, NightDef> = { 1: NIGHT1, 2: NIGHT2, 3: NIGHT3 };
+
+// ---------- geometry (step 2) ----------
+/** Highest ramp surface under (x, z) on Night 3, or null. Two ramps, 3 m wide, along the radius at 30 and 150 degrees, r 30 (Y 0) up to r 24 (Y 3). */
+function rampHeight(x: number, z: number): number | null {
+  let best: number | null = null;
+  for (const deg of [30, 150]) {
+    const a = rad(deg);
+    const ux = Math.cos(a), uz = Math.sin(a);
+    const s = x * ux + z * uz; // distance along the radius
+    const l = Math.abs(-x * uz + z * ux); // sideways distance from the ramp axis
+    if (l <= 1.5 && s >= 24 && s <= 30) {
+      const h = (3 * (30 - s)) / 6;
+      if (best === null || h > best) best = h;
+    }
+  }
+  return best;
+}
+
+/**
+ * Walkable surface height under (x, z) for a night, or null when there is no ground (the player falls).
+ * Night 1: disc r 40. Night 2: discs r 28 at (0,0) and (70,0) plus the bridge x 26..44, |z| <= 2.
+ * Night 3: disc r 45 (Y 0), tier 1 annulus r 12..24 where z > 0 (Y 3), tier 2 disc r 8 (Y 6), ramps, bell tower r 2 (Y 8, unclimbable).
+ */
+export function groundHeight(night: 1 | 2 | 3, x: number, z: number): number | null {
+  if (night === 1) return Math.hypot(x, z) <= 40 ? 0 : null;
+  if (night === 2) {
+    if (Math.hypot(x, z) <= 28 || Math.hypot(x - 70, z) <= 28) return 0;
+    if (x >= 26 && x <= 44 && Math.abs(z) <= 2) return 0;
+    return null;
+  }
+  const r = Math.hypot(x, z);
+  if (r > 45) return null;
+  let h = 0;
+  if (z > 0 && r >= 12 && r <= 24) h = 3;
+  if (r <= 8) h = 6;
+  const ramp = rampHeight(x, z);
+  if (ramp !== null && ramp > h) h = ramp;
+  if (r < 2) h = 8; // bell tower
+  return h;
+}

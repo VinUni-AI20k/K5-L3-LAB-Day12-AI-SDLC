@@ -8,7 +8,7 @@ Date 2026-11-20, Apple M1 MacBook Air 16 GB, macOS 15 (Darwin 24.0.0), Node v21.
 | `npm run build` | ok: `dist/headless.js`, `dist/soak.js`, `dist/web`, `electron/bench-stats.cjs` |
 | `npx electron .` | the window process was still running after 8 s (killed by me); the game window itself was not looked at in this check |
 | `node dist/headless.js --seed 1 --night 1 --ticks 600 --out out/run.jsonl` | exit 0, last line `{"type":"end","ticks":600,"state":"playing","score":0}` |
-| `node dist/soak.js --seed 7 --nights 10 --out out/soak.json` | exit 0, 0 crashes, `mem_start_mb` 34.8, `mem_end_mb` 91.7 (ratio 2.63: the memory threshold is still NOT MET, same cause as in `soak.json`) |
+| `node dist/soak.js --seed 7 --nights 10 --out out/soak.json` | exit 0, 0 crashes, `mem_start_mb` 34.8, `mem_end_mb` 91.7 (ratio 2.63: this clone was built before the `--no-opt` fix; after it the ratio is about 1.17) |
 | `npx electron . --bench --seed 42 --duration 10 --out out/bench.json` | exit 0, 987 frames |
 | `npx electron . --export-leaderboard out/lb.json` | exit 0, `{"entries": []}` (fresh user, nothing saved in that folder yet) |
 

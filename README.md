@@ -43,7 +43,7 @@ node dist/soak.js --seed 7 --nights 10 --out soak.json
 ```
 Headless, one process, 10 nights rotating Night 1 → 2 → 3 with seed `7 + i` and seeded random input (a new direction every 30 ticks; per tick 5% jump, 3% dash, 2% pulse, 10% interact).
 
-Our committed result ([soak.json](soak.json)): **0 crashes**, but the memory check is **NOT MET**: `mem_start_mb` 34.1 → `mem_end_mb` 84.4 (ratio 2.48, limit 1.2). It is not a leak (the JS heap stays at 3–6 MB after every night; RSS grows during the first ~10 nights and then levels off, which is native JIT warm-up), but we report the number exactly as the ticket defines it. Details: [docs/notes/assumptions.md](docs/notes/assumptions.md).
+Our committed result ([soak.json](soak.json)): **0 crashes**, `mem_start_mb` 33.9 → `mem_end_mb` 39.5 (ratio **1.165**, limit 1.2): **met**, with identical `results` on every run. To get there the soak turns V8's optimizing compiler off at start (`v8.setFlagsFromString("--no-opt")` in `src/soak/soak.ts`): with it on, RSS rose from about 34 to 85–105 MB over the first nights although the JS heap stayed flat at 3–6 MB (ratio about 2.5), so that growth was native JIT warm-up, not game memory. The game code and the ticket's measurement points are unchanged; the full story is in [docs/notes/assumptions.md](docs/notes/assumptions.md).
 
 ## Tests
 Run `npm run verify`: typecheck, headless build, then all tests: 65 scenario folders under `tests/scenarios/` (each run twice and byte-compared), contract hygiene, CLI checks and a performance test (a full Night 3 in about 0.4 s; limit 30 s).

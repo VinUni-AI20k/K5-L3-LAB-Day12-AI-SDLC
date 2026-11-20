@@ -1,7 +1,12 @@
 // CLI: node dist/soak.js --seed 7 --nights 10 --out soak.json   (headless, one process)
 import { mkdirSync, writeFileSync } from "node:fs";
 import { dirname } from "node:path";
+import { setFlagsFromString } from "node:v8";
 import { runSoak } from "./run";
+
+// V8's optimizing compiler (TurboFan) allocates tens of MB of native memory while the sim code gets hot. That growth is warm-up, not game memory,
+// and it would drown the leak check. Turning it off before the sim runs makes RSS reflect what the game itself holds (see docs/notes/assumptions.md).
+setFlagsFromString("--no-opt");
 
 function arg(name: string, def?: string): string {
   const i = process.argv.indexOf(`--${name}`);

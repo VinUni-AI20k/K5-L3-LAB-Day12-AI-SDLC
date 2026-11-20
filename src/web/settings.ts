@@ -2,10 +2,11 @@
 export interface Settings {
   volume: number;
   sensitivity: number;
+  colorBlind: boolean; // "Bảng màu dễ phân biệt"
 }
 
 const KEY = "ddl.settings.v1";
-const DEFAULTS: Settings = { volume: 0.7, sensitivity: 1 };
+const DEFAULTS: Settings = { volume: 0.7, sensitivity: 1, colorBlind: false };
 
 export function loadSettings(): Settings {
   try {
@@ -13,7 +14,7 @@ export function loadSettings(): Settings {
     if (!raw) return { ...DEFAULTS };
     const p = JSON.parse(raw) as Partial<Settings>;
     const ok = (v: unknown, lo: number, hi: number, d: number): number => (typeof v === "number" && Number.isFinite(v) ? Math.min(hi, Math.max(lo, v)) : d);
-    return { volume: ok(p.volume, 0, 1, DEFAULTS.volume), sensitivity: ok(p.sensitivity, 0.2, 3, DEFAULTS.sensitivity) };
+    return { volume: ok(p.volume, 0, 1, DEFAULTS.volume), sensitivity: ok(p.sensitivity, 0.2, 3, DEFAULTS.sensitivity), colorBlind: p.colorBlind === true };
   } catch {
     return { ...DEFAULTS };
   }

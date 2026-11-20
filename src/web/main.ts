@@ -54,7 +54,7 @@ playerLight.position.set(0.5, 1.4, 0);
 player.add(body, scarf, hat, hatLantern, playerLight);
 scene.add(player);
 
-interface LanternView { lamp: THREE.Mesh; light: THREE.PointLight; zone: THREE.Mesh; fill: THREE.Mesh }
+interface LanternView { lamp: THREE.Mesh; light: THREE.PointLight; zone: THREE.Mesh; fill: THREE.Mesh; bar: THREE.Group; barFg: THREE.Mesh; tears: THREE.Group }
 const lanternViews = new Map<string, LanternView>();
 let nightGroup: THREE.Group | undefined;
 let seaMesh: THREE.Mesh | undefined;
@@ -80,6 +80,7 @@ let yaw = 0; // cam_yaw_deg in radians: forward (input z=+1) is (sin, cos)
 let toastTimer = 0;
 const settings: Settings = loadSettings();
 const audio = new GameAudio();
+document.body.classList.toggle("cb", settings.colorBlind);
 audio.setVolume(settings.volume);
 let lastCountdown = 99;
 const keys = new Set<string>();
@@ -108,9 +109,28 @@ function buildLanterns(s: Sim): void {
     zone.visible = false;
     const fill = new THREE.Mesh(new THREE.CylinderGeometry(0.5, 0.5, 0.05, 16), mat(0x554466));
     fill.position.y = 0.1;
-    g.add(pole, lamp, light, zone, fill);
+    // fuel bar over the lamp (faces the camera) and torn-paper marks for the colour-blind mode
+    const bar = new THREE.Group();
+    bar.position.y = 5.1;
+    bar.scale.setScalar(1.7);
+    const barBg = new THREE.Mesh(new THREE.PlaneGeometry(1.7, 0.24), new THREE.MeshBasicMaterial({ color: 0x120a1a, transparent: true, opacity: 0.8 }));
+    const barFg = new THREE.Mesh(new THREE.PlaneGeometry(1.6, 0.16), new THREE.MeshBasicMaterial({ color: PALETTE.lanternLit }));
+    barFg.position.z = 0.01;
+    bar.add(barBg, barFg);
+    bar.visible = false;
+    const tears = new THREE.Group();
+    tears.position.y = 3.6;
+    for (let i = 0; i < 6; i++) {
+      const a = (i / 6) * Math.PI * 2;
+      const tear = new THREE.Mesh(new THREE.BoxGeometry(0.22, 0.34, 0.06), new THREE.MeshBasicMaterial({ color: PALETTE.nightSky }));
+      tear.position.set(Math.cos(a) * 0.72, 0.15 * Math.sin(i * 2.3), Math.sin(a) * 0.72);
+      tear.rotation.set(0, -a, 0.4 + 0.3 * (i % 2));
+      tears.add(tear);
+    }
+    tears.visible = false;
+    g.add(pole, lamp, light, zone, fill, bar, tears);
     scene.add(g);
-    lanternViews.set(l.id, { lamp, light, zone, fill });
+    lanternViews.set(l.id, { lamp, light, zone, fill, bar, barFg, tears });
   }
 }
 
@@ -180,9 +200,11 @@ function showSettings(back: () => void): void {
     `<h1>Cài đặt</h1>
      <label>Âm lượng <input id="vol" type="range" min="0" max="100" value="${Math.round(settings.volume * 100)}"></label>
      <label>Độ nhạy chuột <input id="sens" type="range" min="20" max="300" value="${Math.round(settings.sensitivity * 100)}"></label>
+     <label>Bảng màu dễ phân biệt <input id="cb" type="checkbox" ${settings.colorBlind ? "checked" : ""}></label>
      <button id="back">Xong</button>`,
     { back },
   );
+  card.querySelector<HTMLInputElement>("#cb")!.addEventListener("change", (e) => { settings.colorBlind = (e.target as HTMLInputElement).checked; document.body.classList.toggle("cb", settings.colorBlind); saveSettings(settings); });
   card.querySelector<HTMLInputElement>("#vol")!.addEventListener("input", (e) => { settings.volume = Number((e.target as HTMLInputElement).value) / 100; audio.setVolume(settings.volume); audio.init(); audio.sfx("pickup"); saveSettings(settings); });
   card.querySelector<HTMLInputElement>("#sens")!.addEventListener("input", (e) => { settings.sensitivity = Number((e.target as HTMLInputElement).value) / 100; saveSettings(settings); });
 }
@@ -216,15 +238,17 @@ function endScreen(): void {
   if (won) totalScore += sim.score;
   if (won && night === 3) {
     mode = "dawn";
-    showCard(`<h1>Bình minh!</h1><p>Cả ba hòn đảo đã sáng. Ông Đăng mỉm cười: “Giỏi lắm, Mây.”</p><p>Tổng điểm: <b>${totalScore}</b></p><button id="menu">Về menu</button>`, { menu: showMenu });
+    showCard(`<h1>Bình minh!</h1><p>Bạn đã giữ đèn sáng đến bình minh trên cả ba hòn đảo. Ông Đăng mỉm cười: “Giỏi lắm, Mây.”</p><p>Tổng điểm: <b>${totalScore}</b></p><button id="menu">Về menu</button>`, { menu: showMenu });
     return;
   }
   mode = "result";
   if (won) {
-    showCard(`<h1>Đêm ${night} đã sáng!</h1><p>Điểm đêm này: <b>${sim.score}</b> · Tổng: <b>${totalScore}</b></p><button id="next">Đêm tiếp theo</button><button id="menu" class="alt">Về menu</button>`,
+    showCard(`<h1>Đêm ${night} đã qua!</h1><p>Bạn giữ đèn sáng đến bình minh (${sim.lanterns.filter((l) => l.lit).length}/${sim.lanterns.length} đèn).</p><p>Điểm đêm này: <b>${sim.score}</b> · Tổng: <b>${totalScore}</b></p><button id="next">Đêm tiếp theo</button><button id="menu" class="alt">Về menu</button>`,
       { next: () => showIntro((night + 1) as Night), menu: showMenu });
   } else {
-    const reason = sim.player.flames <= 0 ? "Bạn hết ngọn lửa." : "Trời đã sáng, đèn chưa thắp hết.";
+    const litNow = sim.lanterns.filter((l) => l.lit).length;
+    const need = Math.ceil((sim.lanterns.length * 6) / 10);
+    const reason = sim.player.flames <= 0 ? "Bạn hết ngọn lửa." : `Bình minh đến nhưng chỉ ${litNow}/${sim.lanterns.length} đèn còn sáng (cần ${need}).`;
     showCard(`<h1>Màn đêm thắng rồi</h1><p>${reason}</p><p>Điểm: <b>${sim.score}</b></p><button id="replay">Chơi lại đêm ${night} (R)</button><button id="menu" class="alt">Về menu</button>`,
       { replay: () => startNight(night), menu: showMenu });
   }
@@ -271,9 +295,15 @@ function readInput(): InputState {
 }
 
 // ---------- HUD ----------
-const slotHtml = Array.from({ length: TUNING.carry_capacity }, () => "<i></i>").join("");
-moteBar.innerHTML = slotHtml;
-const slots = Array.from(moteBar.querySelectorAll("i"));
+let slotCap = 0;
+let slots: Element[] = [];
+let slotLabel: HTMLElement | undefined;
+function buildSlots(cap: number): void { // one slot per unit of capacity (10 + 2 per lighting, max 20)
+  slotCap = cap;
+  moteBar.innerHTML = Array.from({ length: cap }, () => "<i></i>").join("") + `<span id="slotlabel" style="margin-left:8px;font-size:15px"></span>`;
+  slots = Array.from(moteBar.querySelectorAll("i"));
+  slotLabel = moteBar.querySelector<HTMLElement>("#slotlabel")!;
+}
 cdsEl.innerHTML = '<div class="cd" id="cd-dash">Lướt<br>Shift</div><div class="cd" id="cd-pulse">Tỏa sáng<br>F</div>';
 const cdDash = $("cd-dash"), cdPulse = $("cd-pulse");
 let fpsOn = false, fpsFrames = 0, fpsStart = 0, fpsText = "";
@@ -283,13 +313,16 @@ function renderHud(now: number): void {
   const lit = sim.lanterns.filter((l) => l.lit).length;
   const hearts = "🔥".repeat(Math.max(0, sim.player.flames)) + "<span style='opacity:.25'>" + "🔥".repeat(Math.max(0, TUNING.flames - sim.player.flames)) + "</span>";
   flamesEl.innerHTML = `${hearts}<small>Đêm ${night} — ${NIGHT_INFO[night].name}${sim.charmTicks > 0 ? " · 🧧 Bùa Gió" : ""}</small>`;
-  topRight.innerHTML = `Đèn lồng <b>${lit}/${sim.lanterns.length}</b><br>Điểm <b>${sim.score}</b>`;
+  const need = Math.ceil((sim.lanterns.length * 6) / 10);
+  topRight.innerHTML = `Đèn lồng <b>${lit}/${sim.lanterns.length}</b> <small>(cần ${need})</small><br>Điểm <b>${sim.score}</b>`;
   const secs = Math.max(0, Math.ceil(sim.timeLeft));
-  clockEl.textContent = `${String(Math.floor(secs / 60)).padStart(2, "0")}:${String(secs % 60).padStart(2, "0")}`;
+  clockEl.textContent = `${sim.timeLeft <= 30 ? "⚠ " : ""}${String(Math.floor(secs / 60)).padStart(2, "0")}:${String(secs % 60).padStart(2, "0")}`;
   const danger = sim.timeLeft <= 30; // red and blinking at <= 30 s
   clockEl.classList.toggle("danger", danger);
   clockEl.style.opacity = danger && Math.floor(now / 500) % 2 === 1 ? "0.35" : "1";
+  if (slotCap !== sim.capacity) buildSlots(sim.capacity);
   slots.forEach((el, i) => el.classList.toggle("on", i < sim.player.carried));
+  if (slotLabel) slotLabel.textContent = `${sim.player.carried}/${sim.capacity}`;
 
   const dash = sim.dashCooldownTicks / toTicks(TUNING.dash_cooldown_s);
   const pulse = sim.pulseCooldownTicks / toTicks(TUNING.pulse_cooldown_s);
@@ -302,14 +335,16 @@ function renderHud(now: number): void {
   const p = sim.player.pos;
   let near: (typeof sim.lanterns)[number] | undefined;
   let nearD = Infinity;
+  let target: typeof near; // the lantern E would act on: unlit, or lit and not full (nearest, smaller id on a tie)
+  let targetD = Infinity;
   for (const l of sim.lanterns) {
-    if (l.lit) continue;
     const d = Math.hypot(l.pos[0] - p[0], l.pos[2] - p[2]);
-    if (d < nearD) { near = l; nearD = d; }
+    if (!l.lit && d < nearD) { near = l; nearD = d; }
+    if ((!l.lit || l.fuelU < TUNING.fuel_max * 60) && d < targetD) { target = l; targetD = d; }
   }
   const playing = mode === "playing";
-  if (playing && near && nearD <= TUNING.interact_radius) {
-    promptEl.textContent = `E — Nạp ánh sáng (${near.deposited}/${TUNING.lantern_cost})`;
+  if (playing && target && targetD <= TUNING.interact_radius) {
+    promptEl.textContent = target.lit ? `E — Thêm dầu (${Math.round(target.fuelU / 6) / 10}/${TUNING.fuel_max})` : `E — Nạp ánh sáng (${target.deposited}/${target.everLit ? TUNING.relight_cost : TUNING.lantern_cost})`;
     promptEl.style.display = "block";
   } else promptEl.style.display = "none";
   if (playing && near) {
@@ -340,6 +375,9 @@ function onEvent(e: SimEvent): void {
   switch (e.name) {
     case "mote_picked": audio.sfx("pickup"); break;
     case "dash": audio.sfx("dash"); break;
+    case "lantern_out": showToast(`⚠ Đèn ${e.data.lantern_id} đã tắt!`); audio.sfx("lose"); break;
+    case "refuel": showToast(`Thêm dầu cho ${e.data.lantern_id}: ${e.data.fuel}`); audio.sfx("pickup"); break;
+    case "fuel_drain": showToast(`⚠ Bóng Mực đang hút dầu ${e.data.lantern_id} (còn ${e.data.fuel})`); break;
     case "deposit": showToast(`Nạp ${e.data.amount} đom đóm vào ${e.data.lantern_id}`); break;
     case "lantern_lit": showToast(`Đèn ${e.data.lantern_id} đã sáng!`); audio.sfx("lit"); break;
     case "pulse": audio.sfx("pulse"); addRing(); showToast((e.data.stunned_ids as string[]).length ? "Tỏa sáng! Bóng Mực choáng váng" : "Tỏa sáng!"); break;
@@ -375,16 +413,30 @@ function sync(t: number, dt: number): void {
   for (const l of sim.lanterns) {
     const v = lanternViews.get(l.id);
     if (!v) continue;
-    const frac = Math.min(1, l.deposited / TUNING.lantern_cost);
+    const cost = l.everLit ? TUNING.relight_cost : TUNING.lantern_cost;
+    const frac = Math.min(1, l.deposited / cost);
     const lamp = v.lamp.material as THREE.MeshStandardMaterial;
+    const fuel = l.fuelU / (TUNING.fuel_max * 60);
+    const low = l.lit && l.fuelU < TUNING.low_fuel_threshold * 60;
+    const blinkOn = !low || Math.floor(t / 500) % 2 === 0; // 1 Hz blink below 30 fuel
     if (l.lit) {
-      lamp.color.set(PALETTE.lanternCore); lamp.emissive.set(PALETTE.lanternLit); lamp.emissiveIntensity = 2.4 + 0.3 * Math.sin(t / 250);
-      v.light.intensity = 70 + 8 * Math.sin(t / 300);
+      lamp.color.set(PALETTE.lanternCore); lamp.emissive.set(PALETTE.lanternLit);
+      lamp.emissiveIntensity = blinkOn ? 2.4 + 0.3 * Math.sin(t / 250) : 0.3;
+      v.light.intensity = blinkOn ? 70 + 8 * Math.sin(t / 300) : 10;
     } else {
       lamp.color.set(PALETTE.lanternOff); lamp.emissive.set(0xff9a30); lamp.emissiveIntensity = frac * 1.2;
       v.light.intensity = frac * 8;
     }
-    v.zone.visible = l.lit;
+    // fuel bar on lit lanterns, facing the camera; it blinks with the lantern when low
+    v.bar.visible = l.lit && blinkOn;
+    v.bar.quaternion.copy(camera.quaternion);
+    v.barFg.scale.x = Math.max(0.001, fuel);
+    v.barFg.position.x = -0.8 * (1 - fuel);
+    (v.barFg.material as THREE.MeshBasicMaterial).color.set(low ? (settings.colorBlind ? PALETTE.warningCB : PALETTE.uiDanger) : PALETTE.lanternLit);
+    // colour-blind mode: an unlit lantern is squashed 20% and its paper is torn
+    v.lamp.scale.y = settings.colorBlind && !l.lit ? 0.8 : 1;
+    v.tears.visible = settings.colorBlind && !l.lit;
+    v.zone.visible = sim.hasZone(l);
     v.fill.scale.set(0.4 + frac * 1.6, 1, 0.4 + frac * 1.6);
   }
 
@@ -402,9 +454,21 @@ function sync(t: number, dt: number): void {
   for (const s of sim.shades) {
     seenS.add(s.id);
     let mesh = shadeViews.get(s.id);
-    if (!mesh) { mesh = new THREE.Mesh(shadeGeo, mat(PALETTE.shadeBody, PALETTE.shadeOutline, 0.5)); scene.add(mesh); shadeViews.set(s.id, mesh); }
+    if (!mesh) {
+      mesh = new THREE.Mesh(shadeGeo, mat(PALETTE.shadeBody, PALETTE.shadeOutline, 0.5));
+      for (const ex of [-0.28, 0.28]) { // eyes: the outline colour, so colour-blind mode recolours them too
+        const eye = new THREE.Mesh(new THREE.SphereGeometry(0.12, 8, 8), new THREE.MeshBasicMaterial({ color: PALETTE.shadeOutline }));
+        eye.position.set(ex, 0.2, 0.8);
+        eye.name = "eye";
+        mesh.add(eye);
+      }
+      scene.add(mesh);
+      shadeViews.set(s.id, mesh);
+    }
+    const outline = settings.colorBlind ? PALETTE.shadeOutlineCB : PALETTE.shadeOutline;
+    for (const ch of mesh.children) if (ch.name === "eye") ((ch as THREE.Mesh).material as THREE.MeshBasicMaterial).color.set(outline);
     const m = mesh.material as THREE.MeshStandardMaterial;
-    m.emissive.set(s.state === "stunned" ? PALETTE.shadeStunned : PALETTE.shadeOutline);
+    m.emissive.set(s.state === "stunned" ? PALETTE.shadeStunned : outline);
     m.opacity = s.state === "spawning" ? 0.35 : 1;
     m.transparent = s.state === "spawning";
     mesh.position.set(s.pos[0], s.pos[1] + 0.1 * Math.sin(t / 200), s.pos[2]);

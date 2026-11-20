@@ -19,6 +19,9 @@ export const PALETTE = {
   gold: 0xf2c14e, // gold border, score
   drifter: 0x8fa3b8,
   uiDanger: 0xff5a5f,
+  // colour-blind mode (Ticket-03): shade outline and eyes, and the warning colour (shown with a warning icon)
+  shadeOutlineCB: 0x00b3ff,
+  warningCB: 0xffffff,
   uiText: 0xf5f1e6,
 } as const;
 

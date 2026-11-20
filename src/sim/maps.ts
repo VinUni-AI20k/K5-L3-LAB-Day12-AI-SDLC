@@ -1,5 +1,6 @@
 // Per-night data (Ticket-02 section 2). Pure data + generators; geometry queries are added below in step 2.
 // Angles are measured from +X, counter-clockwise seen from above: a point is (cx + r*cos a, y, cz + r*sin a).
+import { TUNING } from "./config";
 import type { Vec3 } from "./types";
 
 export interface Pad {
@@ -42,7 +43,7 @@ function ring(cx: number, cz: number, r: number, count: number, stepDeg: number,
 
 const NIGHT1: NightDef = {
   night: 1,
-  duration_s: 300,
+  duration_s: TUNING.night1_duration_s,
   start: [0, 0, 0],
   startFacing: [0, 1],
   lanterns: [[0, 0, 25], [23.8, 0, 7.7], [14.7, 0, -20.2], [-14.7, 0, -20.2], [-23.8, 0, 7.7]],
@@ -60,7 +61,7 @@ const NIGHT1: NightDef = {
 
 const NIGHT2: NightDef = {
   night: 2,
-  duration_s: 330,
+  duration_s: TUNING.night2_duration_s,
   start: [0, 0, 0],
   startFacing: [0, 1],
   lanterns: [[0, 0, 20], [17, 0, -10], [-17, 0, -10], [70, 0, 20], [87, 0, -10], [53, 0, -10]],
@@ -84,7 +85,7 @@ const NIGHT2: NightDef = {
 
 const NIGHT3: NightDef = {
   night: 3,
-  duration_s: 360,
+  duration_s: TUNING.night3_duration_s,
   start: [0, 0, -15],
   startFacing: [0, 1],
   lanterns: [[0, 6, 6], [18, 3, 10], [-18, 3, 10], [35, 0, -10], [-35, 0, -10], [20, 0, -35], [-20, 0, -35]],

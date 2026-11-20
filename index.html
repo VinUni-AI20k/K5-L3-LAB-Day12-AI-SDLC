@@ -5,38 +5,44 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Đảo Đèn Lồng</title>
     <style>
+      html { font-size: 18px; }
+      small { font-size: 1rem; }
+      html.large { font-size: 22.5px; }
       html, body { margin: 0; height: 100%; overflow: hidden; background: #120b1f; color: #ffe2b0; font-family: system-ui, "Segoe UI", sans-serif; }
       canvas { display: block; }
       #hud { position: fixed; inset: 0; pointer-events: none; text-shadow: 0 1px 4px #000; }
       .panel { position: absolute; background: rgba(20, 10, 35, 0.55); border: 1px solid rgba(255, 190, 110, 0.35); border-radius: 12px; padding: 8px 14px; }
-      #flames { top: 12px; left: 12px; font-size: 22px; }
-      #flames small { display: block; font-size: 13px; opacity: 0.75; }
-      #clock { top: 12px; left: 50%; transform: translateX(-50%); font-size: 30px; font-weight: 700; letter-spacing: 0.05em; border-color: #F2C14E; }
+      #flames { top: 12px; left: 12px; font-size: 1.22222rem; }
+      #flames small { display: block; font-size: 1rem; opacity: 0.75; }
+      #clock { top: 12px; left: 50%; transform: translateX(-50%); font-size: 1.66667rem; font-weight: 700; letter-spacing: 0.05em; border-color: #F2C14E; }
       :root { --danger: #FF5A5F; }
       body.cb { --danger: #FFFFFF; }
       #clock.danger { color: var(--danger); border-color: var(--danger); }
-      #topright { top: 12px; right: 12px; text-align: right; font-size: 18px; border-color: #F2C14E; }
+      #topright { top: 12px; right: 12px; text-align: right; font-size: 1rem; border-color: #F2C14E; }
       #topright b { color: #F2C14E; }
       #motebar { bottom: 48px; left: 50%; transform: translateX(-50%); display: flex; gap: 6px; padding: 8px 12px; }
       #motebar i { width: 18px; height: 18px; border-radius: 50%; border: 1px solid rgba(255,229,138,0.5); background: transparent; }
       #motebar i.on { background: radial-gradient(#FFF6C2, #FFE58A); box-shadow: 0 0 8px #FFE58A; }
       #cds { bottom: 48px; right: 12px; display: flex; gap: 10px; }
-      .cd { width: 46px; height: 46px; border-radius: 50%; display: grid; place-items: center; font-size: 11px; text-align: center; line-height: 1.1; background: conic-gradient(rgba(20,10,35,0.9) var(--p, 0%), #F2C14E 0); color: #F5F1E6; }
+      .cd { width: 4.2rem; height: 4.2rem; border-radius: 50%; display: grid; place-items: center; font-size: 1rem; text-align: center; line-height: 1.1; background: conic-gradient(rgba(20,10,35,0.9) var(--p, 0%), #F2C14E 0); color: #F5F1E6; }
       .cd.ready { box-shadow: 0 0 10px #F2C14E; }
-      #prompt { position: absolute; bottom: 110px; left: 50%; transform: translateX(-50%); font-size: 20px; color: #F2C14E; display: none; padding: 6px 14px; background: rgba(20,10,35,0.7); border: 1px solid #F2C14E; border-radius: 10px; }
-      #arrow { position: absolute; font-size: 34px; color: #FFB347; display: none; text-shadow: 0 0 8px #FFB347; }
+      #prompt { position: absolute; bottom: 110px; left: 50%; transform: translateX(-50%); font-size: 1.11111rem; color: #F2C14E; display: none; padding: 6px 14px; background: rgba(20,10,35,0.7); border: 1px solid #F2C14E; border-radius: 10px; }
+      #captions { position: absolute; top: 5.2rem; left: 50%; transform: translateX(-50%); display: grid; gap: 6px; justify-items: center; }
+      .cap { background: rgba(20,10,35,0.88); border: 2px solid var(--danger); color: #F5F1E6; padding: 4px 14px; border-radius: 10px; font-size: 1.05rem; }
+      #arrow2 { position: absolute; font-size: 2rem; color: var(--danger); display: none; text-shadow: 0 0 8px #000; }
+      #arrow { position: absolute; font-size: 1.88889rem; color: #FFB347; display: none; text-shadow: 0 0 8px #FFB347; }
       #fps { position: absolute; top: 90px; left: 12px; font: 14px monospace; color: #F5F1E6; background: rgba(0,0,0,0.6); padding: 4px 8px; border-radius: 6px; display: none; }
-      #toast { left: 50%; top: 14%; transform: translateX(-50%); font-size: 22px; opacity: 0; transition: opacity 0.4s; background: none; border: none; }
-      #help { bottom: 12px; left: 50%; transform: translateX(-50%); font-size: 14px; opacity: 0.8; white-space: nowrap; }
+      #toast { left: 50%; top: 30%; transform: translateX(-50%); font-size: 1.22222rem; opacity: 0; transition: opacity 0.4s; background: none; border: none; }
+      #help { bottom: 12px; left: 50%; transform: translateX(-50%); font-size: 1rem; opacity: 0.8; white-space: nowrap; }
       #flash { position: fixed; inset: 0; background: radial-gradient(transparent 40%, color-mix(in srgb, var(--danger) 65%, transparent)); opacity: 0; pointer-events: none; transition: opacity 0.5s; }
       #overlay { position: fixed; inset: 0; display: none; align-items: center; justify-content: center; background: rgba(10, 5, 20, 0.72); }
-      #overlay .card { text-align: center; max-width: 440px; padding: 28px 36px; background: rgba(35, 18, 55, 0.95); border: 1px solid rgba(255, 190, 110, 0.5); border-radius: 18px; }
-      #overlay h1 { margin: 0 0 8px; font-size: 30px; color: #ffc96b; }
+      #overlay .card { max-height: 92vh; overflow-y: auto; text-align: center; max-width: 34rem; padding: 1.5rem 2rem; background: rgba(35, 18, 55, 0.95); border: 1px solid rgba(255, 190, 110, 0.5); border-radius: 18px; }
+      #overlay h1 { margin: 0 0 8px; font-size: 1.66667rem; color: #ffc96b; }
       #overlay p { margin: 6px 0; line-height: 1.45; }
-      #overlay button { margin-top: 14px; font-size: 18px; padding: 10px 26px; border-radius: 10px; border: 0; background: #ffb347; color: #2a1200; cursor: pointer; font-weight: 600; }
+      #overlay button { margin-top: 14px; font-size: 1rem; padding: 10px 26px; border-radius: 10px; border: 0; background: #ffb347; color: #2a1200; cursor: pointer; font-weight: 600; }
       #overlay button:hover { background: #ffc76e; }
       #overlay button.alt { background: transparent; color: #ffd9a0; border: 1px solid rgba(255, 190, 110, 0.6); margin-left: 8px; }
-      #overlay .kicker { margin: 0; opacity: 0.7; letter-spacing: 0.15em; text-transform: uppercase; font-size: 13px; }
+      #overlay .kicker { margin: 0; opacity: 0.7; letter-spacing: 0.15em; text-transform: uppercase; font-size: 1rem; }
       #overlay .speech { font-style: italic; }
       #overlay label { display: flex; justify-content: space-between; align-items: center; gap: 16px; margin: 12px 0; }
       #overlay input[type=range] { width: 180px; }
@@ -50,8 +56,10 @@
       <div id="topright" class="panel"></div>
       <div id="motebar" class="panel"></div>
       <div id="cds" class="panel"></div>
+      <div id="captions"></div>
       <div id="prompt"></div>
       <div id="arrow">➤</div>
+      <div id="arrow2">➤</div>
       <div id="fps"></div>
       <div id="toast" class="panel"></div>
       <div id="help" class="panel">WASD đi · Space nhảy · Shift lướt · E nạp đèn · F tỏa sáng · Esc/P tạm dừng · F3 FPS · ← → / kéo chuột xoay camera</div>

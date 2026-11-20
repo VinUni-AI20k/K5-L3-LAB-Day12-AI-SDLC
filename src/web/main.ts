@@ -5,6 +5,7 @@ import { DT, TUNING, toTicks } from "../sim/config";
 import { Sim } from "../sim/sim";
 import type { InputState, SimEvent } from "../sim/types";
 import { GameAudio } from "./audio";
+import { ACTIONS, ACTION_LABELS, defaultKeymap, keyLabel, rebind, type Action } from "./keymap";
 import { Leaderboard, nowIso, validateName, type LeaderboardStorage } from "./leaderboard";
 import { PALETTE, ambientIntensity, css } from "./palette";
 import { createBenchSim, benchCamera } from "../bench/scene";
@@ -98,9 +99,11 @@ let acc = 0;
 let lastT = 0;
 let yaw = 0; // cam_yaw_deg in radians: forward (input z=+1) is (sin, cos)
 let toastTimer = 0;
+let shake = 0; // seconds of camera shake left (always 0 with reduced motion)
 const settings: Settings = loadSettings();
 const audio = new GameAudio();
 document.body.classList.toggle("cb", settings.colorBlind);
+document.documentElement.classList.toggle("large", settings.largeText);
 audio.setVolume(settings.volume);
 let lastCountdown = 99;
 const keys = new Set<string>();
@@ -155,6 +158,9 @@ function buildLanterns(s: Sim): void {
 }
 
 function loadNightScene(n: Night): void {
+  lowAnnounced.clear();
+  lastWindWarn = -1;
+  caps.length = 0;
   clearViews();
   if (nightGroup) scene.remove(nightGroup);
   if (seaMesh) scene.remove(seaMesh);
@@ -183,6 +189,60 @@ function startNight(n: Night): void {
 // ---------- overlays / menus ----------
 const $ = (id: string) => document.getElementById(id)!;
 const flamesEl = $("flames"), clockEl = $("clock"), topRight = $("topright"), moteBar = $("motebar"), cdsEl = $("cds"), promptEl = $("prompt"), arrowEl = $("arrow"), fpsEl = $("fps"), toast = $("toast"), flash = $("flash"), overlay = $("overlay"), card = overlay.firstElementChild as HTMLElement;
+
+// ---------- captions and visual cues (Ticket-04 section 4) ----------
+const captionsEl = $("captions"), arrow2El = $("arrow2"), helpEl = $("help");
+const caps: Array<{ key: string; text: string; until: number }> = [];
+function caption(key: string, text: string, ms = 4000): void {
+  const until = performance.now() + ms;
+  const old = caps.find((c) => c.key === key);
+  if (old) { old.text = text; old.until = until; } else caps.push({ key, text, until });
+}
+function renderCaptions(now: number): void {
+  for (let i = caps.length - 1; i >= 0; i--) if (caps[i]!.until <= now) caps.splice(i, 1);
+  const html = caps.slice(-3).map((c) => `<div class="cap">${c.text}</div>`).join("");
+  if (captionsEl.dataset.h !== html) { captionsEl.innerHTML = html; captionsEl.dataset.h = html; }
+}
+let spawnCue: { id: string; until: number } | null = null; // edge arrow towards a newly spawned shade
+const lowAnnounced = new Set<string>();
+let lastWindWarn = -1;
+function updateHelp(): void {
+  const k = (a: Action): string => keyLabel(km()[a]);
+  helpEl.textContent = `${k("forward")}${k("left")}${k("back")}${k("right")} đi · ${k("jump")} nhảy · ${k("dash")} lướt · ${k("interact")} nạp đèn · ${k("pulse")} tỏa sáng · ${k("pause")} tạm dừng · F3 FPS · ← → / kéo chuột xoay camera`;
+}
+/** Captions driven by the sim state: wind coming, last 10 s, a lantern below 30 fuel. */
+function updateCaptions(): void {
+  const st = sim.st;
+  if (sim.def.wind) {
+    const warn = st >= 1680 && st % 1800 >= 1680; // 2 s before each gust (gusts start at ticks 1800k)
+    const gust = Math.floor(st / 1800);
+    if (warn && gust !== lastWindWarn) { lastWindWarn = gust; caption("wind", "⚠ 🌬 Gió sắp nổi trong 2 giây!", 2200); }
+    if (sim.windActive) caption("wind", "🌬 Gió đang thổi, hãy bám chắc!", 700);
+  }
+  const left = Math.ceil(sim.timeLeft);
+  if (left <= 10 && left >= 1) caption("time", `⏳ Còn ${left} giây tới bình minh!`, 1200);
+  for (const l of sim.lanterns) {
+    const low = l.lit && l.fuelU < TUNING.low_fuel_threshold * 60;
+    if (low && !lowAnnounced.has(l.id)) { lowAnnounced.add(l.id); caption("low" + l.id, `⚠ Đèn ${l.id} sắp cạn dầu (${Math.round(l.fuelU / 6) / 10})`, 4500); }
+    if (!low) lowAnnounced.delete(l.id);
+  }
+}
+/** Arrow at the screen edge pointing to the shade that just appeared, until it is on screen or 6 s have passed. */
+function updateSpawnArrow(now: number): void {
+  const sh = spawnCue && now < spawnCue.until ? sim.shades.find((s) => s.id === spawnCue!.id) : undefined;
+  if (!sh || mode !== "playing") { arrow2El.style.display = "none"; return; }
+  tmp.set(sh.pos[0], sh.pos[1], sh.pos[2]).project(camera);
+  const behind = tmp.z > 1;
+  if (!behind && Math.abs(tmp.x) < 0.92 && Math.abs(tmp.y) < 0.88) { arrow2El.style.display = "none"; return; }
+  let dx = behind ? -tmp.x : tmp.x, dy = behind ? -tmp.y : tmp.y;
+  const len = Math.hypot(dx, dy) || 1;
+  dx /= len; dy /= len;
+  const W = window.innerWidth, H = window.innerHeight;
+  arrow2El.style.display = "block";
+  arrow2El.style.left = `${W / 2 + dx * W * 0.45 - 17}px`;
+  arrow2El.style.top = `${H / 2 - dy * H * 0.42 - 17}px`;
+  arrow2El.style.transform = `rotate(${Math.atan2(-dy, dx)}rad)`;
+}
 
 function showCard(html: string, handlers: Record<string, () => void> = {}): void {
   card.innerHTML = html;
@@ -222,9 +282,37 @@ function showSettings(back: () => void): void {
      <label>Âm lượng <input id="vol" type="range" min="0" max="100" value="${Math.round(settings.volume * 100)}"></label>
      <label>Độ nhạy chuột <input id="sens" type="range" min="20" max="300" value="${Math.round(settings.sensitivity * 100)}"></label>
      <label>Bảng màu dễ phân biệt <input id="cb" type="checkbox" ${settings.colorBlind ? "checked" : ""}></label>
-     <button id="back">Xong</button>`,
-    { back },
+     <label>Giảm chuyển động (không rung, không nháy màn hình) <input id="rm" type="checkbox" ${settings.reducedMotion ? "checked" : ""}></label>
+     <label>Chữ lớn (×1.25) <input id="lt" type="checkbox" ${settings.largeText ? "checked" : ""}></label>
+     <h2 style="font-size:1.1rem;margin:10px 0 4px">Phím điều khiển</h2>
+     <div id="keys" style="display:grid;grid-template-columns:1fr auto;gap:4px 12px;text-align:left"></div>
+     <p id="keymsg" style="min-height:1.4em;margin:4px 0;color:var(--danger)"></p>
+     <button id="krestore" class="alt">Khôi phục mặc định</button><button id="back">Xong</button>`,
+    { back: () => { keyCapture = null; back(); } },
   );
+  const keysBox = card.querySelector<HTMLElement>("#keys")!;
+  const keyMsg = card.querySelector<HTMLElement>("#keymsg")!;
+  const drawKeys = (waiting: Action | null = null): void => {
+    keysBox.innerHTML = ACTIONS.map((a) => `<span>${ACTION_LABELS[a]}</span><button data-a="${a}" class="alt" style="margin:0;padding:2px 14px;min-width:6rem">${waiting === a ? "Nhấn phím…" : esc(keyLabel(km()[a]))}</button>`).join("");
+    for (const b of Array.from(keysBox.querySelectorAll<HTMLButtonElement>("button"))) {
+      b.addEventListener("click", () => {
+        const a = b.dataset.a as Action;
+        keyMsg.textContent = "";
+        drawKeys(a);
+        keyCapture = (k) => { // the next key press is the new binding; a duplicate or reserved key is reported, not applied
+          keyCapture = null;
+          const r = rebind(km(), a, k);
+          if (r.ok) { settings.keymap = r.map; saveSettings(settings); updateHelp(); }
+          else keyMsg.textContent = r.reason === "reserved" ? `⚠ Phím ${keyLabel(k)} dành riêng, hãy chọn phím khác.` : `⚠ Phím ${keyLabel(k)} đã dùng cho "${ACTION_LABELS[r.conflictWith!]}".`;
+          drawKeys();
+        };
+      });
+    }
+  };
+  drawKeys();
+  card.querySelector("#krestore")!.addEventListener("click", () => { keyCapture = null; settings.keymap = defaultKeymap(); saveSettings(settings); updateHelp(); keyMsg.textContent = ""; drawKeys(); });
+  card.querySelector<HTMLInputElement>("#rm")!.addEventListener("change", (e) => { settings.reducedMotion = (e.target as HTMLInputElement).checked; saveSettings(settings); });
+  card.querySelector<HTMLInputElement>("#lt")!.addEventListener("change", (e) => { settings.largeText = (e.target as HTMLInputElement).checked; document.documentElement.classList.toggle("large", settings.largeText); saveSettings(settings); });
   card.querySelector<HTMLInputElement>("#cb")!.addEventListener("change", (e) => { settings.colorBlind = (e.target as HTMLInputElement).checked; document.body.classList.toggle("cb", settings.colorBlind); saveSettings(settings); });
   card.querySelector<HTMLInputElement>("#vol")!.addEventListener("input", (e) => { settings.volume = Number((e.target as HTMLInputElement).value) / 100; audio.setVolume(settings.volume); audio.init(); audio.sfx("pickup"); saveSettings(settings); });
   card.querySelector<HTMLInputElement>("#sens")!.addEventListener("input", (e) => { settings.sensitivity = Number((e.target as HTMLInputElement).value) / 100; saveSettings(settings); });
@@ -235,7 +323,7 @@ const esc = (s: string): string => s.replace(/[&<>"]/g, (c) => ({ "&": "&amp;", 
 function showLeaderboard(back: () => void, highlight: number | null = null): void {
   const rows = board.entries();
   const body = rows.length
-    ? rows.map((e, i) => `<tr${highlight === i + 1 ? ' style="color:#F2C14E;font-weight:700"' : ""}><td>${i + 1}</td><td>${esc(e.name)}</td><td>${e.score}</td><td>${e.nights_won}/3</td><td style="font-size:12px;opacity:.8">${esc(e.achieved_at.slice(0, 16).replace("T", " "))}</td></tr>`).join("")
+    ? rows.map((e, i) => `<tr${highlight === i + 1 ? ' style="color:#F2C14E;font-weight:700"' : ""}><td>${i + 1}</td><td>${esc(e.name)}</td><td>${e.score}</td><td>${e.nights_won}/3</td><td style="font-size:1rem;opacity:.8">${esc(e.achieved_at.slice(0, 16).replace("T", " "))}</td></tr>`).join("")
     : '<tr><td colspan="5" style="opacity:.7">Chưa có ai. Hãy là người đầu tiên!</td></tr>';
   showCard(
     `<h1>Bảng xếp hạng</h1><table style="margin:8px auto;border-collapse:collapse;text-align:left"><thead><tr style="opacity:.7"><th>#</th><th>Tên</th><th>Điểm</th><th>Đêm</th><th>Lúc</th></tr></thead><tbody>${body}</tbody></table><button id="back">Xong</button>`,
@@ -247,7 +335,7 @@ function showLeaderboard(back: () => void, highlight: number | null = null): voi
 function showNameEntry(after: () => void): void {
   showCard(
     `<h1>Lưu điểm</h1><p>Điểm: <b>${totalScore}</b> · ${nightsWon}/3 đêm thắng</p>
-     <p><input id="pname" maxlength="12" placeholder="Tên (3-12 ký tự)" autocomplete="off" style="font-size:20px;padding:8px;width:220px;text-align:center"></p>
+     <p><input id="pname" maxlength="12" placeholder="Tên (3-12 ký tự)" autocomplete="off" style="font-size:1.11111rem;padding:8px;width:220px;text-align:center"></p>
      <p id="perr" style="color:var(--danger);min-height:1.4em;margin:0"></p>
      <button id="psave">Lưu</button><button id="pskip" class="alt">Bỏ qua</button>`,
     { pskip: after },
@@ -311,21 +399,24 @@ function endScreen(): void {
 
 // ---------- input ----------
 const idleInput = (): InputState => ({ move: [0, 0], cam_yaw_deg: (yaw * 180) / Math.PI, jump: false, interact: false, pulse: false, dash: false, pause: false });
-const GAME_KEYS = new Set(["f3", "w", "a", "s", "d", "arrowleft", "arrowright", "arrowup", "arrowdown", " ", "e", "f", "shift", "escape", "p"]);
+const km = () => settings.keymap;
+const isGameKey = (k: string): boolean => k === "f3" || k.startsWith("arrow") || (Object.values(km()) as string[]).includes(k) || (k === "p" && km().pause === "escape");
+let keyCapture: ((k: string) => void) | null = null; // set while the settings screen waits for a key to bind
 window.addEventListener("pointerdown", () => audio.init());
 window.addEventListener("keydown", (e) => {
   if ((e.target as HTMLElement | null)?.tagName === "INPUT") return; // typing a name: no game keys
   audio.init();
   const k = e.key.toLowerCase();
-  if (GAME_KEYS.has(k)) e.preventDefault();
+  if (keyCapture) { e.preventDefault(); if (!e.repeat) keyCapture(k); return; }
+  if (isGameKey(k)) e.preventDefault();
   if (e.repeat) return;
   if (k === "f3") { fpsOn = !fpsOn; fpsEl.style.display = fpsOn ? "block" : "none"; fpsFrames = 0; fpsStart = performance.now(); return; }
-  if (k === "escape" || k === "p") { togglePause(); return; }
+  if (k === km().pause || (k === "p" && km().pause === "escape")) { togglePause(); return; }
   keys.add(k);
-  if (k === " ") { latch.jump = true; if (mode === "playing" && sim.grounded) audio.sfx("jump"); }
-  if (k === "e") latch.interact = true;
-  if (k === "f") latch.pulse = true;
-  if (k === "shift") latch.dash = true;
+  if (k === km().jump) { latch.jump = true; if (mode === "playing" && sim.grounded) audio.sfx("jump"); }
+  if (k === km().interact) latch.interact = true;
+  if (k === km().pulse) latch.pulse = true;
+  if (k === km().dash) latch.dash = true;
   if (k === "r" && mode === "result") startNight(night);
 });
 window.addEventListener("keyup", (e) => keys.delete(e.key.toLowerCase()));
@@ -335,15 +426,15 @@ window.addEventListener("pointerup", () => (drag = false));
 window.addEventListener("pointermove", (e) => { if (drag && mode === "playing") yaw -= e.movementX * 0.006 * settings.sensitivity; });
 
 function readInput(): InputState {
-  const f = (keys.has("w") ? 1 : 0) - (keys.has("s") ? 1 : 0);
-  const left = (keys.has("a") ? 1 : 0) - (keys.has("d") ? 1 : 0); // D = screen right = world -X when facing +Z
+  const f = (keys.has(km().forward) ? 1 : 0) - (keys.has(km().back) ? 1 : 0);
+  const left = (keys.has(km().left) ? 1 : 0) - (keys.has(km().right) ? 1 : 0); // D = screen right = world -X when facing +Z
   const inp: InputState = {
     move: [left, f],
     cam_yaw_deg: (yaw * 180) / Math.PI,
-    jump: latch.jump || keys.has(" "),
-    interact: latch.interact || keys.has("e"),
-    pulse: latch.pulse || keys.has("f"),
-    dash: latch.dash || keys.has("shift"),
+    jump: latch.jump || keys.has(km().jump),
+    interact: latch.interact || keys.has(km().interact),
+    pulse: latch.pulse || keys.has(km().pulse),
+    dash: latch.dash || keys.has(km().dash),
     pause: false,
   };
   latch.jump = latch.interact = latch.pulse = latch.dash = false;
@@ -356,7 +447,7 @@ let slots: Element[] = [];
 let slotLabel: HTMLElement | undefined;
 function buildSlots(cap: number): void { // one slot per unit of capacity (10 + 2 per lighting, max 20)
   slotCap = cap;
-  moteBar.innerHTML = Array.from({ length: cap }, () => "<i></i>").join("") + `<span id="slotlabel" style="margin-left:8px;font-size:15px"></span>`;
+  moteBar.innerHTML = Array.from({ length: cap }, () => "<i></i>").join("") + `<span id="slotlabel" style="margin-left:8px;font-size:1rem"></span>`;
   slots = Array.from(moteBar.querySelectorAll("i"));
   slotLabel = moteBar.querySelector<HTMLElement>("#slotlabel")!;
 }
@@ -375,7 +466,7 @@ function renderHud(now: number): void {
   clockEl.textContent = `${sim.timeLeft <= 30 ? "⚠ " : ""}${String(Math.floor(secs / 60)).padStart(2, "0")}:${String(secs % 60).padStart(2, "0")}`;
   const danger = sim.timeLeft <= 30; // red and blinking at <= 30 s
   clockEl.classList.toggle("danger", danger);
-  clockEl.style.opacity = danger && Math.floor(now / 500) % 2 === 1 ? "0.35" : "1";
+  clockEl.style.opacity = danger && !settings.reducedMotion && Math.floor(now / 500) % 2 === 1 ? "0.35" : "1";
   if (slotCap !== sim.capacity) buildSlots(sim.capacity);
   slots.forEach((el, i) => el.classList.toggle("on", i < sim.player.carried));
   if (slotLabel) slotLabel.textContent = `${sim.player.carried}/${sim.capacity}`;
@@ -436,13 +527,13 @@ function onEvent(e: SimEvent): void {
     case "fuel_drain": showToast(`⚠ Bóng Mực đang hút dầu ${e.data.lantern_id} (còn ${e.data.fuel})`); break;
     case "deposit": showToast(`Nạp ${e.data.amount} đom đóm vào ${e.data.lantern_id}`); break;
     case "lantern_lit": showToast(`Đèn ${e.data.lantern_id} đã sáng!`); audio.sfx("lit"); break;
-    case "pulse": audio.sfx("pulse"); addRing(); showToast((e.data.stunned_ids as string[]).length ? "Tỏa sáng! Bóng Mực choáng váng" : "Tỏa sáng!"); break;
+    case "pulse": if (!settings.reducedMotion) shake = 0.15; audio.sfx("pulse"); addRing(); showToast((e.data.stunned_ids as string[]).length ? "Tỏa sáng! Bóng Mực choáng váng" : "Tỏa sáng!"); break;
     case "player_hit":
       audio.sfx("hit");
-      flash.style.opacity = "1"; setTimeout(() => (flash.style.opacity = "0"), 250);
+      if (!settings.reducedMotion) { flash.style.opacity = "1"; setTimeout(() => (flash.style.opacity = "0"), 250); shake = 0.3; }
       showToast(e.data.by === "fall" ? "Bạn rơi xuống biển mây! Mất 1 ngọn lửa" : "Bóng Mực chạm bạn! Mất 1 ngọn lửa");
       break;
-    case "shade_spawned": showToast("Một Bóng Mực xuất hiện!"); audio.sfx("shade"); break;
+    case "shade_spawned": showToast("Một Bóng Mực xuất hiện!"); caption("shade", "⚠ Bóng Mực xuất hiện! Hãy nhìn theo mũi tên ➤", 4000); spawnCue = { id: String(e.data.id), until: performance.now() + 6000 }; audio.sfx("shade"); break;
     case "charm_picked": audio.sfx("charm"); showToast("Bùa Gió! Chạy nhanh hơn, lướt không cần chờ"); break;
     case "drifter_steal": audio.sfx("steal"); showToast(`Gió Lạc cuỗm ${e.data.amount} đom đóm!`); break;
     case "drifter_drop": showToast("Đom đóm rơi lại!"); break;
@@ -571,6 +662,12 @@ function sync(t: number, dt: number): void {
 
   const dist = 15, h = 9;
   camera.position.set(p[0] - Math.sin(yaw) * dist, p[1] + h, p[2] - Math.cos(yaw) * dist);
+  if (shake > 0 && !settings.reducedMotion) {
+    const k = shake / 0.3;
+    camera.position.x += (Math.random() - 0.5) * 0.9 * k;
+    camera.position.y += (Math.random() - 0.5) * 0.9 * k;
+    shake = Math.max(0, shake - dt);
+  } else shake = 0;
   camera.lookAt(p[0], p[1] + 1.2, p[2]);
 }
 
@@ -606,8 +703,13 @@ renderer.setAnimationLoop((now) => {
   }
   sync(now, dt);
   renderHud(now);
+  if (mode === "playing") updateCaptions();
+  renderCaptions(now);
+  updateSpawnArrow(now);
   renderer.render(scene, camera);
 });
+
+updateHelp();
 
 // ---------- benchmark mode (Electron --bench, Ticket-04 section 1) ----------
 interface DdlBridge { benchConfig: { seed: number; duration: number; out: string } | null; benchFirstFrame(): void; benchMeasureStart(): void; benchResult(p: { dts: number[]; renderer: string }): void }

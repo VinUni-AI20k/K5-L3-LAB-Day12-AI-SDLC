@@ -5,6 +5,7 @@ import { DT, TUNING, toTicks } from "../sim/config";
 import { Sim } from "../sim/sim";
 import type { InputState, SimEvent } from "../sim/types";
 import { GameAudio } from "./audio";
+import { Leaderboard, nowIso, validateName, type LeaderboardStorage } from "./leaderboard";
 import { PALETTE, ambientIntensity, css } from "./palette";
 import { createBenchSim, benchCamera } from "../bench/scene";
 import { buildNight, buildSea } from "./scene";
@@ -75,6 +76,24 @@ let sim = new Sim(1);
 let night: Night = 1;
 let mode: Mode = "menu";
 let totalScore = 0;
+let nightsWon = 0;
+let lastSeed = 0;
+
+// leaderboard: Electron stores it in a file in userData (over IPC); the plain web build uses localStorage
+const LB_KEY = "ddl.leaderboard.v1";
+const lbStorage: LeaderboardStorage = {
+  read: () => {
+    const shell = (window as unknown as { ddl?: { leaderboard?: LeaderboardStorage } }).ddl?.leaderboard;
+    if (shell) return shell.read();
+    try { return JSON.parse(localStorage.getItem(LB_KEY) ?? "null"); } catch { return null; }
+  },
+  write: (v) => {
+    const shell = (window as unknown as { ddl?: { leaderboard?: LeaderboardStorage } }).ddl?.leaderboard;
+    if (shell) { shell.write(v); return; }
+    try { localStorage.setItem(LB_KEY, JSON.stringify(v)); } catch { /* storage blocked: the score is just not saved */ }
+  },
+};
+const board = new Leaderboard(lbStorage);
 let acc = 0;
 let lastT = 0;
 let yaw = 0; // cam_yaw_deg in radians: forward (input z=+1) is (sin, cos)
@@ -149,6 +168,7 @@ function loadNightScene(n: Night): void {
 function startNight(n: Night): void {
   night = n;
   const seed = Number(new URLSearchParams(location.search).get("seed")) || Math.floor(Math.random() * 1e9);
+  lastSeed = seed;
   sim = new Sim(seed, {}, n);
   (window as unknown as { __ddl: unknown }).__ddl = { get sim() { return sim; } };
   loadNightScene(n);
@@ -181,8 +201,8 @@ function showMenu(): void {
   audio.stopMusic();
   showCard(
     `<h1>Đảo Đèn Lồng</h1><p>Ba đêm, ba hòn đảo. Nhặt đom đóm, thắp sáng những Đèn Lồng Lớn trước bình minh.</p>
-     <button id="play">Chơi</button><button id="settings" class="alt">Cài đặt</button>`,
-    { play: () => { totalScore = 0; showIntro(1); }, settings: () => showSettings(showMenu) },
+     <button id="play">Chơi</button><button id="board" class="alt">Bảng xếp hạng</button><button id="settings" class="alt">Cài đặt</button>`,
+    { play: () => { totalScore = 0; nightsWon = 0; showIntro(1); }, board: () => showLeaderboard(showMenu), settings: () => showSettings(showMenu) },
   );
 }
 
@@ -208,6 +228,40 @@ function showSettings(back: () => void): void {
   card.querySelector<HTMLInputElement>("#cb")!.addEventListener("change", (e) => { settings.colorBlind = (e.target as HTMLInputElement).checked; document.body.classList.toggle("cb", settings.colorBlind); saveSettings(settings); });
   card.querySelector<HTMLInputElement>("#vol")!.addEventListener("input", (e) => { settings.volume = Number((e.target as HTMLInputElement).value) / 100; audio.setVolume(settings.volume); audio.init(); audio.sfx("pickup"); saveSettings(settings); });
   card.querySelector<HTMLInputElement>("#sens")!.addEventListener("input", (e) => { settings.sensitivity = Number((e.target as HTMLInputElement).value) / 100; saveSettings(settings); });
+}
+
+const esc = (s: string): string => s.replace(/[&<>"]/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" })[c]!);
+
+function showLeaderboard(back: () => void, highlight: number | null = null): void {
+  const rows = board.entries();
+  const body = rows.length
+    ? rows.map((e, i) => `<tr${highlight === i + 1 ? ' style="color:#F2C14E;font-weight:700"' : ""}><td>${i + 1}</td><td>${esc(e.name)}</td><td>${e.score}</td><td>${e.nights_won}/3</td><td style="font-size:12px;opacity:.8">${esc(e.achieved_at.slice(0, 16).replace("T", " "))}</td></tr>`).join("")
+    : '<tr><td colspan="5" style="opacity:.7">Chưa có ai. Hãy là người đầu tiên!</td></tr>';
+  showCard(
+    `<h1>Bảng xếp hạng</h1><table style="margin:8px auto;border-collapse:collapse;text-align:left"><thead><tr style="opacity:.7"><th>#</th><th>Tên</th><th>Điểm</th><th>Đêm</th><th>Lúc</th></tr></thead><tbody>${body}</tbody></table><button id="back">Xong</button>`,
+    { back },
+  );
+}
+
+/** Name entry after the Dawn screen or a loss: 3-12 characters, then save to the leaderboard. */
+function showNameEntry(after: () => void): void {
+  showCard(
+    `<h1>Lưu điểm</h1><p>Điểm: <b>${totalScore}</b> · ${nightsWon}/3 đêm thắng</p>
+     <p><input id="pname" maxlength="12" placeholder="Tên (3-12 ký tự)" autocomplete="off" style="font-size:20px;padding:8px;width:220px;text-align:center"></p>
+     <p id="perr" style="color:var(--danger);min-height:1.4em;margin:0"></p>
+     <button id="psave">Lưu</button><button id="pskip" class="alt">Bỏ qua</button>`,
+    { pskip: after },
+  );
+  const input = card.querySelector<HTMLInputElement>("#pname")!;
+  const err = card.querySelector<HTMLElement>("#perr")!;
+  input.focus();
+  const save = (): void => {
+    if (!validateName(input.value)) { err.textContent = "Tên gồm 3-12 ký tự: chữ cái, số hoặc _ (không dấu cách)."; return; }
+    const r = board.submit({ name: input.value, score: totalScore, nights_won: nightsWon, achieved_at: nowIso(), seed: lastSeed });
+    showLeaderboard(after, r.rank);
+  };
+  card.querySelector("#psave")!.addEventListener("click", save);
+  input.addEventListener("keydown", (ev) => { ev.stopPropagation(); if (ev.key === "Enter") save(); });
 }
 
 function showPause(): void {
@@ -236,10 +290,10 @@ function togglePause(): void {
 
 function endScreen(): void {
   const won = sim.state === "won";
-  if (won) totalScore += sim.score;
+  if (won) { totalScore += sim.score; nightsWon++; }
   if (won && night === 3) {
     mode = "dawn";
-    showCard(`<h1>Bình minh!</h1><p>Bạn đã giữ đèn sáng đến bình minh trên cả ba hòn đảo. Ông Đăng mỉm cười: “Giỏi lắm, Mây.”</p><p>Tổng điểm: <b>${totalScore}</b></p><button id="menu">Về menu</button>`, { menu: showMenu });
+    showCard(`<h1>Bình minh!</h1><p>Bạn đã giữ đèn sáng đến bình minh trên cả ba hòn đảo. Ông Đăng mỉm cười: “Giỏi lắm, Mây.”</p><p>Tổng điểm: <b>${totalScore}</b></p><button id="save">Lưu điểm</button><button id="menu" class="alt">Về menu</button>`, { save: () => showNameEntry(showMenu), menu: showMenu });
     return;
   }
   mode = "result";
@@ -250,8 +304,8 @@ function endScreen(): void {
     const litNow = sim.lanterns.filter((l) => l.lit).length;
     const need = Math.ceil((sim.lanterns.length * Math.round(TUNING.win_ratio * 100)) / 100);
     const reason = sim.player.flames <= 0 ? "Bạn hết ngọn lửa." : `Bình minh đến nhưng chỉ ${litNow}/${sim.lanterns.length} đèn còn sáng (cần ${need}).`;
-    showCard(`<h1>Màn đêm thắng rồi</h1><p>${reason}</p><p>Điểm: <b>${sim.score}</b></p><button id="replay">Chơi lại đêm ${night} (R)</button><button id="menu" class="alt">Về menu</button>`,
-      { replay: () => startNight(night), menu: showMenu });
+    showCard(`<h1>Màn đêm thắng rồi</h1><p>${reason}</p><p>Điểm: <b>${sim.score}</b></p><button id="replay">Chơi lại đêm ${night} (R)</button><button id="save" class="alt">Lưu điểm</button><button id="menu" class="alt">Về menu</button>`,
+      { replay: () => startNight(night), save: () => showNameEntry(showMenu), menu: showMenu });
   }
 }
 
@@ -260,6 +314,7 @@ const idleInput = (): InputState => ({ move: [0, 0], cam_yaw_deg: (yaw * 180) / 
 const GAME_KEYS = new Set(["f3", "w", "a", "s", "d", "arrowleft", "arrowright", "arrowup", "arrowdown", " ", "e", "f", "shift", "escape", "p"]);
 window.addEventListener("pointerdown", () => audio.init());
 window.addEventListener("keydown", (e) => {
+  if ((e.target as HTMLElement | null)?.tagName === "INPUT") return; // typing a name: no game keys
   audio.init();
   const k = e.key.toLowerCase();
   if (GAME_KEYS.has(k)) e.preventDefault();

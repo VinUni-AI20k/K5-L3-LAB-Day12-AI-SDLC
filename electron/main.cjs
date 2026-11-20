@@ -15,6 +15,29 @@ const val = (f, d) => {
 };
 
 const bench = has("--bench");
+const exportPath = has("--export-leaderboard") ? val("--export-leaderboard", "leaderboard-export.json") : null;
+
+// leaderboard file in the per-user data folder (survives restarts); entries are kept in rank order by the web code
+const lbFile = () => path.join(app.getPath("userData"), "leaderboard.json");
+function lbRead() {
+  try {
+    const v = JSON.parse(fs.readFileSync(lbFile(), "utf8"));
+    return Array.isArray(v) ? v : Array.isArray(v && v.entries) ? v.entries : [];
+  } catch {
+    return [];
+  }
+}
+ipcMain.on("bench-config", (e) => { e.returnValue = benchCfg; }); // null when not benchmarking
+ipcMain.on("lb-read", (e) => { e.returnValue = lbRead(); });
+ipcMain.on("lb-write", (e, entries) => {
+  try {
+    fs.mkdirSync(path.dirname(lbFile()), { recursive: true });
+    fs.writeFileSync(lbFile(), JSON.stringify(entries, null, 2) + "\n");
+    e.returnValue = true;
+  } catch {
+    e.returnValue = false;
+  }
+});
 const benchCfg = bench ? { seed: Number(val("--seed", "42")), duration: Number(val("--duration", "30")), out: val("--out", "bench.json") } : null;
 if (bench) {
   // vsync off, frame-rate limit off, so the measured fps is not capped by the display
@@ -46,7 +69,6 @@ function setupBench() {
     const kb = app.getAppMetrics().reduce((sum, m) => sum + (m.memory ? m.memory.workingSetSize : 0), 0);
     if (kb > peakKb) peakKb = kb;
   };
-  ipcMain.on("bench-config", (e) => { e.returnValue = benchCfg; });
   ipcMain.on("bench-first-frame", () => {
     // process start = Date.now() - uptime; so load_ms = uptime at the first rendered bench frame
     if (loadMs === null) loadMs = Math.round(process.uptime() * 1000);
@@ -84,5 +106,18 @@ function setupBench() {
 }
 
 if (bench) setupBench();
-app.whenReady().then(createWindow);
+app.whenReady().then(() => {
+  if (exportPath) { // --export-leaderboard out.json: no window, write {"entries": [...]} in rank order and quit
+    try {
+      fs.mkdirSync(path.dirname(path.resolve(exportPath)), { recursive: true });
+      fs.writeFileSync(exportPath, JSON.stringify({ entries: lbRead() }, null, 2) + "\n");
+      app.exit(0);
+    } catch (err) {
+      process.stderr.write(`export failed: ${err && err.message}\n`);
+      app.exit(1);
+    }
+    return;
+  }
+  createWindow();
+});
 app.on("window-all-closed", () => app.quit());

@@ -19,7 +19,7 @@ function count(v: unknown, what: string): number {
 
 const SHADE_STATES: string[] = ["spawning", "wander", "chase", "recoil", "stunned"];
 const DRIFTER_STATES: string[] = ["idle", "chase", "flee"];
-export const LANTERN_IDS = ["L1", "L2", "L3", "L4", "L5"] as const;
+const LANTERN_ID = /^L[1-9]\d*$/; // Night 2 has L1..L6, Night 3 L1..L7; ids a night does not have are ignored by the sim
 
 export function parseScenario(raw: unknown): Scenario {
   if (!isObj(raw)) throw new BadFileError("scenario must be a JSON object");
@@ -66,7 +66,7 @@ export function parseScenario(raw: unknown): Scenario {
     if (!Array.isArray(raw.lanterns)) throw new BadFileError("lanterns must be an array");
     sc.lanterns = raw.lanterns.map((l, i) => {
       if (!isObj(l)) throw new BadFileError(`lanterns[${i}] must be an object`);
-      if (typeof l.id !== "string" || !(LANTERN_IDS as readonly string[]).includes(l.id)) throw new BadFileError(`lanterns[${i}].id must be one of L1..L5`);
+      if (typeof l.id !== "string" || !LANTERN_ID.test(l.id)) throw new BadFileError(`lanterns[${i}].id must look like L1, L2, ...`);
       const out: NonNullable<Scenario["lanterns"]>[number] = { id: l.id };
       if (l.pos !== undefined) out.pos = vec3(l.pos, `lanterns[${i}].pos`);
       if (l.deposited !== undefined) {

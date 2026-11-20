@@ -13,45 +13,62 @@ npm run build
 npm run play
 ```
 
-## Headless (Test Contract v1.0)
+## Headless (Test Contract v1.1)
 ```bash
 node dist/headless.js --seed 1 --night 1 --ticks 600 --out out/run.jsonl [--scenario s.json] [--inputs i.json] [--snapshot-every 10]
 ```
+`--night` is 1, 2 or 3. Bad scenario/inputs files exit with code 2.
 
 ## Tests
-Run `npm run verify`. It does a typecheck, builds the headless bundle, runs the unit and scenario tests, and runs the determinism checks.
+Run `npm run verify`: typecheck, headless build, then all tests: 65 scenario folders under `tests/scenarios/` (each run twice and byte-compared), contract hygiene, CLI checks and a performance test (a full Night 3 in about 0.4 s; limit 30 s).
 
 ## Controls
 | Key | Action |
 |---|---|
 | W A S D | Move (relative to the camera) |
-| Space | Jump (vertical only; it does not avoid shades) |
-| E | Deposit carried fireflies into the nearest unlit lantern within 3 m |
-| F | Light pulse: costs 1 carried firefly, stuns and pushes shades within 6 m |
-| ← → or drag the mouse | Turn the camera |
-| R / "Chơi lại" button | Play again after a win or loss |
+| Space | Jump (only when on the ground) |
+| Shift | Dash: 14 m/s for 0.2 s (2.8 m) in the move direction, or the facing direction when standing still; 1.5 s cooldown |
+| E | Deposit carried fireflies into the nearest unlit lantern within 2 m |
+| F | Light pulse: costs 3 fireflies, 3 s cooldown, stuns and pushes shades within 5 m |
+| Esc / P | Pause menu (Continue, Replay night, Settings, Back to menu) |
+| ← → or drag the mouse | Turn the camera (sensitivity in Settings) |
+| F3 | FPS counter |
+| R | Replay the night after a loss |
 
-Fireflies are picked up automatically when you walk within 1.5 m (up to 10 carried, in firefly-id order).
+Fireflies are picked up automatically within 1 m (and 1.5 m in height), up to 10 carried, in firefly-id order. Volume and mouse sensitivity are saved in the browser.
+
+## The three nights
+| Night | Island | Lanterns | Time | Extras |
+|---|---|---|---|---|
+| 1 Đảo Bến | round, r 40 | 5 | 300 s | |
+| 2 Đảo Cau | two islands r 28 joined by a bamboo bridge | 6 | 330 s | launch pads, Gió Lạc drifters, Bùa Gió charm |
+| 3 Đảo Chuông | r 45 with 3 tiers, ramps, bell tower | 7 | 360 s | wind gusts, drifters, 2 charms, launch pad to the top tier |
+
+Winning Night 3 shows the Dawn screen with the total of the nights won. A lost night can be replayed.
 
 ## Scoring
 Values are in `game.contract.json` → `tuning.score` (and `src/sim/config.ts`).
-- +10 per firefly **deposited** (not on pickup), +100 when a lantern is lit, +20 per shade stunned by a pulse.
-- On a **win only**: +2 per whole second left (rounded down) and +50 per flame left, added on the tick of `game_over`. A loss gets no bonus, so `end.score` is the final score.
-- Score is always an integer.
+- +10 per firefly **deposited**, +100 per lantern lit, +5 per shade hit by a pulse (every time, also stunned ones).
+- On a **win only**: `floor(seconds left) × 2 + 50 × flames left`, added on the tick of `game_over`. A loss gets no bonus.
+- Score per night is an integer; the web game sums the nights won.
 
-## Rules and assumptions (the PRD leaves these open; full list in [docs/notes/assumptions.md](docs/notes/assumptions.md))
-- One night of 300 s on a round island of radius 40 m. Five lanterns L1..L5 on a ring of radius 25 m, 72° apart (L1 at (0,0,25)). 3 flames, 30 fireflies (one more every 4 s if fewer than 30).
-- **Pickup:** automatic, in firefly-id order. When carrying 10 you walk through fireflies without picking them up.
-- **Deposit:** `min(carried, 5 - deposited)`; the rest stays with you. A lantern needs 5.
-- **Hit:** a shade within 1 m costs 1 flame and drops `floor(carried × 0.5)` fireflies (lost, not re-scattered). Then 1.5 s of invulnerability. Stunned shades cannot hit.
-- **Pulse:** needs 1 carried firefly and no cooldown (1 s). Shades within 6 m are stunned 2 s and pushed 4 m away. A pulse with nobody in range still happens and still costs. Stunning an already-stunned shade scores again.
-- **Shades:** first one at 5 s, then every 30 s, up to 5, at the island edge. They chase on the ground plane at 4 m/s. They cannot enter 6 m around a **lit** lantern; if one is inside when the lantern lights (or a pulse pushes it in), it is moved to the nearest point outside every lit zone.
-- **Falling:** off (`fall_enabled: false`). The island edge is a wall.
-- **End:** all lit = win, else no flames = loss, else dawn (time 0) = loss, checked in that order.
-- Concepts we do not have: `dash` (accepted in inputs and ignored). No tuning value is `null`.
+## Rules and assumptions (Ticket-02 fixes the numbers; where it is silent see [docs/notes/assumptions.md](docs/notes/assumptions.md))
+- **Hit:** a non-stunned shade within 1 m (and 1.5 m in height) costs 1 flame, drops `floor(carried / 2)` fireflies onto a 1.5–2.5 m ring (they live 480 ticks and can be picked up again), then 90 ticks of invulnerability. The shade recoils 2 m. A fall (below Y −10) costs 1 flame and all carried fireflies, waits 60 ticks, then respawns at the start with 90 ticks of invulnerability.
+- **Shades:** `spawning` (60 ticks, harmless) → `wander` (stays put) → `chase` within 12 m, give up beyond 18 m; `recoil` and `stunned` as above. 2 spawn at 5 s, then one per 8 / 7 / 6 s (cap 6 / 8 / 10) on fixed points at least 15 m away. They cannot enter 6 m around a **lit** lantern; one already inside is pushed out at 0.2 m per tick, harmlessly.
+- **Pulse:** hits shades whose 3D distance from Mây's feet + 0.8 m is at most 5; stun 120 ticks, 4 m push over 15 ticks.
+- **Charm:** 600 ticks of 7.2 m/s running and no dash cooldown; respawns 2700 ticks after pickup.
+- **Drifters (Nights 2–3):** at most 2, spawn at ticks 1200k. Chase Mây when carrying ≥ 5 within 15 m, steal 3 once, flee; a pulse makes a chasing one flee and makes a fleeing one drop what it stole.
+- **Wind (Night 3):** a 5 s gust every 30 s (from tick 1800) pushes Mây at 2 m/s.
+- **End:** no flames = loss, else all lit = win (even on the dawn tick), else dawn = loss.
+- **Pause:** `tick` keeps counting but time, timers and spawns stop (`sim_tick` shows the frozen game clock).
+- No tuning value is `null`.
 
 ## Sáng tạo của tôi
-_Phase 1: nothing beyond the core yet._ Web-only polish that does not touch `src/sim` or headless output: the island and sky warm up as lanterns are lit, a ring of light on a pulse, a red flash on a hit.
+Nothing is added beyond the ticket's requirements. Web-only polish that does not touch `src/sim` or headless output: the sky and fog warm up as lanterns are lit, a ring of light on a pulse, a red flash on a hit, a blinking warning on dropped fireflies about to vanish.
+
+## Known gaps
+- Audio (synthesised with WebAudio, `src/web/audio.ts`) was never listened to by the author's agent: see the manual check list in `docs/proof/phase-2/summary.md`.
+- No gust warning (leaves) is drawn before a wind gust.
 
 ## Project notes
 - Assumptions: [docs/notes/assumptions.md](docs/notes/assumptions.md)

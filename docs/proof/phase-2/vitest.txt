@@ -1,0 +1,85 @@
+
+ RUN  v3.2.7 /Users/cuong/Documents/AI20K/K5-L3A-LAB-Day12-NguyenHoangCuong-2A202603568-AI-SDLC
+
+ ✓ tests/contract.test.ts > contract hygiene > game.contract.json tuning matches src/sim/config.ts 1ms
+ ✓ tests/contract.test.ts > contract hygiene > v1.1 tuning has the standard numbers and the 5 new keys 1ms
+ ✓ tests/contract.test.ts > contract hygiene > src/sim uses no nondeterministic or rendering APIs 1ms
+ ✓ tests/contract.test.ts > headless CLI > writes JSONL whose last line is an end record 208ms
+ ✓ tests/scenarios.test.ts > headless scenarios > p0-smoke 349ms
+stdout | tests/perf.test.ts > performance > runs a full Night 3 (21,600 ticks) in under 30 s
+Night 3, 21600 ticks: 0.48 s
+
+ ✓ tests/perf.test.ts > performance > runs a full Night 3 (21,600 ticks) in under 30 s 485ms
+ ✓ tests/scenarios.test.ts > headless scenarios > p1-bad-inputs-json 140ms
+ ✓ tests/contract.test.ts > headless CLI > is byte-identical across two runs with the same args 292ms
+ ✓ tests/contract.test.ts > headless CLI > rejects missing required args with non-zero exit and stderr 118ms
+ ✓ tests/scenarios.test.ts > headless scenarios > p1-bad-inputs-move-range 126ms
+ ✓ tests/scenarios.test.ts > headless scenarios > p1-bad-inputs-order 84ms
+ ✓ tests/scenarios.test.ts > headless scenarios > p1-bad-scenario-deposited 81ms
+ ✓ tests/scenarios.test.ts > headless scenarios > p1-bad-scenario-type 79ms
+ ✓ tests/scenarios.test.ts > headless scenarios > p1-default-world 169ms
+ ✓ tests/scenarios.test.ts > headless scenarios > p1-deposit-lights 163ms
+ ✓ tests/scenarios.test.ts > headless scenarios > p1-deposit-out-of-range 164ms
+ ✓ tests/scenarios.test.ts > headless scenarios > p1-deposit-partial 164ms
+ ✓ tests/scenarios.test.ts > headless scenarios > p1-deposit-remaining 164ms
+ ✓ tests/scenarios.test.ts > headless scenarios > p1-end-priority-dawn 165ms
+ ✓ tests/scenarios.test.ts > headless scenarios > p1-end-priority-flames-dawn 161ms
+ ✓ tests/scenarios.test.ts > headless scenarios > p1-hit-drop 168ms
+ ✓ tests/scenarios.test.ts > headless scenarios > p1-inputs-accept-dash 163ms
+ ✓ tests/scenarios.test.ts > headless scenarios > p1-interact-edge 167ms
+ ✓ tests/scenarios.test.ts > headless scenarios > p1-jump-lands 166ms
+ ✓ tests/scenarios.test.ts > headless scenarios > p1-lit-expels-shade 161ms
+ ✓ tests/scenarios.test.ts > headless scenarios > p1-lose-dawn 163ms
+ ✓ tests/scenarios.test.ts > headless scenarios > p1-lose-no-flames 161ms
+ ✓ tests/scenarios.test.ts > headless scenarios > p1-mote-respawn 164ms
+ ✓ tests/scenarios.test.ts > headless scenarios > p1-move-cam-yaw 164ms
+ ✓ tests/scenarios.test.ts > headless scenarios > p1-move-diagonal 163ms
+ ✓ tests/scenarios.test.ts > headless scenarios > p1-move-straight 164ms
+ ✓ tests/scenarios.test.ts > headless scenarios > p1-pickup-boundary 162ms
+ ✓ tests/scenarios.test.ts > headless scenarios > p1-pickup-capacity 162ms
+ ✓ tests/scenarios.test.ts > headless scenarios > p1-pulse-boundary 163ms
+ ✓ tests/scenarios.test.ts > headless scenarios > p1-pulse-cooldown 163ms
+ ✓ tests/scenarios.test.ts > headless scenarios > p1-pulse-empty 162ms
+ ✓ tests/scenarios.test.ts > headless scenarios > p1-pulse-no-light 164ms
+ ✓ tests/scenarios.test.ts > headless scenarios > p1-pulse-prevents-hit 166ms
+ ✓ tests/scenarios.test.ts > headless scenarios > p1-pulse-push-into-zone 162ms
+ ✓ tests/scenarios.test.ts > headless scenarios > p1-pulse-stun-push 168ms
+ ✓ tests/scenarios.test.ts > headless scenarios > p1-safe-zone-overlap 162ms
+ ✓ tests/scenarios.test.ts > headless scenarios > p1-setup-time-model 164ms
+ ✓ tests/scenarios.test.ts > headless scenarios > p1-shade-chase 164ms
+ ✓ tests/scenarios.test.ts > headless scenarios > p1-shade-ids-unique 158ms
+ ✓ tests/scenarios.test.ts > headless scenarios > p1-shade-safe-radius 164ms
+ ✓ tests/scenarios.test.ts > headless scenarios > p1-shade-spawn-schedule 174ms
+ ✓ tests/scenarios.test.ts > headless scenarios > p1-ticks-zero 159ms
+ ✓ tests/scenarios.test.ts > headless scenarios > p1-win-bonus-fraction 160ms
+ ✓ tests/scenarios.test.ts > headless scenarios > p1-win-score 162ms
+ ✓ tests/scenarios.test.ts > headless scenarios > p2-bad-night 79ms
+ ✓ tests/scenarios.test.ts > headless scenarios > p2-bad-pause 79ms
+ ✓ tests/scenarios.test.ts > headless scenarios > p2-charm 160ms
+ ✓ tests/scenarios.test.ts > headless scenarios > p2-dash 162ms
+ ✓ tests/scenarios.test.ts > headless scenarios > p2-deposit-tie 161ms
+ ✓ tests/scenarios.test.ts > headless scenarios > p2-drifter-pulse-drop 171ms
+ ✓ tests/scenarios.test.ts > headless scenarios > p2-drifter-steal 181ms
+ ✓ tests/scenarios.test.ts > headless scenarios > p2-end-win-at-dawn 165ms
+ ✓ tests/scenarios.test.ts > headless scenarios > p2-fall 165ms
+ ✓ tests/scenarios.test.ts > headless scenarios > p2-hit-drop-ring 163ms
+ ✓ tests/scenarios.test.ts > headless scenarios > p2-hit-id-order 161ms
+ ✓ tests/scenarios.test.ts > headless scenarios > p2-lantern-cost 163ms
+ ✓ tests/scenarios.test.ts > headless scenarios > p2-launch-pad 163ms
+ ✓ tests/scenarios.test.ts > headless scenarios > p2-n1-schedule 179ms
+ ✓ tests/scenarios.test.ts > headless scenarios > p2-night2-map 158ms
+ ✓ tests/scenarios.test.ts > headless scenarios > p2-night3-map 157ms
+ ✓ tests/scenarios.test.ts > headless scenarios > p2-night3-prelit-l7 157ms
+ ✓ tests/scenarios.test.ts > headless scenarios > p2-pause 164ms
+ ✓ tests/scenarios.test.ts > headless scenarios > p2-pickup-radius 162ms
+ ✓ tests/scenarios.test.ts > headless scenarios > p2-pulse-cost 161ms
+ ✓ tests/scenarios.test.ts > headless scenarios > p2-pulse-stun-push 165ms
+ ✓ tests/scenarios.test.ts > headless scenarios > p2-safe-zone-pushout 164ms
+ ✓ tests/scenarios.test.ts > headless scenarios > p2-wind 190ms
+ ✓ tests/scenarios.test.ts > matches() > does partial object, exact-length array and strict primitive matching 0ms
+
+ Test Files  3 passed (3)
+      Tests  73 passed (73)
+   Start at  16:23:30
+   Duration  10.66s (transform 55ms, setup 0ms, collect 97ms, tests 11.50s, environment 0ms, prepare 144ms)
+

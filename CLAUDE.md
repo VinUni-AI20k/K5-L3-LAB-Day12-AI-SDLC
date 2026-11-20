@@ -5,14 +5,14 @@
 ## Commands
 - Install/build: `npm ci && npm run build` (headless → `dist/headless.js`, web → `dist/web`)
 - Verify (run before claiming done): `npm run verify` = typecheck + build:headless + vitest
-- Headless: `node dist/headless.js --seed 1 --night 1 --ticks 600 --out out/run.jsonl [--scenario f] [--inputs f]`
+- Headless: `node dist/headless.js --seed 1 --night 1..3 --ticks 600 --out out/run.jsonl [--scenario f] [--inputs f]`
 - Play: `npm run dev` (dev) or `npm run play` (built preview)
 
 ## Layout
-- `src/sim/` pure game logic. NO imports of three/DOM. Shared by web and headless.
+- `src/sim/` pure game logic (`sim.ts` rules, `maps.ts` per-night data and ground heights, `config.ts` numbers). NO imports of three/DOM. Shared by web and headless.
 - `src/headless/` contract CLI. `src/web/` renderer + HUD that only READ sim state and push inputs.
 - `tests/` vitest; `tests/scenarios/` headless scenario fixtures with assertions.
-- Spec: `docs/spec/contract-v1.md` + `docs/spec/ticket-02.md` (v1.1 overrides v1.0; standard numbers are fixed by the
+- Spec: `docs/spec/contract-v1.md` + `ticket-02.md` (Contract v1.1) + `docs/spec/ticket-02.md` (v1.1 overrides v1.0; standard numbers are fixed by the
   customer). Do not re-fetch the lab board. Decisions: `docs/notes/assumptions.md`. Current phase plan: `docs/notes/handoff-phase2.md`.
 - Per-night data (maps, spawn points, lanterns, pads) lives in `src/sim/maps.ts`; headless takes `--night 1|2|3`.
 

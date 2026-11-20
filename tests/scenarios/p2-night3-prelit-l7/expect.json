@@ -1,0 +1,7 @@
+{
+  "requirement": "P2-02 (review) Night 3 has 7 lanterns, so a scenario may pre-light L7 and move L6 (ids are not limited to L1..L5): t0 L7 lit with deposited = lantern_cost 10, L6 at (21,0,-34), the other five unchanged and unlit; no events, score 0",
+  "seed": 1, "night": 3, "ticks": 0,
+  "snapshots": [ { "tick": 0, "score": 0, "lanterns": [
+    { "id": "L1", "lit": false }, { "id": "L2", "lit": false }, { "id": "L3", "lit": false }, { "id": "L4", "lit": false }, { "id": "L5", "lit": false },
+    { "id": "L6", "pos": [21, 0, -34], "lit": false, "deposited": 0 }, { "id": "L7", "pos": [-20, 0, -35], "lit": true, "deposited": 10 } ] } ]
+}

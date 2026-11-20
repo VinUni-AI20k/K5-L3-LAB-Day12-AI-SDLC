@@ -15,6 +15,10 @@ Three to five lines per phase:
 - Next: ask the TA about the remaining Q6..Q9, Q11, Q13..Q15 before Phase 2 so they stop being guesses.
 
 ### Phase 2
+- Passing: all 65 scenario folders (23 `p2-*`, 41 `p1-*` re-derived or kept, `p0-smoke`) and 73 tests green; perf 0.4 s for a full Night 3; 3-night web flow, pause, settings, full HUD, palette, 60 FPS at 1280x720. NOT VERIFIED: audio by ear; no full manual play-through; no wind visual.
+- Phase 1 held up: every p1 scenario was re-derived by arithmetic from the v1.1 numbers (22 changed, 1 deleted) and nothing was weakened.
+- Where the AI went wrong: step 4 needed `night_start` that the handoff scheduled for step 7; the working directory changed after a `cd` in a command; web teleports were used for screenshots. See `ai-log.md`.
+- Next: ask the TA about the open defaults before Phase 3, and have a human play a full night.
 ### Phase 3
 ### Phase 4
 

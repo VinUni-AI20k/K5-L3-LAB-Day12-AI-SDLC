@@ -536,7 +536,8 @@ export class Sim {
       }
     }
     if (T >= this.invulnUntil && this.fallWait === 0) {
-      const order = [...this.shades].sort((a, b) => (a.id < b.id ? -1 : a.id > b.id ? 1 : 0));
+      const num = (id: string): number => Number(id.replace(/\D/g, "")) || 0;
+      const order = [...this.shades].sort((a, b) => num(a.id) - num(b.id) || (a.id < b.id ? -1 : a.id > b.id ? 1 : 0)); // ascending id, numerically (S2 before S10)
       const hitter = order.find((sh) =>
         (sh.state === "wander" || sh.state === "chase") && !pushedOut.has(sh) && !this.insideLitZone(sh.pos) &&
         dist2d(sh.pos, p.pos) <= TUNING.shade_hit_radius && Math.abs(sh.pos[1] - p.pos[1]) <= WORLD.touch_height_tol);

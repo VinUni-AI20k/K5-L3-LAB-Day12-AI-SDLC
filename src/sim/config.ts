@@ -33,8 +33,6 @@ export const DT = 1 / TICK_RATE;
 
 /** Numbers the contract does not ask for (not in game.contract.json). Still gameplay numbers, so they live here only. */
 export const WORLD = {
-  island_radius: 40,
-  lantern_ring_radius: 25, // L1 at (0,0,25), then every 72 degrees towards +X
   mote_start: 20, // motes at the start, on distinct spawn points
   mote_cap: 30, // random motes never exceed this
   charm_ticks: 600,
@@ -65,14 +63,7 @@ export const WORLD = {
   drop_ring_min: 1.5,
   drop_ring_width: 1,
   mote_height_tol: 1.5, // |feet Y - mote Y| for pickup
-  mote_min_r: 3, // random motes spawn between these radii (never on top of the start)
-  mote_max_r: 38,
   mote_respawn_s: 4,
-  shade_first_s: 5,
-  shade_interval_s: 30,
-  shade_max: 5,
-  shade_y: 1,
-  shade_spawn_r: 39,
   jump_speed: 7, // m/s, gravity below: air time 0.7 s
   gravity: 20,
 } as const;

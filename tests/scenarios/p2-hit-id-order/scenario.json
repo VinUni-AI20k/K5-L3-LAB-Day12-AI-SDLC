@@ -1,0 +1,5 @@
+{
+  "random_motes": false, "motes": [], "random_shades": false,
+  "shades": [ { "id": "S10", "pos": [0.5, 1, 0], "state": "chase" }, { "id": "S2", "pos": [-0.5, 1, 0], "state": "chase" } ],
+  "player": { "pos": [0, 0, 0], "carried": 0 }
+}

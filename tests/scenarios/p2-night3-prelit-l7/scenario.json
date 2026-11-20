@@ -1,0 +1,4 @@
+{
+  "random_motes": false, "motes": [], "random_shades": false, "shades": [], "random_drifters": false, "drifters": [], "wind_enabled": false,
+  "lanterns": [ { "id": "L7", "lit": true }, { "id": "L6", "pos": [21, 0, -34] } ]
+}

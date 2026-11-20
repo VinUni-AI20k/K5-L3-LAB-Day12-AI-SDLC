@@ -1,0 +1,6 @@
+{
+  "requirement": "P2-08 (review) touches are resolved in ascending id order, numerically: S2 comes before S10. Both are 0.5 m away; at most 1 flame per tick, so S2 hits (flames 3 -> 2) and goes into recoil, S10 stays in chase (a string sort would pick S10)",
+  "seed": 1, "ticks": 2, "snapshot_every": 1,
+  "events": [ { "name": "player_hit", "tick": 1, "data": { "by": "shade", "flames": 2, "dropped": 0 } } ],
+  "snapshots": [ { "tick": 2, "player": { "flames": 2 }, "shades": [ { "id": "S10", "state": "chase" }, { "id": "S2", "state": "recoil" } ] } ]
+}

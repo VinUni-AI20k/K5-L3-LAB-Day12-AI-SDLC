@@ -1,4 +1,4 @@
-// Headless entry (Test Contract v1.0): load + validate scenario/inputs (exit 2 on bad files) -> run sim steps -> JSONL.
+// Headless entry (Test Contract v1.1): load + validate scenario/inputs (exit 2 on bad files) -> run sim steps -> JSONL.
 import { mkdirSync, readFileSync, writeFileSync } from "node:fs";
 import { dirname } from "node:path";
 import { BadFileError, InputTimeline, parseInputs, parseScenario } from "../sim/files";

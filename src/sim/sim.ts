@@ -116,6 +116,11 @@ export class Sim {
     }
   }
 
+  /** Ticks left of the inert wait after a fall (render only: hides Mây). */
+  get fallWaitTicks(): number {
+    return this.fallWait;
+  }
+
   get timeLeft(): number {
     return this.duration - this.st / TICK_RATE;
   }

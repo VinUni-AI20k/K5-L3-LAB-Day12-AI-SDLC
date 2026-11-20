@@ -21,6 +21,11 @@
       #overlay p { margin: 6px 0; line-height: 1.45; }
       #overlay button { margin-top: 14px; font-size: 18px; padding: 10px 26px; border-radius: 10px; border: 0; background: #ffb347; color: #2a1200; cursor: pointer; font-weight: 600; }
       #overlay button:hover { background: #ffc76e; }
+      #overlay button.alt { background: transparent; color: #ffd9a0; border: 1px solid rgba(255, 190, 110, 0.6); margin-left: 8px; }
+      #overlay .kicker { margin: 0; opacity: 0.7; letter-spacing: 0.15em; text-transform: uppercase; font-size: 13px; }
+      #overlay .speech { font-style: italic; }
+      #overlay label { display: flex; justify-content: space-between; align-items: center; gap: 16px; margin: 12px 0; }
+      #overlay input[type=range] { width: 180px; }
     </style>
   </head>
   <body>
@@ -28,7 +33,7 @@
       <div id="stats" class="panel"></div>
       <div id="timer" class="panel"></div>
       <div id="toast" class="panel"></div>
-      <div id="help" class="panel">WASD đi · Space nhảy · E nạp đèn · F tỏa sáng · ← → / kéo chuột xoay camera</div>
+      <div id="help" class="panel">WASD đi · Space nhảy · Shift lướt · E nạp đèn · F tỏa sáng · Esc/P tạm dừng · ← → / kéo chuột xoay camera</div>
     </div>
     <div id="flash"></div>
     <div id="overlay"><div class="card"></div></div>

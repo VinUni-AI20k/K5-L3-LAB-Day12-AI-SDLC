@@ -116,6 +116,15 @@ export class Sim {
     }
   }
 
+  /** Cooldown ticks left (render only: HUD icons). */
+  get dashCooldownTicks(): number {
+    return this.charmTicks > 0 ? 0 : this.dashCd;
+  }
+
+  get pulseCooldownTicks(): number {
+    return Math.max(0, this.pulseReadyAt - this.st);
+  }
+
   /** Ticks left of the inert wait after a fall (render only: hides Mây). */
   get fallWaitTicks(): number {
     return this.fallWait;

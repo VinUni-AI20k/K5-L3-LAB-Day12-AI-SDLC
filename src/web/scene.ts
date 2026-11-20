@@ -5,9 +5,11 @@ import { NIGHTS } from "../sim/maps";
 const std = (color: number, emissive = 0x000000, ei = 0): THREE.MeshStandardMaterial =>
   new THREE.MeshStandardMaterial({ color, emissive, emissiveIntensity: ei, roughness: 0.9 });
 
-const GRASS = 0x4d7d4a;
-const SAND = 0xc9b48a;
-const WOOD = 0x6b4a2f;
+import { PALETTE } from "./palette";
+
+const GRASS = PALETTE.grass;
+const SAND = PALETTE.sand;
+const WOOD = PALETTE.wood;
 
 function disc(cx: number, cz: number, r: number, h: number, topY: number, color: number): THREE.Mesh {
   const m = new THREE.Mesh(new THREE.CylinderGeometry(r, r, h, 72), std(color));
@@ -51,10 +53,10 @@ export function buildNight(night: 1 | 2 | 3): THREE.Group {
     const hole = new THREE.Path();
     hole.absarc(0, 0, 12, 2 * Math.PI, Math.PI, true);
     shape.holes.push(hole);
-    const tier1 = new THREE.Mesh(new THREE.ExtrudeGeometry(shape, { depth: 3, bevelEnabled: false, curveSegments: 48 }), std(0x5f8f55));
+    const tier1 = new THREE.Mesh(new THREE.ExtrudeGeometry(shape, { depth: 3, bevelEnabled: false, curveSegments: 48 }), std(0x3a7060));
     tier1.rotation.x = -Math.PI / 2;
     g.add(tier1);
-    g.add(disc(0, 0, 8, 6, 6, 0x6a9a60)); // tier 2 (Y 6)
+    g.add(disc(0, 0, 8, 6, 6, 0x4a8070)); // tier 2 (Y 6)
     const tower = new THREE.Mesh(new THREE.CylinderGeometry(2, 2, 8, 24), std(0x8a7a6a));
     tower.position.y = 4;
     g.add(tower);
@@ -77,7 +79,7 @@ export function buildNight(night: 1 | 2 | 3): THREE.Group {
 
   // launch pads
   for (const pad of def.pads) {
-    const m = new THREE.Mesh(new THREE.CylinderGeometry(pad.radius, pad.radius, 0.12, 24), std(0xf2c14e, 0xf2a020, 0.8));
+    const m = new THREE.Mesh(new THREE.CylinderGeometry(pad.radius, pad.radius, 0.12, 24), std(PALETTE.gold, 0xf2a020, 0.8));
     m.position.set(pad.center[0], pad.center[1] + 0.06, pad.center[2]);
     g.add(m);
     const ring = new THREE.Mesh(new THREE.TorusGeometry(pad.radius, 0.06, 8, 32), std(0xfff0b0, 0xffd060, 1));
@@ -90,7 +92,7 @@ export function buildNight(night: 1 | 2 | 3): THREE.Group {
 
 /** The night's background sea plane, centred under the islands. */
 export function buildSea(night: 1 | 2 | 3): THREE.Mesh {
-  const sea = new THREE.Mesh(new THREE.CircleGeometry(400, 48), new THREE.MeshBasicMaterial({ color: 0x12384a }));
+  const sea = new THREE.Mesh(new THREE.CircleGeometry(400, 48), new THREE.MeshBasicMaterial({ color: PALETTE.cloudSea }));
   sea.rotation.x = -Math.PI / 2;
   sea.position.set(night === 2 ? 35 : 0, -8, 0);
   return sea;

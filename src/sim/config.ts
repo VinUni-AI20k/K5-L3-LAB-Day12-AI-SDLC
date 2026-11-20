@@ -35,7 +35,13 @@ export const DT = 1 / TICK_RATE;
 export const WORLD = {
   island_radius: 40,
   lantern_ring_radius: 25, // L1 at (0,0,25), then every 72 degrees towards +X
-  mote_count: 30,
+  mote_start: 20, // motes at the start, on distinct spawn points
+  mote_cap: 30, // random motes never exceed this
+  charm_ticks: 600,
+  charm_respawn_ticks: 2700,
+  charm_speed: 7.2,
+  dropped_ttl_ticks: 480,
+  mote_height_tol: 1.5, // |feet Y - mote Y| for pickup
   mote_min_r: 3, // random motes spawn between these radii (never on top of the start)
   mote_max_r: 38,
   mote_respawn_s: 4,

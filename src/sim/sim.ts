@@ -3,7 +3,7 @@
 import { DT, TICK_RATE, TUNING, WORLD, toTicks } from "./config";
 import { NIGHTS, groundHeight, type NightDef } from "./maps";
 import { createRng, r3 } from "./rng";
-import type { GameState, InputState, Lantern, Mote, Scenario, Shade, ShadeState, SimEvent, Vec3 } from "./types";
+import type { Charm, GameState, InputState, Lantern, Mote, Scenario, Shade, ShadeState, SimEvent, Vec3 } from "./types";
 
 const dist2d = (a: Vec3, b: Vec3): number => Math.hypot(a[0] - b[0], a[2] - b[2]);
 
@@ -32,6 +32,8 @@ export class Sim {
   motes: Mote[] = [];
   shades: Shade[] = [];
   lanterns: Lantern[] = [];
+  charms: Charm[] = [];
+  charmTicks = 0; // run-speed boost ticks left
 
   private rng: () => number;
   private respawnMotes: boolean;
@@ -75,8 +77,21 @@ export class Sim {
     }
 
     // motes: a listed array replaces the default; otherwise 30 seeded ones when random_motes
-    if (sc.motes) for (const m of sc.motes) this.motes.push({ id: `M${this.moteSeq++}`, pos: [...m] });
-    else if (this.respawnMotes) for (let i = 0; i < WORLD.mote_count; i++) this.motes.push(this.newMote());
+    if (sc.motes) for (const m of sc.motes) this.motes.push({ id: `M${this.moteSeq++}`, pos: [...m], kind: "random", ttl: null, spawn: -1 });
+    else if (this.respawnMotes) {
+      const idx = this.def.moteSpawns.map((_, i) => i);
+      for (let i = idx.length - 1; i > 0; i--) { // seeded Fisher-Yates, then take the first 20
+        const j = Math.floor(this.rng() * (i + 1));
+        [idx[i], idx[j]] = [idx[j]!, idx[i]!];
+      }
+      for (const i of idx.slice(0, WORLD.mote_start).sort((a, b) => a - b)) {
+        this.motes.push({ id: `M${this.moteSeq++}`, pos: [...this.def.moteSpawns[i]!], kind: "random", ttl: null, spawn: i });
+      }
+    }
+
+    const charmPos = sc.charms ? sc.charms.map((c) => c.pos) : this.def.charmSpawns;
+    charmPos.forEach((pos, i) => this.charms.push({ id: sc.charms?.[i]?.id ?? `C${i + 1}`, pos: [...pos], available: true, respawn: 0 }));
+    if (sc.player?.charm_ticks !== undefined) this.charmTicks = sc.player.charm_ticks;
 
     for (const s of sc.shades ?? []) if (s.id) this.reservedIds.add(s.id);
     for (const s of sc.shades ?? []) this.shades.push({ id: s.id ?? this.freeShadeId(), pos: [...s.pos], stunUntil: 0 });
@@ -98,10 +113,13 @@ export class Sim {
     return id;
   }
 
-  private newMote(): Mote {
-    const r = WORLD.mote_min_r + (WORLD.mote_max_r - WORLD.mote_min_r) * Math.sqrt(this.rng());
-    const a = 2 * Math.PI * this.rng();
-    return { id: `M${this.moteSeq++}`, pos: [r * Math.sin(a), 0, r * Math.cos(a)] };
+  /** +1 random mote on a random empty spawn point (none free: skip). */
+  private respawnMote(): void {
+    const taken = new Set(this.motes.filter((m) => m.kind === "random").map((m) => m.spawn));
+    const free = this.def.moteSpawns.map((_, i) => i).filter((i) => !taken.has(i));
+    if (free.length === 0) return;
+    const i = free[Math.floor(this.rng() * free.length)]!;
+    this.motes.push({ id: `M${this.moteSeq++}`, pos: [...this.def.moteSpawns[i]!], kind: "random", ttl: null, spawn: i });
   }
 
   /**
@@ -178,6 +196,9 @@ export class Sim {
 
     // 2. timers (counters set at step k block steps k+1..k+N-1; ready again at step k+N)
     if (this.dashCd > 0) this.dashCd--;
+    if (this.charmTicks > 0) this.charmTicks--;
+    for (const c of this.charms) if (!c.available && --c.respawn <= 0) { c.available = true; c.respawn = 0; }
+    this.motes = this.motes.filter((m) => m.ttl === null || --m.ttl > 0);
     if (this.fallWait > 0) {
       this.fallWait--;
       if (this.fallWait === 0) this.respawnPlayer(T);
@@ -198,9 +219,9 @@ export class Sim {
       if (moving) this.facing = [wx / wl, wz / wl];
 
       if (jumpEdge && this.grounded) { p.vy = WORLD.jump_speed; this.grounded = false; }
-      if (dashEdge && this.dashCd === 0 && this.dashLeft === 0) {
+      if (dashEdge && (this.dashCd === 0 || this.charmTicks > 0) && this.dashLeft === 0) {
         this.dashLeft = toTicks(TUNING.dash_duration_s);
-        this.dashCd = toTicks(TUNING.dash_cooldown_s);
+        this.dashCd = this.charmTicks > 0 ? 0 : toTicks(TUNING.dash_cooldown_s); // a charm removes the cooldown
         this.dashDir = moving ? [wx / wl, wz / wl] : [...this.facing];
         emit("dash", {});
       }
@@ -225,7 +246,10 @@ export class Sim {
       let vx: number, vz: number;
       if (dashing) { vx = this.dashDir[0] * TUNING.dash_speed; vz = this.dashDir[1] * TUNING.dash_speed; this.dashLeft--; }
       else if (this.launched) { vx = this.launchV[0]; vz = this.launchV[1]; }
-      else { vx = wx * TUNING.player_speed; vz = wz * TUNING.player_speed; }
+      else {
+        const speed = this.charmTicks > 0 ? WORLD.charm_speed : TUNING.player_speed;
+        vx = wx * speed; vz = wz * speed;
+      }
       this.vh = [vx, vz];
       let dx = vx * DT, dz = vz * DT;
       if (this.windActive) {
@@ -265,17 +289,27 @@ export class Sim {
       }
     }
 
-    // 4. pickup (automatic, id order, only while there is room)
-    for (const m of inert || this.fallWait > 0 ? [] : [...this.motes]) {
-      if (p.carried >= TUNING.carry_capacity) break;
-      if (dist2d(p.pos, m.pos) <= TUNING.pickup_radius) {
-        this.motes = this.motes.filter((x) => x !== m);
-        p.carried++;
-        emit("mote_picked", { carried: p.carried });
+    // 4. pickup: motes and charms, XZ <= pickup_radius and |feet Y - item Y| <= 1.5 (id order, only while there is room)
+    if (!inert) {
+      const reach = (pos: Vec3): boolean => dist2d(p.pos, pos) <= TUNING.pickup_radius && Math.abs(p.pos[1] - pos[1]) <= WORLD.mote_height_tol;
+      for (const m of [...this.motes]) {
+        if (p.carried >= TUNING.carry_capacity) break;
+        if (reach(m.pos)) {
+          this.motes = this.motes.filter((x) => x !== m);
+          p.carried++;
+          emit("mote_picked", { carried: p.carried });
+        }
+      }
+      for (const c of this.charms) {
+        if (!c.available || !reach(c.pos)) continue;
+        c.available = false;
+        c.respawn = WORLD.charm_respawn_ticks;
+        this.charmTicks = WORLD.charm_ticks;
+        emit("charm_picked", { charm_id: c.id, charm_ticks: WORLD.charm_ticks });
       }
     }
 
-    // 4. interact: deposit into the nearest unlit lantern in reach
+    // 5. interact: deposit into the nearest unlit lantern in reach
     if (interactEdge && p.carried > 0) {
       let best: Lantern | undefined;
       let bestD = Infinity;
@@ -357,7 +391,7 @@ export class Sim {
     }
 
     // 9. mote respawn (only when random_motes): +1 every 4 s up to 30
-    if (this.respawnMotes && T % toTicks(WORLD.mote_respawn_s) === 0 && this.motes.length < WORLD.mote_count) this.motes.push(this.newMote());
+    if (this.respawnMotes && T % toTicks(WORLD.mote_respawn_s) === 0 && this.motes.filter((m) => m.kind === "random").length < WORLD.mote_cap) this.respawnMote();
 
     // 10. time
     this.tick = T;
@@ -396,13 +430,16 @@ export class Sim {
         flames: this.player.flames,
         carried: this.player.carried,
         invuln: this.invulnUntil - this.tick > 0,
+        charm_s: r3(this.charmTicks / TICK_RATE),
         dash_cd_s: r3(this.dashCd / TICK_RATE),
         pulse_cd_s: r3(Math.max(0, this.pulseReadyAt - this.tick) / TICK_RATE),
       },
       lanterns: this.lanterns.map((l) => ({ id: l.id, pos: v(l.pos), lit: l.lit, deposited: l.deposited })),
       shades: this.shades.map((s) => ({ id: s.id, pos: v(s.pos), state: this.shadeState(s) })),
       motes_active: this.motes.length,
-      motes: this.motes.map((m) => ({ id: m.id, pos: v(m.pos) })),
+      motes: this.motes.map((m) => ({ id: m.id, pos: v(m.pos), kind: m.kind, ttl_s: m.ttl === null ? null : r3(m.ttl / TICK_RATE) })),
+      drifters: [],
+      charms: this.charms.map((c) => ({ id: c.id, available: c.available, respawn_s: r3(c.respawn / TICK_RATE) })),
     };
   }
 }

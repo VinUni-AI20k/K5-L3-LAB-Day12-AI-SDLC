@@ -1,5 +1,5 @@
 {
-  "requirement": "P2-05 cost 10, progress remembered: L1 holds 8, carried 4 -> amount min(4, 2) = 2, deposited 10, lit; carried 2; score 2x10 + 100 = 120",
+  "requirement": "P2-05 (v1.2) cost 10, progress remembered: L1 holds 8, carried 4 -> amount min(4, 2) = 2, deposited 10, lit; carried 2; score 2*5 + 100 = 110",
   "seed": 1,
   "ticks": 10,
   "events": [
@@ -23,7 +23,7 @@
   "snapshots": [
     {
       "tick": 10,
-      "score": 120,
+      "score": 110,
       "player": {
         "carried": 2
       }

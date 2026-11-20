@@ -22,7 +22,7 @@ export interface Scenario {
   random_motes?: boolean;
   random_shades?: boolean;
   motes?: Vec3[];
-  shades?: Array<{ pos: Vec3; id?: string; state?: ShadeState; state_ticks_left?: number }>;
+  shades?: Array<{ pos: Vec3; id?: string; state?: ShadeState; state_ticks_left?: number; target_lantern_id?: string }>;
   lanterns?: Array<{ id: string; pos?: Vec3; deposited?: number; lit?: boolean; fuel?: number; ever_lit?: boolean }>;
   time_left_s?: number;
 }
@@ -57,6 +57,7 @@ export interface Shade {
   recoilDir: [number, number];
   target: string | null; // lantern a wandering shade is heading for / draining
   drainTicks: number; // ticks of continuous draining (for fuel_drain events)
+  sticky: boolean; // target given by a scenario: kept until the shade leaves wander
 }
 export interface Lantern {
   id: string;

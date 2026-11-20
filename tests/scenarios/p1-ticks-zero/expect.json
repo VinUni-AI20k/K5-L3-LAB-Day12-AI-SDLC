@@ -1,12 +1,12 @@
 {
-  "requirement": "P1-03 --ticks 0 = exactly 0 steps: tick-0 snapshot then end with ticks 0",
+  "requirement": "P1-03 (v1.2) --ticks 0 = exactly 0 steps: tick-0 snapshot (Night 1 lasts 240 s) then end with ticks 0",
   "seed": 1,
   "ticks": 0,
   "snapshots": [
     {
       "tick": 0,
       "state": "playing",
-      "time_left_s": 300,
+      "time_left_s": 240,
       "score": 0
     }
   ],

@@ -10,6 +10,5 @@
         "flames": 2
       }
     }
-  ],
-  "pending": "Phase 3 kickoff: written before implementation (v1.2). Remove this flag when the feature is built."
+  ]
 }

@@ -1,5 +1,5 @@
 {
-  "requirement": "P2-11 last lantern lit in the step that reaches dawn (t60, time_left 1 s) -> won/all_lit; score 1x10 + 100 + floor(0)x2 + 3x50 = 260",
+  "requirement": "P2-11 (v1.2) last lantern lit in the step that reaches dawn (t60, time_left 1 s); 5 lit (L2-L5 preset) -> won dawn_survived. Score = 1*5 + 100 + L2..L5: 4*(50+99) = 596 + L1: 50+100 = 150 + 3 flames*50 = 150 -> 1001",
   "seed": 1,
   "ticks": 120,
   "events": [
@@ -17,13 +17,13 @@
       "tick": 60,
       "data": {
         "result": "won",
-        "reason": "all_lit"
+        "reason": "dawn_survived"
       }
     }
   ],
   "end": {
     "ticks": 60,
     "state": "won",
-    "score": 260
+    "score": 1001
   }
 }

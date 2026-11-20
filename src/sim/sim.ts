@@ -122,7 +122,7 @@ export class Sim {
     }
     for (const s of sc.shades ?? []) if (s.id) this.reservedIds.add(s.id);
     for (const s of sc.shades ?? []) {
-      this.shades.push({ ...this.newShade(s.id ?? this.freeShadeId(), s.pos, s.state ?? "wander"), ticks: s.state_ticks_left ?? 0 });
+      this.shades.push({ ...this.newShade(s.id ?? this.freeShadeId(), s.pos, s.state ?? "wander"), ticks: s.state_ticks_left ?? 0, target: s.target_lantern_id ?? null, sticky: s.target_lantern_id !== undefined });
     }
   }
 
@@ -159,7 +159,7 @@ export class Sim {
   }
 
   private newShade(id: string, pos: Vec3, state: ShadeState): Shade {
-    return { id, pos: [...pos], state, ticks: 0, pushLeft: 0, pushDir: [1, 0], recoilDir: [1, 0], target: null, drainTicks: 0 };
+    return { id, pos: [...pos], state, ticks: 0, pushLeft: 0, pushDir: [1, 0], recoilDir: [1, 0], target: null, drainTicks: 0, sticky: false };
   }
 
   /** Walkable for a flying shade: there is ground, and it is not inside the Night 3 bell tower (r 2). */
@@ -491,10 +491,12 @@ export class Sim {
         const dh = Math.hypot(dx, dz);
         sh.pushDir = dh === 0 ? [1, 0] : [dx / dh, dz / dh]; // on the same spot: towards +X
         sh.pushLeft = WORLD.pulse_push_ticks;
+        this.score += sh.state === "drain" ? WORLD.drain_stun_points : TUNING.score.per_stun; // +15 total when it was draining
         sh.state = "stunned";
         sh.ticks = toTicks(TUNING.pulse_stun_s);
+        sh.drainTicks = 0;
+        sh.sticky = false;
         stunned.push(sh.id);
-        this.score += TUNING.score.per_stun;
       }
       emit("pulse", { stunned_ids: stunned });
       for (const d of this.drifters) { // drifters: no stun, no score, not in stunned_ids
@@ -525,10 +527,41 @@ export class Sim {
         if (sh.state === "recoil") {
           const step = WORLD.shade_recoil_m / WORLD.shade_recoil_ticks;
           if (this.shadeFree(nx + sh.recoilDir[0] * step, nz + sh.recoilDir[1] * step)) { nx += sh.recoilDir[0] * step; nz += sh.recoilDir[1] * step; }
-        } else if (sh.state === "wander" || sh.state === "chase") {
+        } else if (sh.state === "drain") {
+          // leaving drain: lantern out or refuelled to >= 30, shade more than 2 m away, or Maya within 6 m (chase)
+          const l = this.lanterns.find((x) => x.id === sh.target);
+          const dp = this.fallWait > 0 ? Infinity : Math.hypot(p.pos[0] - nx, p.pos[2] - nz);
+          if (!l || !l.lit || this.hasZone(l) || dist2d(sh.pos, l.pos) > WORLD.drain_range_m + 1e-9) { sh.state = "wander"; sh.drainTicks = 0; }
+          else if (dp <= WORLD.drain_leave_chase_m) { sh.state = "chase"; sh.drainTicks = 0; sh.target = null; sh.sticky = false; }
+          else {
+            sh.drainTicks++;
+            if (sh.drainTicks % WORLD.drain_event_ticks === 0) emit("fuel_drain", { lantern_id: l.id, shade_id: sh.id, fuel: Math.round(l.fuelU / 6) / 10 });
+          }
+        }
+        if (sh.state === "wander" || sh.state === "chase") {
           const d = this.fallWait > 0 ? Infinity : Math.hypot(p.pos[0] - nx, p.pos[2] - nz);
-          if (sh.state === "wander" && d <= WORLD.shade_chase_start_m) sh.state = "chase";
+          if (sh.state === "wander" && d <= WORLD.shade_chase_start_m) { sh.state = "chase"; sh.target = null; sh.sticky = false; }
           else if (sh.state === "chase" && d > WORLD.shade_chase_stop_m) sh.state = "wander";
+          if (sh.state === "wander") {
+            // only wander shades pick a target: nearest weak lit lantern, else nearest unlit one (ties: smaller id)
+            const byDist = (a: Lantern, b: Lantern): number => dist2d(sh.pos, a.pos) - dist2d(sh.pos, b.pos) || Number(a.id.slice(1)) - Number(b.id.slice(1));
+            if (!(sh.sticky && sh.target)) {
+              const weak = this.lanterns.filter((x) => x.lit && !this.hasZone(x)).sort(byDist);
+              const unlit = this.lanterns.filter((x) => !x.lit).sort(byDist);
+              sh.target = (weak[0] ?? unlit[0])?.id ?? null;
+            }
+            const tl = this.lanterns.find((x) => x.id === sh.target);
+            if (tl) {
+              const dt = dist2d(sh.pos, tl.pos);
+              if (dt <= WORLD.drain_range_m + 1e-9) {
+                if (tl.lit && !this.hasZone(tl)) { sh.state = "drain"; sh.drainTicks = 0; } // arrived at a weak lantern; an unlit one: stay
+              } else {
+                const step = Math.min(this.def.shadeSpeed * DT, dt - WORLD.drain_range_m);
+                const tx = nx + ((tl.pos[0] - nx) / dt) * step, tz = nz + ((tl.pos[2] - nz) / dt) * step;
+                if (this.shadeFree(tx, tz)) { nx = tx; nz = tz; }
+              }
+            }
+          }
           if (sh.state === "chase") {
             const stepLen = this.def.shadeSpeed * DT;
             const tx = d <= stepLen ? p.pos[0] : nx + ((p.pos[0] - nx) / d) * stepLen;

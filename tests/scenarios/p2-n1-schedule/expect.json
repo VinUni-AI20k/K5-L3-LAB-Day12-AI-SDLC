@@ -1,12 +1,12 @@
 {
-  "requirement": "P2-03 default Night 1: night_start t1; 20 motes at t0, +1 at t240 (21) and t480 (22); 2 shades at t300 (S1, S2), next at 300+480 = t780 (S3). TA: spawned shades are spawning for 60 ticks (no damage), then wander; 37 m away > 12 so still wander at t370",
+  "requirement": "P2-03 default Night 1: night_start t1; 20 motes at t0, +1 at t240 (21) and t480 (22); 2 shades at t300 (S1, S2), next at 300+480 = t780 (S3). TA: spawned shades are spawning for 60 ticks (no damage), then wander; 37 m away > 12 so still wander at t370 [v1.2: night 1 lasts 240 s]",
   "seed": 1,
   "ticks": 800,
   "snapshots": [
     {
       "tick": 0,
       "night": 1,
-      "time_left_s": 300,
+      "time_left_s": 240,
       "motes_active": 20,
       "shades": [],
       "drifters": [],

@@ -1,5 +1,5 @@
 {
-  "requirement": "P2-02 Night 3 standard map at t0: 7 lanterns at the ticket positions (tiers Y=6/3/0), 360 s, charms C1+C2, 20 motes, wind inactive. TA: Night 3 starts at (0,0,-15)",
+  "requirement": "P2-02 (v1.2) Night 3 standard map at t0: 7 lanterns at the ticket positions (tiers Y=6/3/0), 300 s, charms C1+C2, 20 motes, wind inactive. TA: Night 3 starts at (0,0,-15)",
   "seed": 1,
   "night": 3,
   "ticks": 0,
@@ -7,7 +7,7 @@
     {
       "tick": 0,
       "night": 3,
-      "time_left_s": 360,
+      "time_left_s": 300,
       "motes_active": 20,
       "shades": [],
       "drifters": [],

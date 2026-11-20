@@ -1,5 +1,5 @@
 {
-  "requirement": "P2-05 tie: L1 and L2 both 1.5 m away -> smaller id L1 gets min(4, 10) = 4, not lit; score 40",
+  "requirement": "P2-05 (v1.2) tie: L1 and L2 both 1.5 m away -> smaller id L1 gets min(4, 10) = 4, not lit; score 4*5 = 20",
   "seed": 1,
   "ticks": 10,
   "events": [
@@ -19,7 +19,7 @@
   "snapshots": [
     {
       "tick": 10,
-      "score": 40,
+      "score": 20,
       "player": {
         "carried": 0
       }

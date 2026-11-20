@@ -1,5 +1,5 @@
 {
-  "requirement": "P1-18 (v1.1) interact fires on the false->true edge only and targets the nearest UNLIT lantern. L1 (1 m, holds 5 of 10) and L2 (2 m == interact_radius), carried 10. Held t0..t4: one deposit min(10, 10-5)=5 into L1 (lit, score 5*10+100=150); nothing into L2 while held (t10: carried 5, L2 deposited 0). Re-press at t10: L1 is lit, so L2 gets min(5, 10)=5 (t11: carried 0, L2 deposited 5, not lit, score 150+50=200)",
+  "requirement": "P1-18 (v1.2) interact fires on the false->true edge only. L1 (1 m, holds 5 of 10) and L2 (2 m), carried 10. Press at t0: nearest candidate L1: deposit 5 -> lit: score 5*5+100 = 125. Held t0..t4: nothing more. t10: carried 5, L2 deposited 0. Re-press at t10: L1 is lit but not full (fuel 100 - 10/60 after decay) and nearer than L2, so it is the candidate (Ticket-03): refuel used = min(5, ceil(10/600)) = 1, fuel back to 100, carried 4, score 125+5 = 130; L2 untouched",
   "seed": 1,
   "ticks": 20,
   "snapshot_every": 1,
@@ -21,19 +21,19 @@
       }
     },
     {
-      "name": "deposit",
+      "name": "refuel",
       "tick": 11,
       "data": {
-        "lantern_id": "L2",
-        "amount": 5,
-        "deposited": 5
+        "lantern_id": "L1",
+        "amount": 1,
+        "fuel": 100
       }
     }
   ],
   "snapshots": [
     {
       "tick": 10,
-      "score": 150,
+      "score": 125,
       "player": {
         "carried": 5
       },
@@ -60,19 +60,20 @@
     },
     {
       "tick": 11,
-      "score": 200,
+      "score": 130,
       "player": {
-        "carried": 0
+        "carried": 4
       },
       "lanterns": [
         {
           "id": "L1",
-          "lit": true
+          "lit": true,
+          "fuel": 100
         },
         {
           "id": "L2",
           "lit": false,
-          "deposited": 5
+          "deposited": 0
         },
         {
           "id": "L3"

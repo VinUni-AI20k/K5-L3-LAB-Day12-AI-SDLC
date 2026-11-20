@@ -1,5 +1,5 @@
 {
-  "requirement": "P1-14 (v1.1) interact with carried 10 at dist 2 (== interact_radius 2, <=) deposits min(10, 10-0)=10 and lights L1. Score = 10*per_mote(10) + per_lantern(100) = 200",
+  "requirement": "P1-14 (v1.2) interact with carried 10 at dist 2 (== interact_radius 2, <=) deposits min(10, 10-0)=10 and lights L1 (first light, relight false). Score = 10*per_mote(5) + per_lantern(100) = 150",
   "seed": 1,
   "ticks": 30,
   "events": [
@@ -27,7 +27,7 @@
     },
     {
       "tick": 10,
-      "score": 200,
+      "score": 150,
       "player": {
         "carried": 0
       },
@@ -58,7 +58,7 @@
   ],
   "end": {
     "state": "playing",
-    "score": 200
+    "score": 150
   },
   "absent_events": [
     "game_over"

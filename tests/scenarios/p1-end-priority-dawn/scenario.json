@@ -17,23 +17,11 @@
     },
     {
       "id": "L2",
-      "lit": true,
-      "deposited": 10
+      "lit": true
     },
     {
       "id": "L3",
-      "lit": true,
-      "deposited": 10
-    },
-    {
-      "id": "L4",
-      "lit": true,
-      "deposited": 10
-    },
-    {
-      "id": "L5",
-      "lit": true,
-      "deposited": 10
+      "lit": true
     }
   ],
   "time_left_s": 1

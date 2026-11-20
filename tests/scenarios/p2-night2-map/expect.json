@@ -1,5 +1,5 @@
 {
-  "requirement": "P2-02 Night 2 standard map at t0: 6 lanterns at the ticket positions, 330 s, charm C1 available, 20 motes, no shades/drifters yet",
+  "requirement": "P2-02 (v1.2) Night 2 standard map at t0: 6 lanterns at the ticket positions, 270 s, charm C1 available, 20 motes, no shades/drifters yet",
   "seed": 1,
   "night": 2,
   "ticks": 0,
@@ -7,7 +7,7 @@
     {
       "tick": 0,
       "night": 2,
-      "time_left_s": 330,
+      "time_left_s": 270,
       "motes_active": 20,
       "shades": [],
       "drifters": [],

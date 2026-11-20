@@ -1,20 +1,37 @@
 {
-  "requirement": "P1-20 (v1.1) end order no_flames > all_lit > dawn. Last lantern lit in the same step time reaches 0 (T=1, interact t59, carried 10 = cost): won/all_lit, not lost/dawn. Score = 10*10 + 100 + 2*0 + 50*3 = 350",
+  "requirement": "P1-20 (v1.2) the night is decided at dawn, after that step's interact. L2, L3 preset lit; L1 gets its 10 motes in step 59 (dawn step, t60): 3 lit >= ceil(0.6*5) = 3 -> won dawn_survived. Score = 10*5 + 100 + dawn bonus L2, L3: 2*(50+floor(100-60/60)=99) = 298, L1 lit this step: 50+100 = 150, + 3 flames*50 = 150 -> 50+100+298+150+150 = 748",
   "seed": 1,
   "ticks": 600,
   "events": [
+    {
+      "name": "deposit",
+      "tick": 60,
+      "data": {
+        "lantern_id": "L1",
+        "amount": 10,
+        "deposited": 10
+      }
+    },
+    {
+      "name": "lantern_lit",
+      "tick": 60,
+      "data": {
+        "lantern_id": "L1",
+        "relight": false
+      }
+    },
     {
       "name": "game_over",
       "tick": 60,
       "data": {
         "result": "won",
-        "reason": "all_lit"
+        "reason": "dawn_survived"
       }
     }
   ],
   "end": {
     "ticks": 60,
     "state": "won",
-    "score": 350
+    "score": 748
   }
 }

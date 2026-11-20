@@ -1,5 +1,5 @@
 {
-  "requirement": "P1-10 (v1.1) defaults, Night 1: tick 0 has 20 motes on fixed spawn points (none within 1.0 m of the start, so none picked in step 0), 5 unlit lanterns at the ticket positions, no shades; 2 shades at t300 (state spawning); time_left t100 = 300-100/60 = 298.333, t300 = 295. Seed 1",
+  "requirement": "P1-10 (v1.2) defaults, Night 1: 20 motes, 5 unlit lanterns, no shades at t0; 2 shades at t300 (spawning); night is 240 s: t0 240, t100 = 240-100/60 = 238.333, t300 = 235",
   "seed": 1,
   "ticks": 300,
   "snapshots": [
@@ -8,7 +8,7 @@
       "state": "playing",
       "motes_active": 20,
       "shades": [],
-      "time_left_s": 300,
+      "time_left_s": 240,
       "score": 0,
       "player": {
         "pos": [
@@ -74,12 +74,12 @@
     },
     {
       "tick": 100,
-      "time_left_s": 298.333,
+      "time_left_s": 238.333,
       "shades": []
     },
     {
       "tick": 300,
-      "time_left_s": 295,
+      "time_left_s": 235,
       "shades": [
         {
           "state": "spawning"

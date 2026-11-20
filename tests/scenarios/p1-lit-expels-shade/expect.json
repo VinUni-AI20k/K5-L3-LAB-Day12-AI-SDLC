@@ -1,7 +1,7 @@
 {
-  "requirement": "P1-21 (v1.1) a shade inside the zone of a lantern that was just lit is pushed out at 0.2 m/tick and cannot hit meanwhile. L1 (0,0,1) holds 5, Maya carries 5 -> lit at t1 (all lit -> won). S1 (0,1,0.5) is 0.5 m from L1, so in step 0 it is pushed 0.2 m away from L1 (towards -Z): dist 0.7 -> z = 1-0.7 = 0.3. No player_hit with 1 flame",
+  "requirement": "P1-21 (v1.2) a shade inside the zone of a lantern that was just lit is pushed out at 0.2 m/tick and cannot hit meanwhile. L1 (0,0,1) holds 5, Maya carries 5 -> lit at t1 with fuel 100 (zone exists, >= 30). No early win now: the night goes on (state playing). S1 (0,1,0.5) is 0.5 m from L1: pushed 0.2 m away from L1 (towards -Z): dist 0.7 -> z = 1-0.7 = 0.3. No player_hit with 1 flame",
   "seed": 1,
-  "ticks": 600,
+  "ticks": 1,
   "snapshot_every": 1,
   "events": [
     {
@@ -19,20 +19,12 @@
       "data": {
         "lantern_id": "L1"
       }
-    },
-    {
-      "name": "game_over",
-      "tick": 1,
-      "data": {
-        "result": "won",
-        "reason": "all_lit"
-      }
     }
   ],
   "snapshots": [
     {
       "tick": 1,
-      "state": "won",
+      "state": "playing",
       "player": {
         "flames": 1
       },
@@ -51,7 +43,7 @@
   ],
   "end": {
     "ticks": 1,
-    "state": "won"
+    "state": "playing"
   },
   "absent_events": [
     "player_hit"

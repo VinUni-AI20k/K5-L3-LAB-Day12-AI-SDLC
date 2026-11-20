@@ -17,7 +17,7 @@ function count(v: unknown, what: string): number {
   return v;
 }
 
-const SHADE_STATES: string[] = ["spawning", "wander", "chase", "recoil", "stunned"];
+const SHADE_STATES: string[] = ["spawning", "wander", "chase", "recoil", "stunned", "drain"];
 const DRIFTER_STATES: string[] = ["idle", "chase", "flee"];
 const LANTERN_ID = /^L[1-9]\d*$/; // Night 2 has L1..L6, Night 3 L1..L7; ids a night does not have are ignored by the sim
 
@@ -55,6 +55,10 @@ export function parseScenario(raw: unknown): Scenario {
       if (s.state !== undefined) {
         if (typeof s.state !== "string" || !SHADE_STATES.includes(s.state)) throw new BadFileError(`shades[${i}].state must be one of ${SHADE_STATES.join(", ")}`);
         out.state = s.state as ShadeState;
+      }
+      if (s.target_lantern_id !== undefined) {
+        if (typeof s.target_lantern_id !== "string" || !LANTERN_ID.test(s.target_lantern_id)) throw new BadFileError(`shades[${i}].target_lantern_id must look like L1, L2, ...`);
+        out.target_lantern_id = s.target_lantern_id;
       }
       if (s.state_ticks_left !== undefined) out.state_ticks_left = count(s.state_ticks_left, `shades[${i}].state_ticks_left`);
       return out;

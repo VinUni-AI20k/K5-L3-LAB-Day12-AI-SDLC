@@ -1,0 +1,37 @@
+<!doctype html>
+<html lang="vi">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Đảo Đèn Lồng</title>
+    <style>
+      html, body { margin: 0; height: 100%; overflow: hidden; background: #120b1f; color: #ffe2b0; font-family: system-ui, "Segoe UI", sans-serif; }
+      canvas { display: block; }
+      #hud { position: fixed; inset: 0; pointer-events: none; text-shadow: 0 1px 4px #000; }
+      .panel { position: absolute; background: rgba(20, 10, 35, 0.55); border: 1px solid rgba(255, 190, 110, 0.35); border-radius: 12px; padding: 8px 14px; }
+      #stats { top: 12px; left: 12px; display: grid; gap: 4px; font-size: 18px; }
+      #stats b { color: #ffc96b; }
+      #timer { top: 12px; right: 12px; text-align: right; font-size: 20px; }
+      #toast { left: 50%; top: 14%; transform: translateX(-50%); font-size: 22px; opacity: 0; transition: opacity 0.4s; background: none; border: none; }
+      #help { bottom: 12px; left: 50%; transform: translateX(-50%); font-size: 14px; opacity: 0.8; white-space: nowrap; }
+      #flash { position: fixed; inset: 0; background: radial-gradient(transparent 40%, rgba(180, 20, 40, 0.65)); opacity: 0; pointer-events: none; transition: opacity 0.5s; }
+      #overlay { position: fixed; inset: 0; display: none; align-items: center; justify-content: center; background: rgba(10, 5, 20, 0.72); }
+      #overlay .card { text-align: center; max-width: 440px; padding: 28px 36px; background: rgba(35, 18, 55, 0.95); border: 1px solid rgba(255, 190, 110, 0.5); border-radius: 18px; }
+      #overlay h1 { margin: 0 0 8px; font-size: 30px; color: #ffc96b; }
+      #overlay p { margin: 6px 0; line-height: 1.45; }
+      #overlay button { margin-top: 14px; font-size: 18px; padding: 10px 26px; border-radius: 10px; border: 0; background: #ffb347; color: #2a1200; cursor: pointer; font-weight: 600; }
+      #overlay button:hover { background: #ffc76e; }
+    </style>
+  </head>
+  <body>
+    <div id="hud">
+      <div id="stats" class="panel"></div>
+      <div id="timer" class="panel"></div>
+      <div id="toast" class="panel"></div>
+      <div id="help" class="panel">WASD đi · Space nhảy · E nạp đèn · F tỏa sáng · ← → / kéo chuột xoay camera</div>
+    </div>
+    <div id="flash"></div>
+    <div id="overlay"><div class="card"></div></div>
+    <script type="module" src="/src/web/main.ts"></script>
+  </body>
+</html>

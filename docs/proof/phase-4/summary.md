@@ -1,7 +1,7 @@
 # Phase 4 evidence (Ticket-04, Contract v1.3), release v1.0.0
 
-- Commit `4051071` + release notes, 2026-11-20. Machine: MacBook Air, Apple M1 (8 cores: 4 performance + 4 efficiency), 16 GB, macOS 15.0 (Darwin 24.0.0 arm64), Node v21.6.1, Electron 39.8.10 (Chromium 142).
-- `npm run verify`: green, 133 tests in 8 files (79 scenario folders, **0 pending**, unit tests for bench stats/scene, soak, leaderboard, keymap, contract hygiene, perf). Raw log: `vitest.txt`.
+- Commit `f2b7129` + release notes, 2026-11-20. Machine: MacBook Air, Apple M1 (8 cores: 4 performance + 4 efficiency), 16 GB, macOS 15.0 (Darwin 24.0.0 arm64), Node v21.6.1, Electron 39.8.10 (Chromium 142).
+- `npm run verify`: green, 134 tests in 8 files (79 scenario folders, **0 pending**, unit tests for bench stats/scene, soak, leaderboard, keymap, contract hygiene, perf). Raw log: `vitest.txt`.
 - Phase 1-3 regression: `git diff 0725404..HEAD -- tests/scenarios` is empty: no scenario was edited in this phase, and all 79 pass.
 - Determinism: full nights (seed 7, 18000 ticks) on Night 1, 2 and 3 identical across two runs; the soak `results` array is identical across two runs.
 - Independent review: `contract-reviewer`; findings and actions in `docs/notes/changes.md` ("Phase 4 release").

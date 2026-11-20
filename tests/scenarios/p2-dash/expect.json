@@ -1,0 +1,58 @@
+{
+  "requirement": "P2-07 dash from standing faces +Z: 14/60 m per tick x 12 ticks = 2.8 m (t10: 2.333). Cooldown 90 ticks from step 0 -> press at step 60 ignored (still 2.8 at t100), press at step 100 dashes again -> 5.6 at t120",
+  "seed": 1,
+  "ticks": 130,
+  "snapshots": [
+    {
+      "tick": 10,
+      "player": {
+        "pos": [
+          0,
+          0,
+          2.333
+        ]
+      }
+    },
+    {
+      "tick": 20,
+      "player": {
+        "pos": [
+          0,
+          0,
+          2.8
+        ]
+      }
+    },
+    {
+      "tick": 100,
+      "player": {
+        "pos": [
+          0,
+          0,
+          2.8
+        ]
+      }
+    },
+    {
+      "tick": 120,
+      "player": {
+        "pos": [
+          0,
+          0,
+          5.6
+        ]
+      }
+    }
+  ],
+  "events": [
+    {
+      "name": "dash",
+      "tick": 1
+    },
+    {
+      "name": "dash",
+      "tick": 101
+    }
+  ],
+  "pending": "Phase 2 kickoff: written before implementation (v1.1). Remove this flag when the feature is built."
+}

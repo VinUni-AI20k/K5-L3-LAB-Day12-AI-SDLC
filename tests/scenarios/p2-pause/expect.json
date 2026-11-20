@@ -1,0 +1,72 @@
+{
+  "requirement": "P2-12 move +Z 0.1/tick. Pause read at step 10 stops that step: z=1.0, sim_tick 10, time 300-10/60=299.833 frozen while paused (t20, t40). Resume at step 40 runs fully: steps 40-49 -> z=2.0, sim_tick 20, time 299.667 at t50",
+  "seed": 1,
+  "ticks": 50,
+  "snapshots": [
+    {
+      "tick": 10,
+      "state": "playing",
+      "sim_tick": 10,
+      "player": {
+        "pos": [
+          0,
+          0,
+          1
+        ]
+      }
+    },
+    {
+      "tick": 20,
+      "state": "paused",
+      "sim_tick": 10,
+      "time_left_s": 299.833,
+      "player": {
+        "pos": [
+          0,
+          0,
+          1
+        ]
+      }
+    },
+    {
+      "tick": 40,
+      "state": "paused",
+      "sim_tick": 10,
+      "player": {
+        "pos": [
+          0,
+          0,
+          1
+        ]
+      }
+    },
+    {
+      "tick": 50,
+      "state": "playing",
+      "sim_tick": 20,
+      "time_left_s": 299.667,
+      "player": {
+        "pos": [
+          0,
+          0,
+          2
+        ]
+      }
+    }
+  ],
+  "events": [
+    {
+      "name": "paused",
+      "tick": 11
+    },
+    {
+      "name": "resumed",
+      "tick": 41
+    }
+  ],
+  "end": {
+    "ticks": 50,
+    "state": "playing"
+  },
+  "pending": "Phase 2 kickoff: written before implementation (v1.1). Remove this flag when the feature is built."
+}

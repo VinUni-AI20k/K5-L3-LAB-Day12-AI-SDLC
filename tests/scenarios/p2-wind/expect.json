@@ -1,0 +1,27 @@
+{
+  "requirement": "P2-17 Night 3 wind every 30 s for 5 s: inactive at t1790, active at t1810, inactive again at t2110",
+  "seed": 1,
+  "night": 3,
+  "ticks": 2110,
+  "snapshots": [
+    {
+      "tick": 1790,
+      "wind": {
+        "active": false
+      }
+    },
+    {
+      "tick": 1810,
+      "wind": {
+        "active": true
+      }
+    },
+    {
+      "tick": 2110,
+      "wind": {
+        "active": false
+      }
+    }
+  ],
+  "pending": "Phase 2 kickoff: written before implementation (v1.1). Remove this flag when the feature is built."
+}

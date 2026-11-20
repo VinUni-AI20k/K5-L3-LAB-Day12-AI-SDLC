@@ -24,10 +24,19 @@ interface Expect {
   absent_events?: string[];
   absent_snapshots?: number[];
   deterministic?: boolean;
+  night?: number; // --night (default 1)
+  pending?: string; // reason; the scenario is skipped until built. Release requires zero pending.
 }
 
-/** Partial deep match: objects match listed keys; arrays need equal length; primitives strict-equal. */
+/**
+ * Partial deep match: objects match listed keys; arrays need equal length; primitives strict-equal.
+ * `{"$range": [lo, hi]}` matches a number lo <= x <= hi (use only where the spec fixes a bound, not an exact value).
+ */
 export function matches(actual: unknown, expected: unknown): boolean {
+  if (expected !== null && typeof expected === "object" && !Array.isArray(expected) && "$range" in expected) {
+    const [lo, hi] = (expected as { $range: [number, number] }).$range;
+    return typeof actual === "number" && actual >= lo && actual <= hi;
+  }
   if (Array.isArray(expected)) {
     return Array.isArray(actual) && actual.length === expected.length && expected.every((e, i) => matches(actual[i], e));
   }
@@ -40,7 +49,7 @@ export function matches(actual: unknown, expected: unknown): boolean {
 
 function run(dir: string, exp: Expect, outName: string) {
   const out = join(tmp, outName);
-  const args = [HEADLESS, "--seed", String(exp.seed), "--night", "1", "--ticks", String(exp.ticks), "--out", out];
+  const args = [HEADLESS, "--seed", String(exp.seed), "--night", String(exp.night ?? 1), "--ticks", String(exp.ticks), "--out", out];
   if (exp.snapshot_every !== undefined) args.push("--snapshot-every", String(exp.snapshot_every));
   for (const [flag, file] of [["--scenario", "scenario.json"], ["--inputs", "inputs.json"]] as const) {
     if (existsSync(join(dir, file))) args.push(flag, join(dir, file));
@@ -53,11 +62,16 @@ function run(dir: string, exp: Expect, outName: string) {
 const folders = existsSync(SCEN_DIR)
   ? readdirSync(SCEN_DIR).filter((f) => statSync(join(SCEN_DIR, f)).isDirectory()).sort()
   : [];
+const load = (name: string) => JSON.parse(readFileSync(join(SCEN_DIR, name, "expect.json"), "utf8")) as Expect;
+const pending = folders.filter((f) => load(f).pending);
+const active = folders.filter((f) => !load(f).pending);
 
 describe("headless scenarios", () => {
-  it.each(folders)("%s", (name) => {
+  // Visible in every run so a pending scenario can't be forgotten (release requires zero).
+  if (pending.length) it.skip.each(pending.map((f) => [f, load(f).pending]))("PENDING %s — %s", () => {});
+  it.each(active)("%s", (name) => {
     const dir = join(SCEN_DIR, name);
-    const exp = JSON.parse(readFileSync(join(dir, "expect.json"), "utf8")) as Expect;
+    const exp = load(name);
     const a = run(dir, exp, `${name}.a.jsonl`);
     const why = `[${name}] ${exp.requirement}`;
 
@@ -110,5 +124,7 @@ describe("matches()", () => {
     expect(matches({ c: [1, 2, 3] }, { c: [1, 2] })).toBe(false);
     expect(matches({ a: "1" }, { a: 1 })).toBe(false);
     expect(matches([{ id: "S1", s: "chase" }], [{ id: "S1" }])).toBe(true);
+    expect(matches({ x: 43.2 }, { x: { $range: [42, 98] } })).toBe(true);
+    expect(matches({ x: 41 }, { x: { $range: [42, 98] } })).toBe(false);
   });
 });

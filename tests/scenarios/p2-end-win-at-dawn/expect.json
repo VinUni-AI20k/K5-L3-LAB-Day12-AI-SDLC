@@ -1,0 +1,30 @@
+{
+  "requirement": "P2-11 last lantern lit in the step that reaches dawn (t60, time_left 1 s) -> won/all_lit; score 1x10 + 100 + floor(0)x2 + 3x50 = 260",
+  "seed": 1,
+  "ticks": 120,
+  "events": [
+    {
+      "name": "deposit",
+      "tick": 60,
+      "data": {
+        "lantern_id": "L1",
+        "amount": 1,
+        "deposited": 10
+      }
+    },
+    {
+      "name": "game_over",
+      "tick": 60,
+      "data": {
+        "result": "won",
+        "reason": "all_lit"
+      }
+    }
+  ],
+  "end": {
+    "ticks": 60,
+    "state": "won",
+    "score": 260
+  },
+  "pending": "Phase 2 kickoff: written before implementation (v1.1). Remove this flag when the feature is built."
+}

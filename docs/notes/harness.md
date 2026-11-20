@@ -27,3 +27,6 @@ Not used on purpose: MCP servers and plugins. Each one adds context cost, and no
 | CP0 | Initial: CLAUDE.md, Stop hook, verify skill, contract-reviewer | Plan: enforce verification and independent review from the start |
 | CP0 | Added phase skill, git guard hook, scenario runner, launch.json, this file | Review of rubric B/C gaps before the lab started |
 | 1 | Scenario runner: global event-before-snapshot check, `absent_snapshots` key | The `contract-reviewer` found the runner could not assert a missing snapshot or event order |
+| 2 | Scenario runner: `night`, `pending` (skipped but listed; release requires zero), `$range` matcher | Phase 2 scenarios are written before the code and must not turn verify red, so the Stop hook doesn't block. Some ticket rules only give bounds |
+| 2 | CLAUDE.md: v1.1 spec, `maps.ts`, the `--night` flag, the pending rule. Phase skill: zero-pending release, handoff file | DoD: the agent guide and skills must be updated for the new scope |
+| 2 | New `docs/notes/handoff-phase2.md`: Opus does the kickoff, Sonnet builds from a fixed order and prompt | Pro quota: 26% used in Phase 1. Keeps the expensive model on decisions only |

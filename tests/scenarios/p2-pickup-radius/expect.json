@@ -1,0 +1,24 @@
+{
+  "requirement": "P2-04 pickup XZ <= 1.0: mote at 1.0 m picked at t1, mote at 1.05 m never",
+  "seed": 1,
+  "ticks": 10,
+  "events": [
+    {
+      "name": "mote_picked",
+      "tick": 1,
+      "data": {
+        "carried": 1
+      }
+    }
+  ],
+  "snapshots": [
+    {
+      "tick": 10,
+      "player": {
+        "carried": 1
+      },
+      "motes_active": 1
+    }
+  ],
+  "pending": "Phase 2 kickoff: written before implementation (v1.1). Remove this flag when the feature is built."
+}

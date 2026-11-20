@@ -1,0 +1,33 @@
+{
+  "requirement": "P2-16 standing on the Night 2 pad (20,0,18) (XZ 1.0) -> launched vy 14 + 24 m/s towards B (70,0,0); ~1.4 s flight, ~33.6 m -> lands on island B (x > 42) and is grounded by t120",
+  "seed": 1,
+  "night": 2,
+  "ticks": 120,
+  "absent_events": [
+    "player_hit"
+  ],
+  "snapshots": [
+    {
+      "tick": 120,
+      "player": {
+        "pos": [
+          {
+            "$range": [
+              42,
+              98
+            ]
+          },
+          0,
+          {
+            "$range": [
+              -28,
+              28
+            ]
+          }
+        ],
+        "grounded": true
+      }
+    }
+  ],
+  "pending": "Phase 2 kickoff: written before implementation (v1.1). Remove this flag when the feature is built."
+}

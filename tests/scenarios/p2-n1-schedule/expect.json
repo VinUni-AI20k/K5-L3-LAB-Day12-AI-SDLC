@@ -1,0 +1,93 @@
+{
+  "requirement": "P2-03 default Night 1: night_start t1; 20 motes at t0, +1 at t240 (21) and t480 (22); 2 shades at t300 (S1, S2), next at 300+480 = t780 (S3). TA: spawned shades are spawning for 60 ticks (no damage), then wander; 37 m away > 12 so still wander at t370",
+  "seed": 1,
+  "ticks": 800,
+  "snapshots": [
+    {
+      "tick": 0,
+      "night": 1,
+      "time_left_s": 300,
+      "motes_active": 20,
+      "shades": [],
+      "drifters": [],
+      "charms": [],
+      "player": {
+        "pos": [
+          0,
+          0,
+          0
+        ],
+        "flames": 3,
+        "carried": 0
+      }
+    },
+    {
+      "tick": 240,
+      "motes_active": 21
+    },
+    {
+      "tick": 300,
+      "shades": [
+        {
+          "id": "S1",
+          "state": "spawning"
+        },
+        {
+          "id": "S2",
+          "state": "spawning"
+        }
+      ]
+    },
+    {
+      "tick": 370,
+      "shades": [
+        {
+          "id": "S1",
+          "state": "wander"
+        },
+        {
+          "id": "S2",
+          "state": "wander"
+        }
+      ]
+    },
+    {
+      "tick": 480,
+      "motes_active": 22
+    }
+  ],
+  "events": [
+    {
+      "name": "night_start",
+      "tick": 1,
+      "data": {
+        "night": 1
+      }
+    },
+    {
+      "name": "shade_spawned",
+      "tick": 300,
+      "data": {
+        "id": "S1"
+      }
+    },
+    {
+      "name": "shade_spawned",
+      "tick": 300,
+      "data": {
+        "id": "S2"
+      }
+    },
+    {
+      "name": "shade_spawned",
+      "tick": 780,
+      "data": {
+        "id": "S3"
+      }
+    }
+  ],
+  "absent_events": [
+    "player_hit"
+  ],
+  "pending": "Phase 2 kickoff: written before implementation (v1.1). Remove this flag when the feature is built."
+}

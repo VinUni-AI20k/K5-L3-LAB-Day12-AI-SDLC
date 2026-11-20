@@ -1,0 +1,29 @@
+{
+  "requirement": "P2-05 tie: L1 and L2 both 1.5 m away -> smaller id L1 gets min(4, 10) = 4, not lit; score 40",
+  "seed": 1,
+  "ticks": 10,
+  "events": [
+    {
+      "name": "deposit",
+      "tick": 1,
+      "data": {
+        "lantern_id": "L1",
+        "amount": 4,
+        "deposited": 4
+      }
+    }
+  ],
+  "absent_events": [
+    "lantern_lit"
+  ],
+  "snapshots": [
+    {
+      "tick": 10,
+      "score": 40,
+      "player": {
+        "carried": 0
+      }
+    }
+  ],
+  "pending": "Phase 2 kickoff: written before implementation (v1.1). Remove this flag when the feature is built."
+}

@@ -12,7 +12,9 @@
 - `src/sim/` pure game logic. NO imports of three/DOM. Shared by web and headless.
 - `src/headless/` contract CLI. `src/web/` renderer + HUD that only READ sim state and push inputs.
 - `tests/` vitest; `tests/scenarios/` headless scenario fixtures with assertions.
-- Spec: `docs/spec/contract-v1.md` (read it; do not re-fetch the lab board). Assumptions: `docs/notes/assumptions.md`.
+- Spec: `docs/spec/contract-v1.md` + `docs/spec/ticket-02.md` (v1.1 overrides v1.0; standard numbers are fixed by the
+  customer). Do not re-fetch the lab board. Decisions: `docs/notes/assumptions.md`. Current phase plan: `docs/notes/handoff-phase2.md`.
+- Per-night data (maps, spawn points, lanterns, pads) lives in `src/sim/maps.ts`; headless takes `--night 1|2|3`.
 
 ## Hard rules
 - Contract output format is exact: field names, event names, tick model, 3-decimal rounding, exit code 2 on bad files.
@@ -28,6 +30,7 @@
 ## Harness (details: `docs/notes/harness.md`)
 - Workflow per phase: `/phase kickoff N` (criteria + scenarios before code) → build → `/phase release N`.
 - New check = new folder in `tests/scenarios/` (format: `tests/scenarios/README.md`), not new test code.
+  `"pending"` scenarios were written before the code: un-pend when built, never edit their expected values. Release = zero pending.
 - Hooks: Stop blocks finishing while `npm run verify` is red; PreToolUse blocks force-push / tag delete.
 - `verify` skill writes evidence to `docs/proof/phase-N/`; `contract-reviewer` subagent reviews (writer never self-approves).
 - Screenshots: start "game" from `.claude/launch.json` in the browser pane.

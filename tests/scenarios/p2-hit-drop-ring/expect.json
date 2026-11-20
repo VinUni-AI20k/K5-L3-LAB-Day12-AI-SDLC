@@ -1,0 +1,41 @@
+{
+  "requirement": "P2-08 shade at 0.5 m touches at t1: flames 3 -> 2, dropped floor(5/2) = 2 as 'dropped' motes on the 1.5-2.5 m ring (out of pickup reach), carried 3, shade in recoil",
+  "seed": 1,
+  "ticks": 10,
+  "events": [
+    {
+      "name": "player_hit",
+      "tick": 1,
+      "data": {
+        "by": "shade",
+        "flames": 2,
+        "dropped": 2
+      }
+    }
+  ],
+  "snapshots": [
+    {
+      "tick": 10,
+      "player": {
+        "flames": 2,
+        "carried": 3
+      },
+      "motes_active": 2,
+      "motes": [
+        {
+          "kind": "dropped"
+        },
+        {
+          "kind": "dropped"
+        }
+      ],
+      "shades": [
+        {
+          "id": "S1",
+          "state": "recoil"
+        }
+      ]
+    }
+  ],
+  "pending": "Phase 2 kickoff: written before implementation (v1.1). Remove this flag when the feature is built."
+}

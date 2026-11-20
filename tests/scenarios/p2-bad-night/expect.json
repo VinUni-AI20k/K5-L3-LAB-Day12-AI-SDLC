@@ -1,0 +1,9 @@
+{
+  "requirement": "P2-18 --night 4 is not a night -> non-zero exit (usage error = 1) with a message on stderr",
+  "seed": 1,
+  "night": 4,
+  "ticks": 10,
+  "exit_code": 1,
+  "stderr_match": "night",
+  "pending": "Phase 2 kickoff: written before implementation (v1.1). Remove this flag when the feature is built."
+}

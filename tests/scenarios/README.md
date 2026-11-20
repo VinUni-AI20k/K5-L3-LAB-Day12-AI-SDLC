@@ -39,6 +39,11 @@ Field notes:
 - `absent_snapshots`: ticks that must NOT have a snapshot (e.g. the game ends off the `--snapshot-every` schedule).
 - Every scenario also checks, without being asked, that no event of tick T appears after tick T's snapshot.
 - `deterministic`: optional, default true. The scenario is run twice and the two outputs must be byte-identical.
+- `night`: optional, default 1. Passed as `--night`.
+- `pending`: optional reason string. The scenario is skipped and listed as `PENDING` in every run. Phase kickoffs write
+  scenarios before the code exists; remove the flag when the feature is built. **`/phase release` requires zero pending.**
+- `{"$range": [lo, hi]}` in place of a number: matches lo ≤ x ≤ hi. Use only where the spec fixes a bound, not a value
+  (e.g. "lands on island B" → x in [42, 98]).
 
 Partial match means:
 - Objects match on the listed keys only.

@@ -1,0 +1,17 @@
+{
+  "requirement": "P2-06 pulse needs 3 motes: carried 2 -> no pulse event, carried stays 2",
+  "seed": 1,
+  "ticks": 10,
+  "absent_events": [
+    "pulse"
+  ],
+  "snapshots": [
+    {
+      "tick": 10,
+      "player": {
+        "carried": 2
+      }
+    }
+  ],
+  "pending": "Phase 2 kickoff: written before implementation (v1.1). Remove this flag when the feature is built."
+}

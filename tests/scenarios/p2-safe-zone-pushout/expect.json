@@ -1,0 +1,21 @@
+{
+  "requirement": "P2-10 L1 lit at t1 while S1 is 3 m inside its zone: pushed out over <= 30 ticks with no damage; Mây stays 1.5 m from L1 (inside the zone) so S1 can never touch",
+  "seed": 1,
+  "ticks": 120,
+  "events": [
+    {
+      "name": "lantern_lit",
+      "tick": 1,
+      "data": {
+        "lantern_id": "L1"
+      }
+    }
+  ],
+  "absent_events": [
+    "player_hit"
+  ],
+  "end": {
+    "state": "playing"
+  },
+  "pending": "Phase 2 kickoff: written before implementation (v1.1). Remove this flag when the feature is built."
+}

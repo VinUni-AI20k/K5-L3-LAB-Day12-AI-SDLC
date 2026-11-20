@@ -21,3 +21,26 @@ One entry per change: phase, what changed in the ticket, design decision (one li
 - Tightened: `p1-pulse-stun-push` now checks t120/t121, `p1-hit-drop` checks t90/t91 (both edges). Added `p1-win-bonus-fraction`, `p1-end-priority-flames-dawn`, `p1-shade-spawn-schedule`.
 - Test runner: every scenario now checks "events of tick T precede tick T's snapshot", and `absent_snapshots` is available (used by `p1-lose-no-flames`).
 - Not changed: Q6 default (respawn on when `motes` listed and `random_motes` omitted) is still a guess; the reviewer flagged the risk.
+
+## Phase 2 kickoff: Ticket-02 replaces our Phase 1 numbers (Contract v1.1)
+- **What changed:** the customer standardised every number, the map and the tick order. Our own Phase 1 choices no longer apply. The full list is in `assumptions.md` → Phase 2 → "Replaced".
+- **Design decision:**
+  - Per-night data moves to `src/sim/maps.ts`.
+  - Timers become integer tick counters.
+  - Island clamping is replaced by a ground-height function and falling.
+  - End order becomes no_flames → all_lit → dawn.
+  - Why: the ticket fixes all of this, and hidden Phase 1 tests are re-run with the standard numbers.
+- **Tests:**
+  - 21 `p2-*` scenarios were added before any code, marked `pending`.
+  - The runner gained `night`, `pending` (visible as skipped, and release requires zero) and `$range` (for bounds the ticket gives, like "lands on island B").
+  - All `p1-*` scenarios must be **re-derived** for the v1.1 numbers in build step 7. Each change gets a line below.
+  - `p1-island-clamp` is to be **deleted**: falling replaces the clamp, and P2-09 covers it.
+  - `p1-end-priority-dawn` stays valid. Under the new order it is still won.
+  - `p1-end-priority-flames-dawn` stays valid: no_flames is now checked first anyway.
+- **Phase 1 TA answers superseded by the ticket:**
+  - safe-zone expel is now gradual over ≤ 30 ticks, not an instant projection;
+  - pulse targets use 3D distance;
+  - dropped motes go onto a ring instead of being lost.
+
+### Phase 2 build: p1 scenario re-derivations
+_(one line per scenario: old → new value, arithmetic)_

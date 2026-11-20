@@ -1,0 +1,31 @@
+{
+  "requirement": "P2-09 walk +X from x=39.9: off the r=40 island at step 1, falls below Y=-10 (~1 s) -> player_hit by fall, flames 2, lost 4; after 60 ticks respawn at (0,0,0) with 0 carried",
+  "seed": 1,
+  "ticks": 300,
+  "events": [
+    {
+      "name": "player_hit",
+      "data": {
+        "by": "fall",
+        "flames": 2,
+        "lost": 4
+      }
+    }
+  ],
+  "snapshots": [
+    {
+      "tick": 300,
+      "state": "playing",
+      "player": {
+        "pos": [
+          0,
+          0,
+          0
+        ],
+        "flames": 2,
+        "carried": 0
+      }
+    }
+  ],
+  "pending": "Phase 2 kickoff: written before implementation (v1.1). Remove this flag when the feature is built."
+}

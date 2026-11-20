@@ -1,0 +1,35 @@
+{
+  "requirement": "P2-13 Night 2 charm C1 at (35,0,0) on the bridge: step 0 moves 0.1 -> 34.6 and picks it (0.4 <= 1.0); steps 1-9 at 7.2 m/s = 0.12/tick -> x = 34.6 + 1.08 = 35.68 at t10",
+  "seed": 1,
+  "night": 2,
+  "ticks": 10,
+  "events": [
+    {
+      "name": "charm_picked",
+      "tick": 1,
+      "data": {
+        "charm_id": "C1",
+        "charm_ticks": 600
+      }
+    }
+  ],
+  "snapshots": [
+    {
+      "tick": 10,
+      "player": {
+        "pos": [
+          35.68,
+          0,
+          0
+        ]
+      },
+      "charms": [
+        {
+          "id": "C1",
+          "available": false
+        }
+      ]
+    }
+  ],
+  "pending": "Phase 2 kickoff: written before implementation (v1.1). Remove this flag when the feature is built."
+}

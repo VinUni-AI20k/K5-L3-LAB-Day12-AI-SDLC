@@ -15,13 +15,16 @@ Arguments: `kickoff N` or `release N`. Ask for the ticket text if the user hasn'
    - what **replaces** an old rule. For each replaced rule, list the tests, scenarios and docs it affects.
 3. List the remaining ambiguities as questions for the phase TA, each with the default you'll assume.
 4. Write acceptance criteria as rows in the format "do A → see B". Give each one an ID (`P{N}-01`…) and a planned scenario folder or unit test.
-5. Create the scenario folders (`tests/scenarios/p{N}-*/`) **before** any implementation. Expected values must be derived from the spec and tuning, never copied from program output. Use the format in `tests/scenarios/README.md`.
+5. Create the scenario folders (`tests/scenarios/p{N}-*/`) **before** any implementation, each with `"pending": "<reason>"`
+   so verify stays green until the feature lands. Expected values must be derived from the spec and tuning, never copied from program output. Use the format in `tests/scenarios/README.md`.
 6. If the contract changed, update `docs/spec/`, `game.contract.json`, `src/sim/config.ts` and the headless output together.
 7. Log any rule change in `docs/notes/changes.md`. Any old test that the change makes wrong gets fixed or retired **with the reason**.
 8. Stop and show the user the criteria list and the questions. Wait for approval before building.
 
 ## release N (target: ≤ 8 min)
 1. Run `npm run verify`. It must be green, or the failures must be written up honestly as FAIL / NOT DONE.
+   It must also have **zero `PENDING` scenarios**. Any left are listed as NOT DONE in the proof, with the reason.
+8. For a big ticket, the kickoff also writes `docs/notes/handoff-phaseN.md`: the build order, files, done-when checks and a paste-ready prompt, so a cheaper model (Sonnet) can build it.
 2. Run the `verify` skill for phase N. It writes `docs/proof/phase-N/summary.md` and includes a regression check of every earlier phase's scenarios.
 3. Ask the `contract-reviewer` subagent to review `phase-(N-1)..HEAD`, or the whole tree for N=1. Fix any high-severity findings or record them.
 4. For visual requirements, use `.claude/launch.json` ("game") in the browser pane and save 1–3 screenshots into `docs/proof/phase-N/img/`. Name each screenshot after the requirement it proves.

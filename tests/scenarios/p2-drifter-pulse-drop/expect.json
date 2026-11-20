@@ -1,0 +1,51 @@
+{
+  "requirement": "P2-15 fleeing D1 holding 3 at 3D distance 2.01 <= 5 from the pulse centre -> drifter_drop amount 3 at t1; the 3 motes become dropped motes 2 m away (out of reach); pulse has no shade targets, score 0",
+  "seed": 1,
+  "night": 2,
+  "ticks": 10,
+  "events": [
+    {
+      "name": "pulse",
+      "tick": 1,
+      "data": {
+        "stunned_ids": []
+      }
+    },
+    {
+      "name": "drifter_drop",
+      "tick": 1,
+      "data": {
+        "drifter_id": "D1",
+        "amount": 3
+      }
+    }
+  ],
+  "snapshots": [
+    {
+      "tick": 10,
+      "score": 0,
+      "player": {
+        "carried": 0
+      },
+      "motes_active": 3,
+      "motes": [
+        {
+          "kind": "dropped"
+        },
+        {
+          "kind": "dropped"
+        },
+        {
+          "kind": "dropped"
+        }
+      ],
+      "drifters": [
+        {
+          "id": "D1",
+          "stolen": 0
+        }
+      ]
+    }
+  ],
+  "pending": "Phase 2 kickoff: written before implementation (v1.1). Remove this flag when the feature is built."
+}

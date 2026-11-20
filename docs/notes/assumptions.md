@@ -135,13 +135,104 @@ Scenario folders live in `tests/scenarios/`. Expected values are derived by hand
 
 ---
 
-## Phase 2: Ticket-02
-_(filled by `/phase kickoff 2`)_
+## Phase 2: Ticket-02 (spec: `docs/spec/ticket-02.md`, Contract v1.1)
+
 ### What the ticket adds or changes vs Phase 1
-### New or updated assumptions
-### Acceptance criteria → verification
-| ID | Criterion | Verified by |
+- **Replaced (our Phase 1 choices → customer standard).** All tuning now comes from the ticket:
+  - pickup 1.5 → 1.0, plus a height check ≤ 1.5
+  - lantern_cost 5 → 10
+  - interact 3 → 2, with ties going to the smaller id
+  - pulse cost 1 → 3, radius 6 XZ → 5 in **3D** from feet + 0.8
+  - pulse cooldown 1 → 3 s
+  - pulse push: instant → 4 m spread over 15 ticks
+  - per_stun 20 → 5
+  - fall_enabled false → **true** (the island clamp is gone)
+  - dropped motes: lost → a ring 1.5–2.5 m with TTL 480
+  - invuln 1.5 s → 90 ticks (same length)
+  - motes: 30 random → 20 on fixed spawn points, cap 30
+  - shade schedule: 5 s + 30 s ×5 → 2 at t300, then every 8/7/6 s, cap 6/8/10, on fixed points ≥ 15 m away
+  - shade states: chase/stunned → spawning/wander/chase/recoil/stunned
+  - safe-zone expel: instant projection → pushed out over ≤ 30 ticks with no damage
+  - lantern ring → fixed positions
+  - **end-check order:** all_lit → no_flames → dawn becomes **no_flames → all_lit → dawn**
+- **New:** nights 2 and 3 (maps, tiers, ramps, launch pads, bell tower, wind), dash, fall/respawn, drifters, charms, pause, and the v1.1 snapshot, scenario, input and event fields. Web adds the 3-night chain, menus, settings, audio, full HUD, palette and the ambient formula.
+- **Clarified:** "after setup, before input" is still tick 0. Scoring is still on deposit. The win bonus formula is unchanged.
+
+### Open questions for the Phase 2 TA (defaults are used now; update when answered)
+| # | Question | Default we implement |
 |---|---|---|
+| Q2-1 | How long does a shade stay `spawning`, and what does `wander` do? | **TA answer:** `spawning` lasts 1.0 s (60 ticks). The shade deals no damage and fades in, then switches to `wander`. Scenario shades skip `spawning` and start in `wander`, unless the scenario gives `state`. Our default: `wander` stays where it is (it doesn't move). → `chase` when XZ ≤ 12, back to `wander` when XZ > 18 |
+| Q2-2 | Which tick carries `night_start`? | **TA answer:** tick 1. Tick 0 is the state after setup with no events, and the first step's events carry tick 1. It is emitted with or without a scenario. Hidden tests compare times with a **±2 tick tolerance**, but we stay exact to our convention |
+| Q2-3 | Is `player.invuln` a boolean or seconds? | **TA answer:** boolean, `true` while invulnerable. The ticks left only exist in a scenario, as `player.invuln_ticks` |
+| Q2-4 | Night 2 and 3 start points? (0,0,0) is inside the Night 3 bell tower | **TA answer:** Night 2 starts at (0,0,0) (centre of island A), facing +Z. Night 3 starts at (0,0,−15), facing +Z (tier 0) |
+| Q2-5 | Does the 30-mote cap include dropped motes? | Only `random` motes count toward the cap and fill spawn points; dropped motes are extra |
+| Q2-6 | On the resume tick, does logic run? | Yes. Only the step that **pauses** stops early; the resume step runs fully |
+| Q2-7 | Acceleration "≤ 0.1 s" | Instant: velocity = target each tick (0 s ≤ 0.1 s) |
+| Q2-8 | First wind gust, and `dir_deg` when inactive | Gusts at ticks 1800k for 300 ticks; seeded direction. `dir_deg` = current or next gust direction |
+| Q2-9 | Drifter "fog points" and idle glide | Fog points = that night's shade spawn points. Idle glides at 2 m/s towards a seeded fog point and picks a new one on arrival |
+| Q2-10 | Shades on Night 3 tiers and walls | Shades fly: y = ground height under them + 1.0; tier walls don't block them; the bell tower (r 2) does |
+
+### New or updated assumptions
+- **Timers** are integer tick counters set when triggered and decremented in step phase 2 of every **later** step. A counter set to N at step k blocks steps k+1 … k+N−1, so the action is ready again at step k+N.
+  - Snapshot `*_s` value = `ticks_left / 60`, rounded to 3 decimals.
+- **Dash:**
+  - Starts in phase 3 of the step that reads the edge and moves in that same step: 12 steps × 14/60 = **2.8 m**.
+  - Facing = the last non-zero move direction (initially +Z).
+  - A dash in the air sets vy = 0 and skips gravity while dashing.
+- **Charm:** speed 7.2 applies from the step after pickup.
+- **Ground height function** per night (islands, bridge, tiers, ramps). If there's no ground under the feet, Mây falls with gravity.
+  - Walking into a higher surface by more than 0.25 m is blocked (walls, tower). A ramp rises 0.05 m per tick at run speed, so it passes.
+- **Falling:**
+  - Triggers when feet Y < −10: `player_hit {by:"fall", flames, dropped: 0, lost: carried}`.
+  - Then 60 ticks inert, then respawn at the night start with 90 ticks invulnerable.
+  - If flames reach 0, end with `no_flames` that tick.
+- **Shades:**
+  - Hit check: XZ ≤ 1.0 and |shade centre Y − feet Y| ≤ 1.5. A hit puts the shade into `recoil` for 60 ticks, moving 2 m away from Mây horizontally (2/60 m per tick). A shade in recoil can't hit.
+  - Pushes (pulse, recoil, safe-zone expel) are clamped to the island or ground edge: "stop at obstacles" = don't leave the ground.
+- **Safe zone:** a shade inside a just-lit zone moves radially outward at 0.2 m/tick (6 m in ≤ 30 ticks) and can't hit until it is outside. A shade outside a lit zone never ends a step inside it.
+- **Dropped motes:**
+  - Ring positions are seeded: radius 1.5 + rng, angle 2π·rng.
+  - Y = ground height there, or Mây's ground Y if no ground.
+  - `ttl_s` = ticks left / 60. A random mote's `ttl_s` is `null`.
+- **Drifters:**
+  - Pulse checks the 3D distance to the drifter centre (ground + 1.0).
+  - Pulse doesn't add score and doesn't put the drifter in `stunned_ids`.
+  - A removed drifter stays in the snapshot with `state: "removed"`, but doesn't count toward the max of 2.
+- **Charms snapshot:** `respawn_s` is 0 while available.
+- **Score** is per night in headless runs. The web game sums the nights won.
+
+### Acceptance criteria → verification
+Scenario folders: `tests/scenarios/p2-*/`. A folder with `"pending"` in `expect.json` is skipped until built. **Release requires zero pending.**
+
+| ID | Criterion ("do A → see B") | Verified by |
+|---|---|---|
+| P2-01 | `game.contract.json` is v1.1 with every standard number and the 5 new keys | `tests/contract.test.ts` |
+| P2-02 | `--night 2`/`3` load their map: lanterns 6/7 at the exact positions, time 330/360, charms, 20 motes | `p2-night2-map`, `p2-night3-map` |
+| P2-03 | Default Night 1: 20 motes at t0, +1 at t240 and t480; S1+S2 at t300, S3 at t780 | `p2-n1-schedule` |
+| P2-04 | Pickup at XZ 1.0 yes, 1.05 no | `p2-pickup-radius` |
+| P2-05 | Deposit is min(carried, missing) into the nearest unlit lantern; ties go to the smaller id; cost 10 | `p2-deposit-tie`, `p2-lantern-cost` |
+| P2-06 | Pulse with < 3 carried does nothing; with 3: cost 3, stun 120 ticks, 4 m push by t15, +5 | `p2-pulse-cost`, `p2-pulse-stun-push` |
+| P2-07 | **Dash**: 2.8 m in 12 ticks from standing (facing +Z); blocked during the 90-tick cooldown | `p2-dash` |
+| P2-08 | Shade hit: −1 flame, floor(5/2) = 2 motes dropped as `dropped`, shade in `recoil`, carried 3 | `p2-hit-drop-ring` |
+| P2-09 | **Fall**: walking off Night 1 → `player_hit` by fall with `lost`, respawn at the start with 0 carried | `p2-fall` |
+| P2-10 | Lantern lit with a shade inside its zone → no hit while it is pushed out | `p2-safe-zone-pushout` |
+| P2-11 | Last lantern lit on the dawn tick → won (score 10+100+150 = 260) | `p2-end-win-at-dawn` |
+| P2-12 | **Pause**: tick runs, `sim_tick`/time/position freeze, state `paused`, `paused`/`resumed` events | `p2-pause` |
+| P2-13 | **Charm**: pickup → `charm_picked` C1 600, run speed 7.2 m/s, charm unavailable | `p2-charm` |
+| P2-14 | **Drifter** steals min(3, carried) from a player carrying ≥ 5, then flees | `p2-drifter-steal` |
+| P2-15 | Pulse on a fleeing drifter holding motes → `drifter_drop`, the motes become dropped motes | `p2-drifter-pulse-drop` |
+| P2-16 | **Launch pad** (Night 2): touching it lands Mây on island B (x > 42, grounded) | `p2-launch-pad` |
+| P2-17 | **Wind** (Night 3): inactive at t1790, active at t1810, inactive again at t2110 | `p2-wind` |
+| P2-18 | Malformed v1.1 scenario fields (`pause` not a boolean, `--night 4`) → exit 2 / non-zero | `p2-bad-pause`, `p2-bad-night` |
+| P2-19 | A full headless night (21,600 ticks, Night 3) finishes in ≤ 30 s | `tests/perf.test.ts` |
+| P2-20 | Every Phase 1 scenario re-derived for the v1.1 numbers still passes; replaced rules are deleted with a reason | `tests/scenarios/p1-*`, `docs/notes/changes.md` |
+| P2-W1 | Web: menu → intro (island name, Ông Đăng's line) → play → result → next night; Dawn screen after Night 3; replay a lost night | screenshots `docs/proof/phase-2/img/` |
+| P2-W2 | Web pause (Esc/P) with Continue / Replay night / Settings / Menu; logic frozen | screenshot + `p2-pause` |
+| P2-W3 | Settings (volume, mouse sensitivity) persist after reload (`localStorage`) | screenshot before/after reload |
+| P2-W4 | Audio: night music + listed effects (WebAudio synthesised, credited) | demo video / manual check list |
+| P2-W5 | Full HUD layout, the clock turning red and blinking at ≤ 30 s, prompt near a lantern, off-screen arrow | screenshots |
+| P2-W6 | Palette hex values used for the listed parts; ambient = 0.15 + 0.55 × lit/total | code review (constants in `src/web/palette.ts`) + screenshot |
+| P2-W7 | ≥ 30 FPS average at 1280×720 | FPS counter screenshot with machine specs |
 
 ---
 

@@ -1,0 +1,98 @@
+{
+  "requirement": "P2-02 Night 2 standard map at t0: 6 lanterns at the ticket positions, 330 s, charm C1 available, 20 motes, no shades/drifters yet",
+  "seed": 1,
+  "night": 2,
+  "ticks": 0,
+  "snapshots": [
+    {
+      "tick": 0,
+      "night": 2,
+      "time_left_s": 330,
+      "motes_active": 20,
+      "shades": [],
+      "drifters": [],
+      "charms": [
+        {
+          "id": "C1",
+          "available": true,
+          "respawn_s": 0
+        }
+      ],
+      "player": {
+        "pos": [
+          0,
+          0,
+          0
+        ],
+        "flames": 3,
+        "carried": 0
+      },
+      "lanterns": [
+        {
+          "id": "L1",
+          "pos": [
+            0,
+            0,
+            20
+          ],
+          "lit": false,
+          "deposited": 0
+        },
+        {
+          "id": "L2",
+          "pos": [
+            17,
+            0,
+            -10
+          ],
+          "lit": false,
+          "deposited": 0
+        },
+        {
+          "id": "L3",
+          "pos": [
+            -17,
+            0,
+            -10
+          ],
+          "lit": false,
+          "deposited": 0
+        },
+        {
+          "id": "L4",
+          "pos": [
+            70,
+            0,
+            20
+          ],
+          "lit": false,
+          "deposited": 0
+        },
+        {
+          "id": "L5",
+          "pos": [
+            87,
+            0,
+            -10
+          ],
+          "lit": false,
+          "deposited": 0
+        },
+        {
+          "id": "L6",
+          "pos": [
+            53,
+            0,
+            -10
+          ],
+          "lit": false,
+          "deposited": 0
+        }
+      ]
+    }
+  ],
+  "end": {
+    "ticks": 0
+  },
+  "pending": "Phase 2 kickoff: written before implementation (v1.1). Remove this flag when the feature is built."
+}

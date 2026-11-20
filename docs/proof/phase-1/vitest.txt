@@ -1,0 +1,58 @@
+
+ RUN  v3.2.7 /Users/cuong/Documents/AI20K/K5-L3A-LAB-Day12-NguyenHoangCuong-2A202603568-AI-SDLC
+
+ ✓ tests/contract.test.ts > contract hygiene > game.contract.json tuning matches src/sim/config.ts 1ms
+ ✓ tests/contract.test.ts > contract hygiene > src/sim uses no nondeterministic or rendering APIs 1ms
+ ✓ tests/contract.test.ts > headless CLI > writes JSONL whose last line is an end record 172ms
+ ✓ tests/scenarios.test.ts > headless scenarios > p0-smoke 300ms
+ ✓ tests/scenarios.test.ts > headless scenarios > p1-bad-inputs-json 121ms
+ ✓ tests/contract.test.ts > headless CLI > is byte-identical across two runs with the same args 256ms
+ ✓ tests/contract.test.ts > headless CLI > rejects missing required args with non-zero exit and stderr 116ms
+ ✓ tests/scenarios.test.ts > headless scenarios > p1-bad-inputs-move-range 121ms
+ ✓ tests/scenarios.test.ts > headless scenarios > p1-bad-inputs-order 83ms
+ ✓ tests/scenarios.test.ts > headless scenarios > p1-bad-scenario-deposited 78ms
+ ✓ tests/scenarios.test.ts > headless scenarios > p1-bad-scenario-type 78ms
+ ✓ tests/scenarios.test.ts > headless scenarios > p1-default-world 162ms
+ ✓ tests/scenarios.test.ts > headless scenarios > p1-deposit-lights 158ms
+ ✓ tests/scenarios.test.ts > headless scenarios > p1-deposit-out-of-range 161ms
+ ✓ tests/scenarios.test.ts > headless scenarios > p1-deposit-partial 158ms
+ ✓ tests/scenarios.test.ts > headless scenarios > p1-deposit-remaining 157ms
+ ✓ tests/scenarios.test.ts > headless scenarios > p1-end-priority-dawn 158ms
+ ✓ tests/scenarios.test.ts > headless scenarios > p1-end-priority-flames-dawn 155ms
+ ✓ tests/scenarios.test.ts > headless scenarios > p1-hit-drop 184ms
+ ✓ tests/scenarios.test.ts > headless scenarios > p1-inputs-accept-dash 159ms
+ ✓ tests/scenarios.test.ts > headless scenarios > p1-interact-edge 158ms
+ ✓ tests/scenarios.test.ts > headless scenarios > p1-island-clamp 159ms
+ ✓ tests/scenarios.test.ts > headless scenarios > p1-jump-lands 157ms
+ ✓ tests/scenarios.test.ts > headless scenarios > p1-lit-expels-shade 157ms
+ ✓ tests/scenarios.test.ts > headless scenarios > p1-lose-dawn 156ms
+ ✓ tests/scenarios.test.ts > headless scenarios > p1-lose-no-flames 160ms
+ ✓ tests/scenarios.test.ts > headless scenarios > p1-mote-respawn 157ms
+ ✓ tests/scenarios.test.ts > headless scenarios > p1-move-cam-yaw 157ms
+ ✓ tests/scenarios.test.ts > headless scenarios > p1-move-diagonal 155ms
+ ✓ tests/scenarios.test.ts > headless scenarios > p1-move-straight 156ms
+ ✓ tests/scenarios.test.ts > headless scenarios > p1-pickup-boundary 156ms
+ ✓ tests/scenarios.test.ts > headless scenarios > p1-pickup-capacity 156ms
+ ✓ tests/scenarios.test.ts > headless scenarios > p1-pulse-boundary 182ms
+ ✓ tests/scenarios.test.ts > headless scenarios > p1-pulse-cooldown 159ms
+ ✓ tests/scenarios.test.ts > headless scenarios > p1-pulse-empty 157ms
+ ✓ tests/scenarios.test.ts > headless scenarios > p1-pulse-no-light 156ms
+ ✓ tests/scenarios.test.ts > headless scenarios > p1-pulse-prevents-hit 160ms
+ ✓ tests/scenarios.test.ts > headless scenarios > p1-pulse-push-into-zone 156ms
+ ✓ tests/scenarios.test.ts > headless scenarios > p1-pulse-stun-push 164ms
+ ✓ tests/scenarios.test.ts > headless scenarios > p1-safe-zone-overlap 156ms
+ ✓ tests/scenarios.test.ts > headless scenarios > p1-setup-time-model 158ms
+ ✓ tests/scenarios.test.ts > headless scenarios > p1-shade-chase 159ms
+ ✓ tests/scenarios.test.ts > headless scenarios > p1-shade-ids-unique 154ms
+ ✓ tests/scenarios.test.ts > headless scenarios > p1-shade-safe-radius 159ms
+ ✓ tests/scenarios.test.ts > headless scenarios > p1-shade-spawn-schedule 169ms
+ ✓ tests/scenarios.test.ts > headless scenarios > p1-ticks-zero 155ms
+ ✓ tests/scenarios.test.ts > headless scenarios > p1-win-bonus-fraction 155ms
+ ✓ tests/scenarios.test.ts > headless scenarios > p1-win-score 156ms
+ ✓ tests/scenarios.test.ts > matches() > does partial object, exact-length array and strict primitive matching 0ms
+
+ Test Files  2 passed (2)
+      Tests  49 passed (49)
+   Start at  15:32:48
+   Duration  6.92s (transform 37ms, setup 0ms, collect 48ms, tests 7.22s, environment 0ms, prepare 105ms)
+

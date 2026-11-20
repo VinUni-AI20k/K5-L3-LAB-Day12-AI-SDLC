@@ -356,6 +356,9 @@ Scenario folders: `tests/scenarios/p3-*/`, marked `pending` until built. Release
 
 - **Electron version (build decision):** pinned exactly to **39.8.10** (released 2026-05-05). Newer majors (40+) have an installer that `require()`s an ES module and fails on Node < 20.19/22.12 (we saw `ERR_REQUIRE_ESM` on Node 21.6.1 with 43.8.7 and 45.2.3); 39.x installs and runs on Node 20/21. It is far older than the 2-week minimum.
 
+- **Soak details chosen (build):** night `i` (0-based) uses the map `(i mod 3) + 1` and seed `7 + i`, so `--seed 7` gives seeds 7..16. Input per tick: a unit move vector re-picked every 30 ticks, then 5% jump, 3% dash, 2% pulse, 10% interact (one draw each per tick, in that order). `mem_start_mb` is read right after the first night's `Sim` is constructed; `mem_end_mb` after the last night is released and a forced GC. Nights end at `game_over` or the standard length.
+- **Soak memory finding (honest):** with that literal definition the ratio is about 2.4 (start ≈ 34 MB on a cold process, end ≈ 80 MB), so the "ratio ≤ 1.2" threshold is **not met**. It is not a leak: `heapUsed` is flat at 3-6 MB after every night and `heapTotal` stays below 10 MB, while RSS rises over the first ~10 nights (34 → ~105 MB over 30 nights, then it levels off). The growth is native (JIT code and compiler zones), i.e. process warm-up. A start point taken after warm-up (for example after the first three nights) would give about 1.1, but that is not what the ticket defines, so `soak.json` reports the literal number.
+
 ### Acceptance criteria → verification
 | ID | Criterion | Verified by |
 |---|---|---|

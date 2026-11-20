@@ -9,7 +9,7 @@
   "scripts": {
     "dev": "vite",
     "build": "npm run build:headless && npm run build:web",
-    "build:headless": "esbuild src/headless/cli.ts --bundle --platform=node --format=esm --target=node20 --outfile=dist/headless.js --log-level=warning",
+    "build:headless": "esbuild src/headless/cli.ts --bundle --platform=node --format=esm --target=node20 --outfile=dist/headless.js --log-level=warning && esbuild src/soak/soak.ts --bundle --platform=node --format=esm --target=node20 --outfile=dist/soak.js --log-level=warning",
     "build:web": "vite build --logLevel warn",
     "play": "electron .",
     "typecheck": "tsc --noEmit",

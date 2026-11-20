@@ -17,7 +17,7 @@
 | Phase | Models used | % of 5-hour limit (start → end) | Tokens, approx (in / out) | Approx API-equivalent cost | Main prompts / tasks | Savings applied |
 |---|---|---|---|---|---|---|
 | CP0 prep | Opus 5.5 | 0 → 8% (planning and scaffold) | | | read the lab docs and the PRD-0 board, plan, scaffold, harness | spec condensed into one file; CLAUDE.md is 40 lines or fewer; hooks print only on failure |
-| 1 | | | | | | |
+| 1 | Sonnet 5.5 (build) + `contract-reviewer` subagent | CP0 ended at 8%; end of Phase 1 = **26%** (read from the usage API on 2026-11-20; the start of this window was not measured) | context ≈ 257k tokens at release (not a billing figure) | not computed | kickoff with 43 scenarios before code, sim + headless, web client, release with independent review | scenarios as data folders (no new test code); read-only reviewer; condensed spec |
 | 2 | | | | | | |
 | 3 | | | | | | |
 | 4 | | | | | | |

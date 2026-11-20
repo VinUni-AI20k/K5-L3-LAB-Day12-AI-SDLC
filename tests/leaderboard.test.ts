@@ -107,6 +107,17 @@ describe("Leaderboard (injected storage)", () => {
     expect(new Leaderboard(memory([{ name: "ok_name", score: "x" }])).entries()).toEqual([]);
   });
 
+  it("re-sorts, caps at 10 and drops invalid names when reading a hand-edited file", () => {
+    const stored = [
+      ...Array.from({ length: 12 }, (_, i) => e(`pl${String(i).padStart(2, "0")}x`, i * 10)), // scores 0..110, unsorted by id order
+      e("bad name!", 9999), // invalid: dropped even with a huge score
+    ];
+    const out = new Leaderboard(memory(stored)).entries();
+    expect(out).toHaveLength(10);
+    expect(out.map((x) => x.score)).toEqual([110, 100, 90, 80, 70, 60, 50, 40, 30, 20]); // top 10 by score, 0 and 10 cut
+    expect(out.map((x) => x.name)).not.toContain("bad name!");
+  });
+
   it("export is {\"entries\": [...]} in rank order", () => {
     const lb = new Leaderboard(memory());
     lb.submit(e("low_one", 10));

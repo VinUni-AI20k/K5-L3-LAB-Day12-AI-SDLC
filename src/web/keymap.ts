@@ -7,8 +7,8 @@ export const ACTION_LABELS: Record<Action, string> = {
   forward: "Tiến", back: "Lùi", left: "Trái", right: "Phải", jump: "Nhảy", dash: "Lướt", interact: "Nạp đèn", pulse: "Tỏa sáng", pause: "Tạm dừng",
 };
 
-/** Keys that cannot be bound: F3 is the FPS counter, Tab is browser focus. */
-const RESERVED = new Set(["f3", "tab"]);
+/** Keys that cannot be bound: F3 is the FPS counter, Tab is browser focus, the arrows turn the camera, P is a pause alias and R restarts a lost night. */
+const RESERVED = new Set(["f3", "tab", "arrowleft", "arrowright", "arrowup", "arrowdown", "p", "r"]);
 
 export function defaultKeymap(): Keymap {
   return { forward: "w", back: "s", left: "a", right: "d", jump: " ", dash: "shift", interact: "e", pulse: "f", pause: "escape" };

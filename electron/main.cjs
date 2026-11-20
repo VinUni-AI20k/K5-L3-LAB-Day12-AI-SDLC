@@ -11,7 +11,7 @@ const argv = process.argv.slice(app.isPackaged ? 1 : 2);
 const has = (f) => argv.includes(f);
 const val = (f, d) => {
   const i = argv.indexOf(f);
-  return i >= 0 && argv[i + 1] !== undefined ? argv[i + 1] : d;
+  return i >= 0 && argv[i + 1] !== undefined && !argv[i + 1].startsWith("--") ? argv[i + 1] : d; // a following flag is not a value
 };
 
 const bench = has("--bench");
@@ -30,6 +30,7 @@ function lbRead() {
 ipcMain.on("bench-config", (e) => { e.returnValue = benchCfg; }); // null when not benchmarking
 ipcMain.on("lb-read", (e) => { e.returnValue = lbRead(); });
 ipcMain.on("lb-write", (e, entries) => {
+  if (!Array.isArray(entries) || entries.length > 10) { e.returnValue = false; return; } // only a top-10 list is ever stored
   try {
     fs.mkdirSync(path.dirname(lbFile()), { recursive: true });
     fs.writeFileSync(lbFile(), JSON.stringify(entries, null, 2) + "\n");
@@ -39,6 +40,10 @@ ipcMain.on("lb-write", (e, entries) => {
   }
 });
 const benchCfg = bench ? { seed: Number(val("--seed", "42")), duration: Number(val("--duration", "30")), out: val("--out", "bench.json") } : null;
+if (benchCfg && (!Number.isInteger(benchCfg.seed) || !Number.isFinite(benchCfg.duration) || benchCfg.duration <= 0)) {
+  process.stderr.write("error: --bench needs an integer --seed and a --duration > 0 (seconds)\n");
+  process.exit(1);
+}
 if (bench) {
   // vsync off, frame-rate limit off, so the measured fps is not capped by the display
   app.commandLine.appendSwitch("disable-gpu-vsync");
@@ -79,6 +84,11 @@ function setupBench() {
   });
   ipcMain.on("bench-result", (_e, payload) => {
     if (timer) clearInterval(timer);
+    if (!payload || !Array.isArray(payload.dts) || payload.dts.length === 0 || !payload.dts.every((x) => Number.isFinite(x) && x >= 0)) {
+      process.stderr.write("bench failed: invalid frame times\n");
+      app.exit(1);
+      return;
+    }
     sample();
     try {
       const s = benchStats(payload.dts);

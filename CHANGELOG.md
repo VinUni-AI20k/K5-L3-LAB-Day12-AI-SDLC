@@ -4,7 +4,7 @@
 
 ### Added
 - **Desktop build:** Electron shell (`npx electron .`) around the web game; `run_cmd` is now `npx electron .`. `npm run dev` / `npm run preview` still run in a browser.
-- **Benchmark:** `npx electron . --bench --seed 42 --duration 30 --out bench.json` (1280x720, vsync off, standard scene with 200 wander shades and 100 motes). Our run is committed as `bench.json`.
+- **Benchmark:** `npx electron . --bench --seed 42 --duration 30 --out bench.json` (1280x720, vsync off, standard scene with 200 wander shades and 100 motes). Our run is committed as `bench.json` (avg 275 fps, 1% low 146 fps on an Apple M1, pixel ratio 1).
 - **Soak test:** `node dist/soak.js --seed 7 --nights 10 --out soak.json` (10 nights in one process with seeded random input). Our run is committed as `soak.json`: 0 crashes, memory ratio 2.48 (the 1.2 threshold is **not met**; the JS heap is flat, the growth is native warm-up, see `docs/notes/assumptions.md`).
 - **Local leaderboard:** top 10, name entry after Dawn or a loss, menu screen, `--export-leaderboard out.json`.
 - **Accessibility:** rebindable keys (9 actions) with duplicate detection and restore defaults, captions with an edge arrow, reduced motion, 18 px base text and a large-text option.

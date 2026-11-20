@@ -715,11 +715,11 @@ updateHelp();
 interface DdlBridge { benchConfig: { seed: number; duration: number; out: string } | null; benchFirstFrame(): void; benchMeasureStart(): void; benchResult(p: { dts: number[]; renderer: string }): void }
 const ddl = (window as unknown as { ddl?: DdlBridge }).ddl;
 const benchCfg = ddl?.benchConfig ?? null;
-const bench = { t0: 0, last: 0, measureStart: 0, dts: [] as number[], started: false, done: false, acc: 0 };
+const bench = { t0: -1, last: 0, measureStart: 0, dts: [] as number[], started: false, done: false, acc: 0 };
 
 function benchFrame(now: number, dt: number): void {
   if (!ddl || !benchCfg || bench.done) return;
-  if (bench.t0 === 0) { bench.t0 = now; bench.last = now; }
+  if (bench.t0 < 0) { bench.t0 = now; bench.last = now; }
   const t = (now - bench.t0) / 1000;
   // game logic at its normal fixed step: the shades wander
   bench.acc += dt;
@@ -748,6 +748,8 @@ function benchFrame(now: number, dt: number): void {
 }
 
 if (benchCfg) {
+  renderer.setPixelRatio(1); // the bench window is 1280x720 pixels, also on HiDPI displays
+  renderer.setSize(window.innerWidth, window.innerHeight);
   sim = createBenchSim(benchCfg.seed);
   (window as unknown as { __ddl: unknown }).__ddl = { get sim() { return sim; } };
   loadNightScene(1);

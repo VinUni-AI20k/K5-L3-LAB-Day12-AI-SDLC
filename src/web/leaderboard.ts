@@ -74,7 +74,13 @@ export class Leaderboard {
       return [];
     }
     const arr = Array.isArray(raw) ? raw : raw && typeof raw === "object" && Array.isArray((raw as { entries?: unknown }).entries) ? (raw as { entries: unknown[] }).entries : [];
-    return arr.filter(isEntry);
+    // a hand-edited file is cleaned on read: valid entries only, ranked, at most 10
+    const valid = arr.filter(isEntry).filter((e) => validateName(e.name));
+    return valid
+      .map((x, i) => ({ x, i }))
+      .sort((a, b) => b.x.score - a.x.score || instant(a.x.achieved_at) - instant(b.x.achieved_at) || a.i - b.i)
+      .slice(0, MAX_ENTRIES)
+      .map((t) => t.x);
   }
 
   submit(entry: Entry): { entries: Entry[]; rank: number | null } {

@@ -45,9 +45,8 @@ describe("rebind", () => {
   it("lets an action keep its own key (no false conflict)", () => {
     expect(rebind(defaultKeymap(), "pulse", "f").ok).toBe(true);
   });
-  it("refuses reserved keys: F3 (FPS counter) and Tab", () => {
-    expect(rebind(defaultKeymap(), "jump", "F3").ok).toBe(false);
-    expect(rebind(defaultKeymap(), "jump", "Tab").ok).toBe(false);
+  it("refuses reserved keys: F3 (FPS counter), Tab, the camera arrows, P (pause alias) and R (restart)", () => {
+    for (const k of ["F3", "Tab", "ArrowLeft", "ArrowRight", "ArrowUp", "ArrowDown", "p", "R"]) expect(rebind(defaultKeymap(), "jump", k).ok, k).toBe(false);
   });
   it("does not modify its input", () => {
     const m = defaultKeymap();

@@ -13,9 +13,9 @@ Date 2026-11-20, Apple M1 MacBook Air 16 GB, macOS 15 (Darwin 24.0.0), Node v21.
 | `npx electron . --export-leaderboard out/lb.json` | exit 0, `{"entries": []}` (fresh user, nothing saved in that folder yet) |
 
 ## Bench numbers vary with machine load (important)
-- Committed [bench.json](../../../bench.json), 30 s run earlier the same day: avg 211.6 fps, 1% low 124.1 fps, load 357 ms.
+- The first committed bench.json (30 s, before the review fix, renderer at devicePixelRatio 2 on this Retina display): avg 211.6 fps, 1% low 124.1 fps, load 357 ms. It was replaced by a run with the pixel ratio forced to 1: avg 275.1, 1% low 145.8, load 623 ms.
 - Runs made later, with the author's other apps open (a 10 s run in the clone and two 10 s runs in the repo): avg 98.6 / 90.6 / 93.8 fps, 1% low 37.8 / 30.8 / 31.4 fps, load 548-648 ms.
-- So the thresholds (avg >= 60, 1% low >= 30, load <= 10 s) were met in every run, but the 1% low was close to 30 in the later runs. Treat the committed numbers as a best-case run on an idle machine, not as a guarantee. We did not replace `bench.json`.
+- So the thresholds (avg >= 60, 1% low >= 30, load <= 10 s) were met in every run, but the 1% low was close to 30 in the later pre-fix runs. Treat the committed numbers as one run on this machine, not as a guarantee.
 
 ## Release zip
 `npm run release:zip` wrote `release/dao-den-long-web-v1.0.0.zip` (index.html, assets/, LICENSE, HOW-TO-RUN.txt). Unzipped and served with `python3 -m http.server`: `/` and the JS asset both returned HTTP 200. The game was not opened from that served copy in a browser.

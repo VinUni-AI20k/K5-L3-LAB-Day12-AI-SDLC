@@ -113,3 +113,10 @@ One line per old scenario: old -> new, why. Every new value is derived by arithm
 - Fixed (low): a scenario `target_lantern_id` no longer stays sticky after a drain ends; `capacity_base` now comes from `TUNING.carry_capacity`; the `p1-win-score` log line said "5 +" (it is 10x5); removed an empty placeholder section; `p1-win-score` now also asserts `relight:false` on `lantern_lit`.
 - Not verified by the reviewer: it did not read the `p3-*` expect files line by line or the web code; it did not capture process exit codes for bad scenario values (the scenario tests cover exit 2).
 
+## Phase 4 build and release (Contract v1.3)
+- No rule changed and no p1-p3 scenario was edited (`git diff 0725404..HEAD -- tests/scenarios` is empty). `tests/contract.test.ts` now expects contract "1.3" and the `bench_cmd` / `soak_cmd` keys; `tests/perf.test.ts` is unchanged from Phase 3.
+- New pure-module tests (written before the modules): `soak`, `bench-stats`, `bench-scene`, `leaderboard`, `keymap`.
+- **contract-reviewer findings.** Fixed: invalid `--bench` seed/duration now exits 1 instead of hanging; the bench renders at pixel ratio 1 (it had used devicePixelRatio 2 on a Retina display) and `bench.json` was re-measured (275.1 / 145.8 fps); a following flag is no longer taken as an option value; IPC writes are limited to a top-10 array and `bench-result` is validated; the leaderboard is re-ranked, capped and name-checked on read (a hand-edited file); arrow keys, P and R are reserved for rebinding; the bench start sentinel is -1. Written test-first where behaviour changed (`keymap`, `leaderboard`).
+- **Accepted, not changed:** `peak_mem_mb` is the sum of `workingSetSize` over all Electron processes (the ticket says process RSS), documented in README; bench shades/motes use a fixed R = 40 disc; `--export-leaderboard` exports only the userData file (not browser localStorage); `gc` before `mem_end` is best effort; no automated tests for the Electron bench path, the export CLI, the name-entry flow or the captions (manual evidence in `docs/proof/phase-4`).
+- **Not done (author):** demo video, retro, GitHub Release v1.0.0, the `phase-4` tag.
+

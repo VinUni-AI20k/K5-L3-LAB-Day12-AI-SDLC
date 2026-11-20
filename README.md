@@ -35,7 +35,7 @@ npx electron . --bench --seed 42 --duration 30 --out bench.json
 ```
 Opens a 1280×720 window (not fullscreen) with vsync and the frame-rate limit **off** (`--disable-gpu-vsync`, `--disable-frame-rate-limit`; `vsync_off: true`), shows the standard scene (Night 1, 200 shades in `wander` spread with seed 42, 100 motes, L1–L3 lit; spawning, damage, pickup, fuel decay and the end of the night are off), flies the camera on a circle of radius 30 m at Y 15 (one lap per 15 s), skips 3 s of warm-up, measures `--duration` s and exits with code 0. `peak_mem_mb` is the sum of `workingSetSize` over all Electron processes, polled every 250 ms. Statistics follow the ticket (`src/bench/stats.ts`, unit-tested).
 
-Our committed result ([bench.json](bench.json), Apple M1 MacBook Air, 16 GB, macOS 15): **avg 211.6 fps, 1% low 124.1 fps, p95 6.3 ms, load 357 ms, peak 411.6 MB**, all thresholds met (≥ 60 / ≥ 30 / ≤ 10 s) on that machine.
+Our committed result ([bench.json](bench.json), Apple M1 MacBook Air, 16 GB, macOS 15): **avg 275.1 fps, 1% low 145.8 fps, p95 4.4 ms, load 623 ms, peak 427.1 MB**, all thresholds met (≥ 60 / ≥ 30 / ≤ 10 s) on that machine. Numbers vary with machine load (see [docs/proof/phase-4/fresh-clone.md](docs/proof/phase-4/fresh-clone.md)). The renderer pixel ratio is forced to 1 in the bench, so the 1280×720 window renders 1280×720 pixels also on Retina displays. `peak_mem_mb` is a sum over processes (Chromium shares pages between them), so it is higher than the main process's own RSS.
 
 ## Soak test
 ```bash

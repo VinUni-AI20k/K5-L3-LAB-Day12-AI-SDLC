@@ -3,7 +3,7 @@
 import { DT, TICK_RATE, TUNING, WORLD, toTicks } from "./config";
 import { NIGHTS, groundHeight, type NightDef } from "./maps";
 import { createRng, r3 } from "./rng";
-import type { Charm, GameState, InputState, Lantern, Mote, Scenario, Shade, ShadeState, SimEvent, Vec3 } from "./types";
+import type { Charm, Drifter, GameState, InputState, Lantern, Mote, Scenario, Shade, ShadeState, SimEvent, Vec3 } from "./types";
 
 const dist2d = (a: Vec3, b: Vec3): number => Math.hypot(a[0] - b[0], a[2] - b[2]);
 
@@ -33,6 +33,10 @@ export class Sim {
   shades: Shade[] = [];
   lanterns: Lantern[] = [];
   charms: Charm[] = [];
+  drifters: Drifter[] = [];
+  private spawnDrifters: boolean;
+  private drifterSeq = 1;
+  private drifterReserved = new Set<string>();
   charmTicks = 0; // run-speed boost ticks left
 
   private rng: () => number;
@@ -58,6 +62,7 @@ export class Sim {
     this.duration = sc.time_left_s ?? this.def.duration_s;
     this.respawnMotes = sc.random_motes ?? true;
     this.spawnShades = sc.random_shades ?? true;
+    this.spawnDrifters = sc.random_drifters ?? this.def.drifters;
 
     if (sc.player?.pos) this.player.pos = [...sc.player.pos];
     if (sc.player?.carried !== undefined) this.player.carried = sc.player.carried;
@@ -93,6 +98,14 @@ export class Sim {
     charmPos.forEach((pos, i) => this.charms.push({ id: sc.charms?.[i]?.id ?? `C${i + 1}`, pos: [...pos], available: true, respawn: 0 }));
     if (sc.player?.charm_ticks !== undefined) this.charmTicks = sc.player.charm_ticks;
 
+    for (const d of sc.drifters ?? []) if (d.id) this.drifterReserved.add(d.id);
+    for (const d of sc.drifters ?? []) {
+      const state = d.state ?? "idle";
+      this.drifters.push({
+        id: d.id ?? this.freeDrifterId(), pos: [...d.pos], state, stolen: d.stolen ?? 0,
+        stoleOnce: state === "flee" || (d.stolen ?? 0) > 0, ticks: state === "flee" ? WORLD.drifter_flee_ticks : 0, target: null,
+      });
+    }
     for (const s of sc.shades ?? []) if (s.id) this.reservedIds.add(s.id);
     for (const s of sc.shades ?? []) {
       this.shades.push({ ...this.newShade(s.id ?? this.freeShadeId(), s.pos, s.state ?? "wander"), ticks: s.state_ticks_left ?? 0 });
@@ -117,6 +130,13 @@ export class Sim {
     return !(this.night === 3 && Math.hypot(x, z) < 2);
   }
 
+  private freeDrifterId(): string {
+    let id = `D${this.drifterSeq++}`;
+    while (this.drifterReserved.has(id) || this.drifters.some((d) => d.id === id)) id = `D${this.drifterSeq++}`;
+    return id;
+  }
+
+  /** Height of a ribbon's centre: ground + 1.0, or where it is now when there is no ground. */
   private shadeY(x: number, z: number, fallback: number): number {
     const h = groundHeight(this.night, x, z);
     return h === null ? fallback : h + 1;
@@ -216,6 +236,10 @@ export class Sim {
     this.motes = this.motes.filter((m) => m.ttl === null || --m.ttl > 0);
     for (const sh of this.shades) {
       if (sh.ticks > 0 && --sh.ticks === 0 && (sh.state === "spawning" || sh.state === "stunned" || sh.state === "recoil")) sh.state = "wander";
+    }
+    for (const d of this.drifters) {
+      if (d.state === "removed" || d.ticks === 0) continue;
+      if (--d.ticks === 0 && d.state === "flee") { d.state = "removed"; d.stolen = 0; } // disappears along with what it stole
     }
     if (this.fallWait > 0) {
       this.fallWait--;
@@ -383,6 +407,19 @@ export class Sim {
         this.score += TUNING.score.per_stun;
       }
       emit("pulse", { stunned_ids: stunned });
+      for (const d of this.drifters) { // drifters: no stun, no score, not in stunned_ids
+        if (d.state !== "chase" && d.state !== "flee") continue;
+        const dist = Math.hypot(d.pos[0] - p.pos[0], d.pos[1] - (p.pos[1] + WORLD.pulse_center_y), d.pos[2] - p.pos[2]);
+        if (dist > TUNING.pulse_radius) continue;
+        if (d.state === "chase") { d.state = "flee"; d.ticks = WORLD.drifter_flee_ticks; }
+        else if (d.stolen > 0) {
+          const y = groundHeight(this.night, d.pos[0], d.pos[2]) ?? p.pos[1];
+          for (let i = 0; i < d.stolen; i++) this.motes.push({ id: `M${this.moteSeq++}`, pos: [d.pos[0], y, d.pos[2]], kind: "dropped", ttl: WORLD.dropped_ttl_ticks, spawn: -1 });
+          emit("drifter_drop", { drifter_id: d.id, amount: d.stolen });
+          d.stolen = 0;
+          d.ticks = WORLD.drifter_drop_leave_ticks;
+        }
+      }
     }
 
     // 8. move shades
@@ -418,7 +455,43 @@ export class Sim {
       }
     }
 
-    // 9. touch: shades hit in ascending id order, at most one flame per tick
+    for (const d of this.drifters) { // drifters ignore safe zones, walls and invulnerability
+      if (d.state === "removed") continue;
+      const dx = p.pos[0] - d.pos[0], dz = p.pos[2] - d.pos[2];
+      const dist = Math.hypot(dx, dz);
+      const near = this.fallWait === 0 && p.carried >= WORLD.drifter_chase_carried && dist <= WORLD.drifter_chase_range;
+      if (d.state === "idle" && near) d.state = "chase";
+      else if (d.state === "chase" && !near) d.state = "idle";
+      let nx = d.pos[0], nz = d.pos[2];
+      if (d.state === "chase") {
+        const step = WORLD.drifter_speed * DT;
+        if (dist <= step) { nx = p.pos[0]; nz = p.pos[2]; } else { nx += (dx / dist) * step; nz += (dz / dist) * step; }
+      } else if (d.state === "flee") {
+        const step = WORLD.drifter_speed * DT;
+        if (dist === 0) nx += step; else { nx -= (dx / dist) * step; nz -= (dz / dist) * step; }
+      } else { // idle: glide towards a seeded fog point, then pick another
+        if (!d.target || Math.hypot(d.target[0] - nx, d.target[2] - nz) <= 0.01) d.target = [...this.def.shadeSpawns[Math.floor(this.rng() * this.def.shadeSpawns.length)]!];
+        const tx = d.target[0] - nx, tz = d.target[2] - nz;
+        const tl = Math.hypot(tx, tz);
+        const step = Math.min(WORLD.drifter_idle_speed * DT, tl);
+        if (tl > 0) { nx += (tx / tl) * step; nz += (tz / tl) * step; }
+      }
+      d.pos = [nx, this.shadeY(nx, nz, d.pos[1]), nz];
+    }
+
+    // 9. touch: drifters steal first, then shades hit in ascending id order, at most one flame per tick
+    if (this.fallWait === 0) {
+      for (const d of this.drifters) {
+        if (d.state !== "chase" || d.stoleOnce || dist2d(d.pos, p.pos) > WORLD.drifter_touch_m) continue;
+        const amount = Math.min(WORLD.drifter_steal, p.carried);
+        p.carried -= amount;
+        d.stolen = amount;
+        d.stoleOnce = true;
+        d.state = "flee";
+        d.ticks = WORLD.drifter_flee_ticks;
+        emit("drifter_steal", { drifter_id: d.id, amount, carried: p.carried });
+      }
+    }
     if (T >= this.invulnUntil && this.fallWait === 0) {
       const order = [...this.shades].sort((a, b) => (a.id < b.id ? -1 : a.id > b.id ? 1 : 0));
       const hitter = order.find((sh) =>
@@ -448,6 +521,10 @@ export class Sim {
 
     // 10. spawn: motes, then shades on schedule (2 at the first time, then one per interval, up to the night's max)
     if (this.respawnMotes && T % toTicks(WORLD.mote_respawn_s) === 0 && this.motes.filter((m) => m.kind === "random").length < WORLD.mote_cap) this.respawnMote();
+    if (this.spawnDrifters && T % WORLD.drifter_interval_ticks === 0 && this.drifters.filter((d) => d.state !== "removed").length < WORLD.drifter_max) {
+      const pt = this.def.shadeSpawns[Math.floor(this.rng() * this.def.shadeSpawns.length)]!;
+      this.drifters.push({ id: this.freeDrifterId(), pos: [pt[0], this.shadeY(pt[0], pt[2], 1), pt[2]], state: "idle", stolen: 0, stoleOnce: false, ticks: 0, target: null });
+    }
     if (this.spawnShades && this.spawned < this.def.shadeMax) {
       let count = 0;
       if (T === this.def.shadeFirstTick) count = WORLD.shade_first_count;
@@ -508,7 +585,7 @@ export class Sim {
       shades: this.shades.map((s) => ({ id: s.id, pos: v(s.pos), state: this.shadeState(s) })),
       motes_active: this.motes.length,
       motes: this.motes.map((m) => ({ id: m.id, pos: v(m.pos), kind: m.kind, ttl_s: m.ttl === null ? null : r3(m.ttl / TICK_RATE) })),
-      drifters: [],
+      drifters: this.drifters.map((d) => ({ id: d.id, pos: v(d.pos), state: d.state, stolen: d.stolen })),
       charms: this.charms.map((c) => ({ id: c.id, available: c.available, respawn_s: r3(c.respawn / TICK_RATE) })),
     };
   }

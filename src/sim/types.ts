@@ -30,13 +30,22 @@ export interface Scenario {
 export interface SimEvent {
   type: "event";
   tick: number;
-  name: "night_start" | "dash" | "charm_picked" | "mote_picked" | "deposit" | "lantern_lit" | "pulse" | "player_hit" | "shade_spawned" | "game_over";
+  name: "drifter_steal" | "drifter_drop" | "night_start" | "dash" | "charm_picked" | "mote_picked" | "deposit" | "lantern_lit" | "pulse" | "player_hit" | "shade_spawned" | "game_over";
   data: Record<string, unknown>;
 }
 
 export type GameState = "playing" | "won" | "lost";
 
 export interface Mote { id: string; pos: Vec3; kind: "random" | "dropped"; ttl: number | null; spawn: number }
+export interface Drifter {
+  id: string;
+  pos: Vec3;
+  state: DrifterState;
+  stolen: number; // motes it carries
+  stoleOnce: boolean; // each drifter steals only once
+  ticks: number; // ticks left before a fleeing drifter disappears
+  target: Vec3 | null; // idle glide target (a fog point)
+}
 export interface Charm { id: string; pos: Vec3; available: boolean; respawn: number }
 export interface Shade {
   id: string;

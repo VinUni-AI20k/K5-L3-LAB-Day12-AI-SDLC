@@ -1,0 +1,20 @@
+{
+  "requirement": "P3-12 all 5 lanterns preset lit, default 240 s night -> no game_over within 120 ticks, still playing; time_left 240 at t0",
+  "seed": 1,
+  "ticks": 120,
+  "absent_events": [
+    "game_over"
+  ],
+  "snapshots": [
+    {
+      "tick": 0,
+      "time_left_s": 240
+    }
+  ],
+  "end": {
+    "ticks": 120,
+    "state": "playing",
+    "score": 0
+  },
+  "pending": "Phase 3 kickoff: written before implementation (v1.2). Remove this flag when the feature is built."
+}

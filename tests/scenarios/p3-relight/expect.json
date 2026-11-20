@@ -1,0 +1,57 @@
+{
+  "requirement": "P3-04 L1 out but ever_lit -> relight costs 5: deposit 5, lantern_lit relight:true; score 5x5 + 40 = 65; fuel 100, relit_count 1; capacity 10 + 2x1 = 12",
+  "seed": 1,
+  "ticks": 1,
+  "snapshot_every": 1,
+  "events": [
+    {
+      "name": "deposit",
+      "tick": 1,
+      "data": {
+        "lantern_id": "L1",
+        "amount": 5,
+        "deposited": 5
+      }
+    },
+    {
+      "name": "lantern_lit",
+      "tick": 1,
+      "data": {
+        "lantern_id": "L1",
+        "relight": true
+      }
+    }
+  ],
+  "snapshots": [
+    {
+      "tick": 1,
+      "score": 65,
+      "player": {
+        "carried": 0,
+        "capacity": 12
+      },
+      "lanterns": [
+        {
+          "id": "L1",
+          "lit": true,
+          "fuel": 100,
+          "ever_lit": true,
+          "relit_count": 1
+        },
+        {
+          "id": "L2"
+        },
+        {
+          "id": "L3"
+        },
+        {
+          "id": "L4"
+        },
+        {
+          "id": "L5"
+        }
+      ]
+    }
+  ],
+  "pending": "Phase 3 kickoff: written before implementation (v1.2). Remove this flag when the feature is built."
+}

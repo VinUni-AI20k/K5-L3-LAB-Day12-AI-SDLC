@@ -1,0 +1,63 @@
+{
+  "requirement": "P3-03 fuel 1 = 60 units, -1 per step: 10 units left at t50 (0.2), 0 after step 59 -> lantern_out at t60; then unlit, deposited 0, fuel 0, ever_lit true",
+  "seed": 1,
+  "ticks": 70,
+  "events": [
+    {
+      "name": "lantern_out",
+      "tick": 60,
+      "data": {
+        "lantern_id": "L1"
+      }
+    }
+  ],
+  "snapshots": [
+    {
+      "tick": 50,
+      "lanterns": [
+        {
+          "id": "L1",
+          "lit": true,
+          "fuel": 0.2
+        },
+        {
+          "id": "L2"
+        },
+        {
+          "id": "L3"
+        },
+        {
+          "id": "L4"
+        },
+        {
+          "id": "L5"
+        }
+      ]
+    },
+    {
+      "tick": 70,
+      "lanterns": [
+        {
+          "id": "L1",
+          "lit": false,
+          "fuel": 0,
+          "deposited": 0,
+          "ever_lit": true
+        },
+        {
+          "id": "L2"
+        },
+        {
+          "id": "L3"
+        },
+        {
+          "id": "L4"
+        },
+        {
+          "id": "L5"
+        }
+      ]
+    }
+  ],
+  "pending": "Phase 3 kickoff: written before implementation (v1.2). Remove this flag when the feature is built."
+}

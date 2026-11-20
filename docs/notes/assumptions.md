@@ -251,13 +251,63 @@ Scenario folders: `tests/scenarios/p2-*/`. A folder with `"pending"` in `expect.
 
 ---
 
-## Phase 3: Ticket-03 (rule replacement expected)
-_(filled by `/phase kickoff 3`)_
+## Phase 3: Ticket-03 (spec: `docs/spec/ticket-03.md`, Contract v1.2; design: `docs/adr/0001-lantern-fuel-and-dawn-win.md`)
+
 ### Rules replaced and their impact (tests, docs, assumptions)
-### New or updated assumptions
-### Acceptance criteria → verification
-| ID | Criterion | Verified by |
+| Replaced rule | New rule | Scenarios to update or delete (log each in `changes.md`) |
 |---|---|---|
+| Win as soon as all lanterns are lit (`all_lit`) | Win only at dawn with ≥ ceil(0.6n) lit (`dawn_survived`) | `p1-win-score`, `p1-win-bonus-fraction`, `p1-end-priority-dawn`, `p2-end-win-at-dawn`, and any scenario expecting the run to stop on all lit |
+| Score 10/mote, +5 stun, time bonus | 5/mote, +100 first light, +40 relight, +5 or +15 stun, dawn bonus 50 + floor(fuel) per lit lantern + 50 per flame | Every scenario asserting `score` |
+| Nights 300/330/360 s | 240/270/300 s | `time_left_s` in default runs: `p2-pause`, `p2-n1-schedule`, `p2-night2-map`, `p2-night3-map`, `p1-default-world`, … |
+| A lit lantern never changes | Fuel decays and the lantern can go out; refuel; relight costs 5 | `p1-interact-edge` (lit lanterns are now refuel candidates), deposit scenarios that check lanterns after many ticks |
+| Shades never enter a lit zone | Zone lost below 30 fuel; `drain` state | Safe-zone scenarios still hold at fuel 100 (fuel stays ≥ 30 for 70 s) |
+| Wander shades stand still (our Phase 2 default) | Wander moves to the nearest weak lantern, else the nearest unlit lantern | Scenarios with wander shades that assert positions over time |
+| Capacity always 10 | 10 + 2 × successful lights, max 20 | `p1-pickup-capacity` if it lights anything first |
+
+### Open questions for the Phase 3 TA (defaults are used now)
+| # | Question | Default we implement |
+|---|---|---|
+| Q3-1 | Score keys in `tuning.score` under v1.2? | Keep the 5 keys: `per_mote` 5, `per_lantern` 100, `per_stun` 5, `per_second_left` **0**, `per_flame_left` 50. No extra keys: relight +40, drain +15 and the dawn bonus are hard-coded in `config.ts` (WORLD) |
+| Q3-2 | Scenario lantern `lit: true` without `ever_lit`? | `ever_lit` defaults to `lit`. `lit: true` and no `fuel` gives 100 (ticket) |
+| Q3-3 | When is `fuel_drain` written? | For each draining shade, every 60th tick of continuous draining (the first after 60 drain ticks). `fuel` is after this tick's subtraction |
+| Q3-4 | Wander movement towards a target | At `shade_speed`, stopping ≤ 2 m from the target. Arriving at an **unlit** lantern: it stays (no drain) |
+| Q3-5 | `shades[].target_lantern_id` in a scenario | The shade's current target. It is re-picked by the normal rule only after the shade leaves `wander` and comes back to it |
+| Q3-6 | Which event does a relight deposit use? | `deposit {lantern_id, amount, deposited}`, as with a first light; `refuel` only for lit lanterns. `lantern_lit {lantern_id, relight}` |
+| Q3-7 | Scenario `fuel` outside 0..100, or `fuel > 0` with `lit: false`? | Outside 0..100 → exit 2. `lit: false` forces fuel 0 |
+| Q3-8 | `carried > capacity` in a scenario | Echoed as given, and no pickup until carried < capacity (same as Phase 1 Q15) |
+
+### New or updated assumptions
+- **Fuel** is an integer number of 1/60 units (ADR §1). Snapshot `fuel` = `round(units / 6) / 10`.
+- **Interact candidates:** unlit lanterns, or lit lanterns with `units < 6000`. Pick the nearest within 2 m; on a tie, the smaller id.
+- **Order within one step:**
+  - Step 2: decay, then drain, then lights out (`lantern_out`, in id order).
+  - Step 5: interact.
+  - Step 6: safe zones. A zone exists if lit and units ≥ 1800. A zone that **appears** this tick, from lighting or from a refuel crossing 30, starts the push-out.
+- **Pulse score:** a shade in `drain` at the moment of the pulse gives 15 instead of 5.
+- **Capacity** = `min(20, 10 + 2 × successful_lights)`. It is shown as `player.capacity` and is effective in step 4 of the next tick.
+
+### Acceptance criteria → verification
+Scenario folders: `tests/scenarios/p3-*/`, marked `pending` until built. Release requires zero pending.
+
+| ID | Criterion ("do A → see B") | Verified by |
+|---|---|---|
+| P3-01 | `game.contract.json` v1.2: the 8 new keys, durations 240/270/300, score keys per Q3-1 | `tests/contract.test.ts` |
+| P3-02 | A lit lantern loses 1 fuel/s: 100 at t0, 99 at t60, 98 at t120 | `p3-fuel-decay` |
+| P3-03 | Fuel reaches 0 → `lantern_out` at t60 (from fuel 1), unlit, deposited 0, `ever_lit` true | `p3-lantern-out` |
+| P3-04 | Relight costs 5: `lantern_lit relight:true`, +5×5 + 40 = 65, `relit_count` 1, capacity 12 | `p3-relight` |
+| P3-05 | First light: `relight:false`, +5 + 100, capacity 12 | `p3-first-light-capacity` |
+| P3-06 | Refuel uses ceil((100−fuel)/10) motes after this tick's decay (49.983 → 6 motes), fuel capped at 100, +30 | `p3-refuel` |
+| P3-07 | A wander shade next to a weak lantern (fuel 20) drains it (`drain`, `fuel_drain`), the lantern goes out, the shade returns to wander | `p3-drain` |
+| P3-08 | Pulse on a draining shade → +15 | `p3-drain-pulse-score` |
+| P3-09 | A weak lantern (< 30) has no safe zone: a chasing shade reaches Mây next to it | `p3-weak-no-safezone` |
+| P3-10 | Dawn with 3/5 lit → won `dawn_survived`, score 3×(50+99) + 3×50 = 597 | `p3-win-dawn` |
+| P3-11 | Dawn with 2/5 lit → lost `dawn` | `p3-lose-dawn-below` |
+| P3-12 | All 5 lit before dawn → no `game_over`, still playing | `p3-no-early-win` |
+| P3-13 | Night 3 lasts 300 s | `p3-night3-time` |
+| P3-W1 | Fuel bar on lit lanterns, 1 Hz blink below 30 | screenshot |
+| P3-W2 | Colour-blind setting (saved): shade outline #00B3FF, warnings #FFFFFF with ⚠, unlit lanterns squashed 20% and torn | screenshots on/off |
+| P3-W3 | HUD shows carried / capacity | screenshot |
+| P3-D1 | ADR written; `CHANGELOG.md` lists the breaking changes; every changed or deleted old scenario has a reason | `docs/adr/0001-…`, `CHANGELOG.md`, `changes.md` |
 
 ---
 

@@ -1,0 +1,15 @@
+{
+  "requirement": "P3-09 L1 lit at fuel 29 (< 30) has no safe zone: Mây stands 1 m from it, chasing S1 3 m away closes 2 m at 4 m/s (~30 ticks) and hits",
+  "seed": 1,
+  "ticks": 60,
+  "events": [
+    {
+      "name": "player_hit",
+      "data": {
+        "by": "shade",
+        "flames": 2
+      }
+    }
+  ],
+  "pending": "Phase 3 kickoff: written before implementation (v1.2). Remove this flag when the feature is built."
+}

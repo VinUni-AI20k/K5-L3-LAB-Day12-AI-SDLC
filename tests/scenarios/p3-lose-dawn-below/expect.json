@@ -1,0 +1,21 @@
+{
+  "requirement": "P3-11 time_left 1 s, only 2 lit (< 3) -> lost dawn at t60, no bonus, score 0",
+  "seed": 1,
+  "ticks": 120,
+  "events": [
+    {
+      "name": "game_over",
+      "tick": 60,
+      "data": {
+        "result": "lost",
+        "reason": "dawn"
+      }
+    }
+  ],
+  "end": {
+    "ticks": 60,
+    "state": "lost",
+    "score": 0
+  },
+  "pending": "Phase 3 kickoff: written before implementation (v1.2). Remove this flag when the feature is built."
+}

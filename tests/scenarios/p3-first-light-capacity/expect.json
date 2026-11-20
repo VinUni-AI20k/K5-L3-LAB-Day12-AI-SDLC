@@ -1,0 +1,57 @@
+{
+  "requirement": "P3-05 never-lit L1 holds 9, carried 1 -> deposit 1 lights it (cost 10), relight:false; score 5 + 100 = 105; capacity 12; relit_count 0",
+  "seed": 1,
+  "ticks": 1,
+  "snapshot_every": 1,
+  "events": [
+    {
+      "name": "deposit",
+      "tick": 1,
+      "data": {
+        "lantern_id": "L1",
+        "amount": 1,
+        "deposited": 10
+      }
+    },
+    {
+      "name": "lantern_lit",
+      "tick": 1,
+      "data": {
+        "lantern_id": "L1",
+        "relight": false
+      }
+    }
+  ],
+  "snapshots": [
+    {
+      "tick": 1,
+      "score": 105,
+      "player": {
+        "carried": 0,
+        "capacity": 12
+      },
+      "lanterns": [
+        {
+          "id": "L1",
+          "lit": true,
+          "fuel": 100,
+          "ever_lit": true,
+          "relit_count": 0
+        },
+        {
+          "id": "L2"
+        },
+        {
+          "id": "L3"
+        },
+        {
+          "id": "L4"
+        },
+        {
+          "id": "L5"
+        }
+      ]
+    }
+  ],
+  "pending": "Phase 3 kickoff: written before implementation (v1.2). Remove this flag when the feature is built."
+}

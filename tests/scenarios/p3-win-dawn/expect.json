@@ -1,0 +1,21 @@
+{
+  "requirement": "P3-10 time_left 1 s, L1-L3 lit (3 >= ceil(0.6x5) = 3), alive -> won dawn_survived at t60; fuel 100 - 60/60 = 99 -> bonus 3x(50+99) + 3 flames x 50 = 597; no time bonus",
+  "seed": 1,
+  "ticks": 120,
+  "events": [
+    {
+      "name": "game_over",
+      "tick": 60,
+      "data": {
+        "result": "won",
+        "reason": "dawn_survived"
+      }
+    }
+  ],
+  "end": {
+    "ticks": 60,
+    "state": "won",
+    "score": 597
+  },
+  "pending": "Phase 3 kickoff: written before implementation (v1.2). Remove this flag when the feature is built."
+}

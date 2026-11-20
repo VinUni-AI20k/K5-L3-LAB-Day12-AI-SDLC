@@ -1,0 +1,35 @@
+{
+  "requirement": "P3-08 S1 draining weak L1; Mây 4 m away with 3 carried pulses at t0 (pulse is step 7, before shades switch in step 8): 3D distance 4.005 <= 5 -> stunned, +15 because it was draining",
+  "seed": 1,
+  "ticks": 10,
+  "events": [
+    {
+      "name": "pulse",
+      "tick": 1,
+      "data": {
+        "stunned_ids": [
+          "S1"
+        ]
+      }
+    }
+  ],
+  "absent_events": [
+    "player_hit"
+  ],
+  "snapshots": [
+    {
+      "tick": 10,
+      "score": 15,
+      "player": {
+        "carried": 0
+      },
+      "shades": [
+        {
+          "id": "S1",
+          "state": "stunned"
+        }
+      ]
+    }
+  ],
+  "pending": "Phase 3 kickoff: written before implementation (v1.2). Remove this flag when the feature is built."
+}

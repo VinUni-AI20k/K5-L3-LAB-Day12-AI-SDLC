@@ -1,0 +1,14 @@
+{
+  "requirement": "P3-13 Night 3 lasts 300 s",
+  "seed": 1,
+  "night": 3,
+  "ticks": 0,
+  "snapshots": [
+    {
+      "tick": 0,
+      "night": 3,
+      "time_left_s": 300
+    }
+  ],
+  "pending": "Phase 3 kickoff: written before implementation (v1.2). Remove this flag when the feature is built."
+}

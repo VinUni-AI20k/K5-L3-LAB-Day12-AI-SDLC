@@ -74,3 +74,11 @@ The ticket fixes every number, so all Phase 1 tuning is replaced (list in `assum
 - **Accepted, not changed:** the Timers convention from `assumptions.md` (a counter set to N blocks the next N-1 steps) makes invulnerability 89 blocked steps, charm 599 boosted steps, recoil 59 moves (1.97 m), dropped-mote pickup 479 steps, fall wait 59 inert steps. The kickoff decisions are final and `p2-dash`, `p2-pulse-stun-push`, `p1-hit-drop` depend on them. Risk: hidden tests allow +-2 ticks on timing but may be tight on the recoil distance. If the TA says otherwise, change the counters in one place (`sim.ts` phase 2) and re-derive.
 - **Accepted, not changed:** shade touch uses the shade centre Y against Mây's feet (ticket: "height difference <= 1.5"); drifter idle glide uses the shared RNG; no wind-gust warning (leaves/sound) yet; wind `dir_deg` uses angles from +X towards +Z (same convention as the map points).
 
+
+## Phase 3 kickoff: Ticket-03 replaces the win rule, the lit-lantern model, safe zones and scoring (Contract v1.2)
+- **Design:** `docs/adr/0001-lantern-fuel-and-dawn-win.md`. **Breaking changes:** `CHANGELOG.md`. **Impact table:** `assumptions.md` → Phase 3.
+- **Tests:** added 13 `p3-*` scenarios before any code, marked `pending`. Old scenarios broken by the new rules get one line each below, during the build.
+- **Changed our Phase 2 default:** wander shades used to stand still. Ticket-03 says they go "to the nearest unlit lantern, as before", so they now move towards a target (ADR §3).
+
+### Phase 3 build: p1/p2 scenarios updated or deleted
+_(one line each: scenario, old → new, why)_

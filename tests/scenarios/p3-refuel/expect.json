@@ -1,0 +1,50 @@
+{
+  "requirement": "P3-06 L1 lit at fuel 50 = 3000 units; step 2 decays to 2999 before interact; used = min(10, ceil(3001/600)) = 6; fuel = min(6000, 2999 + 3600) = 6000 = 100; carried 4; score 6x5 = 30",
+  "seed": 1,
+  "ticks": 1,
+  "snapshot_every": 1,
+  "events": [
+    {
+      "name": "refuel",
+      "tick": 1,
+      "data": {
+        "lantern_id": "L1",
+        "amount": 6,
+        "fuel": 100
+      }
+    }
+  ],
+  "absent_events": [
+    "deposit",
+    "lantern_lit"
+  ],
+  "snapshots": [
+    {
+      "tick": 1,
+      "score": 30,
+      "player": {
+        "carried": 4
+      },
+      "lanterns": [
+        {
+          "id": "L1",
+          "lit": true,
+          "fuel": 100
+        },
+        {
+          "id": "L2"
+        },
+        {
+          "id": "L3"
+        },
+        {
+          "id": "L4"
+        },
+        {
+          "id": "L5"
+        }
+      ]
+    }
+  ],
+  "pending": "Phase 3 kickoff: written before implementation (v1.2). Remove this flag when the feature is built."
+}

@@ -1,0 +1,88 @@
+{
+  "requirement": "P3-07 wander S1 1 m from weak L1 (fuel 20 < 30) -> drain: from 1200 units, -1 at step 0, then -6/tick -> ~14.0-14.1 at t60; fuel_drain events; out near t200 -> lantern_out, S1 back to wander. Mây 26 m away (no chase)",
+  "seed": 1,
+  "ticks": 260,
+  "events": [
+    {
+      "name": "fuel_drain",
+      "data": {
+        "lantern_id": "L1",
+        "shade_id": "S1"
+      }
+    },
+    {
+      "name": "lantern_out",
+      "data": {
+        "lantern_id": "L1"
+      }
+    }
+  ],
+  "absent_events": [
+    "player_hit"
+  ],
+  "snapshots": [
+    {
+      "tick": 60,
+      "shades": [
+        {
+          "id": "S1",
+          "state": "drain"
+        }
+      ],
+      "lanterns": [
+        {
+          "id": "L1",
+          "lit": true,
+          "fuel": {
+            "$range": [
+              13.9,
+              14.2
+            ]
+          }
+        },
+        {
+          "id": "L2"
+        },
+        {
+          "id": "L3"
+        },
+        {
+          "id": "L4"
+        },
+        {
+          "id": "L5"
+        }
+      ]
+    },
+    {
+      "tick": 260,
+      "shades": [
+        {
+          "id": "S1",
+          "state": "wander"
+        }
+      ],
+      "lanterns": [
+        {
+          "id": "L1",
+          "lit": false,
+          "fuel": 0,
+          "ever_lit": true
+        },
+        {
+          "id": "L2"
+        },
+        {
+          "id": "L3"
+        },
+        {
+          "id": "L4"
+        },
+        {
+          "id": "L5"
+        }
+      ]
+    }
+  ],
+  "pending": "Phase 3 kickoff: written before implementation (v1.2). Remove this flag when the feature is built."
+}

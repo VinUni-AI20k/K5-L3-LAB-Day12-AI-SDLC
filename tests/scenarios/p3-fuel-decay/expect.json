@@ -1,0 +1,85 @@
+{
+  "requirement": "P3-02 L1 preset lit (fuel defaults to 100, no points): -1/60 per tick -> 100 at t0, 99 at t60, 98 at t120; unlit lanterns report fuel 0",
+  "seed": 1,
+  "ticks": 120,
+  "snapshots": [
+    {
+      "tick": 0,
+      "score": 0,
+      "lanterns": [
+        {
+          "id": "L1",
+          "lit": true,
+          "fuel": 100,
+          "ever_lit": true,
+          "relit_count": 0
+        },
+        {
+          "id": "L2",
+          "lit": false,
+          "fuel": 0
+        },
+        {
+          "id": "L3",
+          "fuel": 0
+        },
+        {
+          "id": "L4",
+          "fuel": 0
+        },
+        {
+          "id": "L5",
+          "fuel": 0
+        }
+      ]
+    },
+    {
+      "tick": 60,
+      "lanterns": [
+        {
+          "id": "L1",
+          "lit": true,
+          "fuel": 99
+        },
+        {
+          "id": "L2"
+        },
+        {
+          "id": "L3"
+        },
+        {
+          "id": "L4"
+        },
+        {
+          "id": "L5"
+        }
+      ]
+    },
+    {
+      "tick": 120,
+      "lanterns": [
+        {
+          "id": "L1",
+          "lit": true,
+          "fuel": 98
+        },
+        {
+          "id": "L2"
+        },
+        {
+          "id": "L3"
+        },
+        {
+          "id": "L4"
+        },
+        {
+          "id": "L5"
+        }
+      ]
+    }
+  ],
+  "absent_events": [
+    "lantern_out"
+  ],
+  "pending": "Phase 3 kickoff: written before implementation (v1.2). Remove this flag when the feature is built."
+}

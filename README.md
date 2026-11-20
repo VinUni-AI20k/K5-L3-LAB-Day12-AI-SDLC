@@ -1,23 +1,49 @@
 # Đảo Đèn Lồng
 
-> **Demo video:** _(added at v1.0.0)_
+> **Demo video:** _(added by the author at release, see the GitHub Release v1.0.0)_
 
-A small 3D third-person game, built for the Day 12 AI-SDLC lab. You play Mây, a young lantern keeper. Gather fireflies and relight the Great Lanterns before dawn, while avoiding the Bóng Mực (ink shades).
+![Đảo Đèn Lồng: night 1 with the HUD, captions and a low lantern](docs/proof/phase-4/img/p4-a11y-captions-lantern-low-shade.jpg)
 
-Lab brief and rules: [docs/lab/](docs/lab/README.md). Contract summary: [docs/spec/contract-v1.md](docs/spec/contract-v1.md).
+A small 3D third-person game, built for the Day 12 AI-SDLC lab. You play Mây, a young lantern keeper. Gather fireflies, light the Great Lanterns and **keep them burning until dawn** while the Bóng Mực (ink shades) try to drain them. Three nights, three islands, a local leaderboard.
 
-## Run (Node ≥ 20)
+Lab brief and rules: [docs/lab/](docs/lab/README.md). Specs: [docs/spec/](docs/spec/).
+
+## System requirements
+- macOS or Linux (Windows should work for the web build), 64-bit.
+- **Node.js ≥ 20** and npm.
+- A GPU/driver with WebGL 2 (any recent laptop). The desktop build bundles Chromium through Electron.
+- Disk: about 400 MB for `node_modules` (Electron binary included). **The first `npm ci` downloads the Electron binary, so it needs network access.**
+- A static web build (no Node needed to play) is attached to the GitHub Release: `dao-den-long-web-v1.0.0.zip`.
+
+## Install and run (3 commands)
 ```bash
 npm ci
 npm run build
-npm run play
+npx electron .
 ```
+Browser alternative (no Electron window): `npm run dev`, or `npm run build && npm run preview`.
 
-## Headless (Test Contract v1.2)
+## Headless (Test Contract v1.3)
 ```bash
 node dist/headless.js --seed 1 --night 1 --ticks 600 --out out/run.jsonl [--scenario s.json] [--inputs i.json] [--snapshot-every 10]
 ```
-`--night` is 1, 2 or 3. Bad scenario/inputs files exit with code 2.
+`--night` is 1, 2 or 3. Bad scenario/inputs files exit with code 2. The format is in [docs/spec/](docs/spec/); scenario fixtures are in [tests/scenarios/](tests/scenarios/README.md).
+
+## Benchmark
+```bash
+npx electron . --bench --seed 42 --duration 30 --out bench.json
+```
+Opens a 1280×720 window (not fullscreen) with vsync and the frame-rate limit **off** (`--disable-gpu-vsync`, `--disable-frame-rate-limit`; `vsync_off: true`), shows the standard scene (Night 1, 200 shades in `wander` spread with seed 42, 100 motes, L1–L3 lit; spawning, damage, pickup, fuel decay and the end of the night are off), flies the camera on a circle of radius 30 m at Y 15 (one lap per 15 s), skips 3 s of warm-up, measures `--duration` s and exits with code 0. `peak_mem_mb` is the sum of `workingSetSize` over all Electron processes, polled every 250 ms. Statistics follow the ticket (`src/bench/stats.ts`, unit-tested).
+
+Our committed result ([bench.json](bench.json), Apple M1 MacBook Air, 16 GB, macOS 15): **avg 211.6 fps, 1% low 124.1 fps, p95 6.3 ms, load 357 ms, peak 411.6 MB**, all thresholds met (≥ 60 / ≥ 30 / ≤ 10 s) on that machine.
+
+## Soak test
+```bash
+node dist/soak.js --seed 7 --nights 10 --out soak.json
+```
+Headless, one process, 10 nights rotating Night 1 → 2 → 3 with seed `7 + i` and seeded random input (a new direction every 30 ticks; per tick 5% jump, 3% dash, 2% pulse, 10% interact).
+
+Our committed result ([soak.json](soak.json)): **0 crashes**, but the memory check is **NOT MET**: `mem_start_mb` 34.1 → `mem_end_mb` 84.4 (ratio 2.48, limit 1.2). It is not a leak (the JS heap stays at 3–6 MB after every night; RSS grows during the first ~10 nights and then levels off, which is native JIT warm-up), but we report the number exactly as the ticket defines it. Details: [docs/notes/assumptions.md](docs/notes/assumptions.md).
 
 ## Tests
 Run `npm run verify`: typecheck, headless build, then all tests: 65 scenario folders under `tests/scenarios/` (each run twice and byte-compared), contract hygiene, CLI checks and a performance test (a full Night 3 in about 0.4 s; limit 30 s).
@@ -32,6 +58,8 @@ Run `npm run verify`: typecheck, headless build, then all tests: 65 scenario fol
 | F | Light pulse: costs 3 fireflies, 3 s cooldown, stuns and pushes shades within 5 m |
 | Esc / P | Pause menu (Continue, Replay night, Settings, Back to menu) |
 | ← → or drag the mouse | Turn the camera (sensitivity in Settings) |
+
+All keys except the camera turn can be rebound in **Settings** (duplicates are refused, "Khôi phục mặc định" restores them).
 | F3 | FPS counter |
 | R | Replay the night after a loss |
 
@@ -66,6 +94,15 @@ Values are in `game.contract.json` → `tuning.score` and `src/sim/config.ts` (`
 - **End:** no flames = loss at once; otherwise the night is decided at dawn: ≥ 60% of lanterns lit = win (`dawn_survived`), else loss (`dawn`).
 - **Pause:** `tick` keeps counting but time, timers and spawns stop (`sim_tick` shows the frozen game clock).
 - No tuning value is `null`.
+
+## Leaderboard
+After the Dawn screen (Night 3 won) or a loss, "Lưu điểm" asks for a name (3–12 characters: letters, digits or `_`; Vietnamese letters work). The top 10 are kept by score, ties going to the earlier entry. In the Electron build the file is `leaderboard.json` in the app's user-data folder; the browser build uses `localStorage`. `npx electron . --export-leaderboard out.json` writes `{"entries":[...]}` in rank order without opening a window.
+
+## Accessibility
+Rebindable keys, captions with an arrow at the screen edge (shade appears, wind coming, last 10 s, lantern below 30 fuel), reduced motion (no camera shake or screen flashes), at least 18 px UI text with a large-text option (×1.25), and a colour-blind palette. All are in Settings and are saved.
+
+## Release
+`npm run build && npm run release:zip` writes `release/dao-den-long-web-v1.0.0.zip` (the static web folder plus a how-to). The GitHub Release v1.0.0 attaches this zip and the demo video.
 
 ## Sáng tạo của tôi
 Nothing is added beyond the ticket's requirements. Web-only polish that does not touch `src/sim` or headless output: the sky and fog warm up as lanterns are lit, a ring of light on a pulse, a red flash on a hit, a blinking warning on dropped fireflies about to vanish.

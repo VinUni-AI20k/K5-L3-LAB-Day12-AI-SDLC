@@ -1,5 +1,24 @@
 # Changelog
 
+## [phase-4] v1.0.0, Contract v1.3: "Bình minh" (Ticket-04)
+
+### Added
+- **Desktop build:** Electron shell (`npx electron .`) around the web game; `run_cmd` is now `npx electron .`. `npm run dev` / `npm run preview` still run in a browser.
+- **Benchmark:** `npx electron . --bench --seed 42 --duration 30 --out bench.json` (1280x720, vsync off, standard scene with 200 wander shades and 100 motes). Our run is committed as `bench.json`.
+- **Soak test:** `node dist/soak.js --seed 7 --nights 10 --out soak.json` (10 nights in one process with seeded random input). Our run is committed as `soak.json`: 0 crashes, memory ratio 2.48 (the 1.2 threshold is **not met**; the JS heap is flat, the growth is native warm-up, see `docs/notes/assumptions.md`).
+- **Local leaderboard:** top 10, name entry after Dawn or a loss, menu screen, `--export-leaderboard out.json`.
+- **Accessibility:** rebindable keys (9 actions) with duplicate detection and restore defaults, captions with an edge arrow, reduced motion, 18 px base text and a large-text option.
+- **Release:** `npm run release:zip` builds `release/dao-den-long-web-v1.0.0.zip`; CHANGELOG, CREDITS, LICENSE.
+- `game.contract.json` v1.3 adds `bench_cmd` and `soak_cmd`.
+
+### Changed
+- `run_cmd` was `npm run play` and is now `npx electron .` (`npm run play` also starts Electron).
+- All UI text sizes are rem-based with an 18 px minimum.
+
+### Fixed / notes
+- Electron is pinned to 39.8.10: newer majors' installers fail on Node < 20.19 / 22.12.
+- No game rules changed in this phase; every Phase 1-3 scenario is unchanged and green.
+
 ## [phase-3] Contract v1.2: "Đèn cạn dầu" (Ticket-03)
 
 ### Breaking changes

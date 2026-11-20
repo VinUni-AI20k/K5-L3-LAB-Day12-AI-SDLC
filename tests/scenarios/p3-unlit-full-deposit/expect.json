@@ -1,0 +1,6 @@
+{
+  "requirement": "P3-05 (review) a scenario lantern that is unlit but already 'full' (deposited 10 = cost) must not be stuck: deposited is capped at cost-1 = 9, so one mote lights it: deposit 1, lantern_lit relight false, score 1*5 + 100 = 105, carried 0",
+  "seed": 1, "ticks": 1, "snapshot_every": 1,
+  "events": [ { "name": "deposit", "tick": 1, "data": { "lantern_id": "L1", "amount": 1, "deposited": 10 } }, { "name": "lantern_lit", "tick": 1, "data": { "lantern_id": "L1", "relight": false } } ],
+  "snapshots": [ { "tick": 1, "score": 105, "player": { "carried": 0 }, "lanterns": [ { "id": "L1", "lit": true, "fuel": 100 }, { "id": "L2" }, { "id": "L3" }, { "id": "L4" }, { "id": "L5" } ] } ]
+}

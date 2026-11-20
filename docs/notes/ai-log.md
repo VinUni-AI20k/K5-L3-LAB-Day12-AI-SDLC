@@ -19,7 +19,7 @@
 | CP0 prep | Opus 5.5 | 0 → 8% (planning and scaffold) | | | read the lab docs and the PRD-0 board, plan, scaffold, harness | spec condensed into one file; CLAUDE.md is 40 lines or fewer; hooks print only on failure |
 | 1 | Sonnet 5.5 (build) + `contract-reviewer` subagent | CP0 ended at 8%; end of Phase 1 = **26%** (read from the usage API on 2026-11-20; the start of this window was not measured) | context ≈ 257k tokens at release (not a billing figure) | not computed | kickoff with 43 scenarios before code, sim + headless, web client, release with independent review | scenarios as data folders (no new test code); read-only reviewer; condensed spec |
 | 2 | Opus 5.5 (kickoff, earlier session) + Sonnet 5.5 (build, release) + `contract-reviewer` | Phase 1 ended at 26%; at Phase 2 release = **57%** (read from the usage API; includes everything in the window since, the kickoff session is not separately measured) | context ≈ 500k tokens at release (not a billing figure) | not computed | steps 1-9 of the handoff: contract v1.1, maps/physics, motes/charms, lanterns/pulse/shades, drifters, pause, I/O, web nights/menus, HUD/audio | handoff file with a fixed build order; scenarios written before code; one commit per step |
-| 3 | | | | | | |
+| 3 | Opus 5.5 (kickoff, earlier) + Sonnet 5.5 (build, release) + `contract-reviewer` | Phase 2 ended at 57%; at Phase 3 release = **77%** (usage API; same window, kickoff not separately measured) | context ≈ 615k tokens at release (not a billing figure) | not computed | steps 1-4 of the handoff: contract v1.2, fuel/dawn model, shades, web | handoff file with a fixed build order; ADR decided the model before coding; scenarios written first |
 | 4 | | | | | | |
 
 ## Main prompts (short)
@@ -34,3 +34,4 @@ Record the opening prompt of each phase and any prompt that redirected the agent
 | Phase 1 release | Counted 36 `p1-*` scenarios when there were 35 | Summary generator listed 36 folders including `p0-smoke` | Docs corrected |
 | Phase 2 step 4 | Handoff listed `p2-n1-schedule` in step 4 but it needs `night_start` from step 7 | Scenario failed on a missing event | Pulled that one event forward and noted it in changes.md |
 | Phase 2 step 8 | A `cd` into docs/ left the shell in the wrong directory for later commands | Environment notice | Use absolute paths or a subshell |
+| Phase 3 step 1 | A search-and-replace of `per_mote: 10` also changed `fuel_per_mote` | Contract test failed (config vs json) | Check substring hits after bulk edits |

@@ -247,7 +247,7 @@ function endScreen(): void {
       { next: () => showIntro((night + 1) as Night), menu: showMenu });
   } else {
     const litNow = sim.lanterns.filter((l) => l.lit).length;
-    const need = Math.ceil((sim.lanterns.length * 6) / 10);
+    const need = Math.ceil((sim.lanterns.length * Math.round(TUNING.win_ratio * 100)) / 100);
     const reason = sim.player.flames <= 0 ? "Bạn hết ngọn lửa." : `Bình minh đến nhưng chỉ ${litNow}/${sim.lanterns.length} đèn còn sáng (cần ${need}).`;
     showCard(`<h1>Màn đêm thắng rồi</h1><p>${reason}</p><p>Điểm: <b>${sim.score}</b></p><button id="replay">Chơi lại đêm ${night} (R)</button><button id="menu" class="alt">Về menu</button>`,
       { replay: () => startNight(night), menu: showMenu });
@@ -313,7 +313,7 @@ function renderHud(now: number): void {
   const lit = sim.lanterns.filter((l) => l.lit).length;
   const hearts = "🔥".repeat(Math.max(0, sim.player.flames)) + "<span style='opacity:.25'>" + "🔥".repeat(Math.max(0, TUNING.flames - sim.player.flames)) + "</span>";
   flamesEl.innerHTML = `${hearts}<small>Đêm ${night} — ${NIGHT_INFO[night].name}${sim.charmTicks > 0 ? " · 🧧 Bùa Gió" : ""}</small>`;
-  const need = Math.ceil((sim.lanterns.length * 6) / 10);
+  const need = Math.ceil((sim.lanterns.length * Math.round(TUNING.win_ratio * 100)) / 100);
   topRight.innerHTML = `Đèn lồng <b>${lit}/${sim.lanterns.length}</b> <small>(cần ${need})</small><br>Điểm <b>${sim.score}</b>`;
   const secs = Math.max(0, Math.ceil(sim.timeLeft));
   clockEl.textContent = `${sim.timeLeft <= 30 ? "⚠ " : ""}${String(Math.floor(secs / 60)).padStart(2, "0")}:${String(secs % 60).padStart(2, "0")}`;

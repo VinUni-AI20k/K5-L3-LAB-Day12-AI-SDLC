@@ -1,0 +1,5 @@
+{
+  "requirement": "P3-07 (review, Q3-2/Q3-7 extension) a scenario lantern that sets fuel > 0 without `lit` is lit: fuel 50 at t0, ever_lit true, no points, no events; the others stay unlit with fuel 0",
+  "seed": 1, "ticks": 0,
+  "snapshots": [ { "tick": 0, "score": 0, "lanterns": [ { "id": "L1", "lit": true, "fuel": 50, "ever_lit": true }, { "id": "L2", "lit": false, "fuel": 0 }, { "id": "L3" }, { "id": "L4" }, { "id": "L5" } ] } ]
+}

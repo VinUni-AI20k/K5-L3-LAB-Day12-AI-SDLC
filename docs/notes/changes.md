@@ -80,9 +80,6 @@ The ticket fixes every number, so all Phase 1 tuning is replaced (list in `assum
 - **Tests:** added 13 `p3-*` scenarios before any code, marked `pending`. Old scenarios broken by the new rules get one line each below, during the build.
 - **Changed our Phase 2 default:** wander shades used to stand still. Ticket-03 says they go "to the nearest unlit lantern, as before", so they now move towards a target (ADR §3).
 
-### Phase 3 build: p1/p2 scenarios updated or deleted
-_(one line each: scenario, old → new, why)_
-
 ## Phase 3 build: Ticket-03 replaces core rules (Contract v1.2)
 One line per old scenario: old -> new, why. Every new value is derived by arithmetic from the v1.2 rules (shown in each `expect.json` -> `requirement`), never copied from program output. Nothing was skipped.
 
@@ -100,7 +97,7 @@ One line per old scenario: old -> new, why. Every new value is derived by arithm
 | `p2-lantern-cost` | 120 -> 110 | 2x5 + 100 |
 | `p1-interact-edge` | 2nd press deposited 5 into L2 (score 200) -> refuels L1 by 1 mote (`refuel`, score 130, L2 untouched) | a lit lantern that is not full is now an interact candidate, and L1 (1 m) is nearer than L2 |
 | `p1-lit-expels-shade` | ended `won`/`all_lit` at t1 -> stays `playing`, `ticks` 600 -> 1 | no early win; the push-out expectation (z = 0.3) is unchanged |
-| `p1-win-score` | won `all_lit` at t60, score 550 -> won `dawn_survived` at t60 (time_left_s 101 -> 1), score 1046 | the night is decided at dawn; 5 + 100 + 4x149 + 150 + 150 |
+| `p1-win-score` | won `all_lit` at t60, score 550 -> won `dawn_survived` at t60 (time_left_s 101 -> 1), score 1046 | the night is decided at dawn; 10x5 + 100 + 4x149 + 150 + 150 |
 | `p1-end-priority-dawn` | "all_lit beats dawn" -> "a lantern lit in the dawn step counts": 3 lit >= 3, won, score 748 | `all_lit` no longer exists; the dawn-step ordering is the new priority rule |
 | `p2-end-win-at-dawn` | won `all_lit`, score 260 -> won `dawn_survived`, score 1001 | same; 5 + 100 + 596 + 150 + 150 |
 
@@ -108,3 +105,11 @@ One line per old scenario: old -> new, why. Every new value is derived by arithm
 
 **Order/semantic notes:** wander shades now walk to the nearest weak lantern, else the nearest unlit one (they used to stand still); `p1-shade-chase`, `p2-*` shade scenarios were not affected because they assert states or short windows.
 - `tests/perf.test.ts`: full Night 3 is 18,000 ticks now (300 s), not 21,600; the 30 s limit is unchanged.
+
+## Phase 3 release: contract-reviewer findings
+- Fixed (medium): the win threshold hard-coded 60%; it now derives from `TUNING.win_ratio` in integers (same behaviour, one source). Web uses the same formula.
+- Fixed (medium): a scenario lantern `lit:false` with `deposited >= cost` could never be lit; unlit lanterns now cap `deposited` at cost - 1. Scenario `p3-unlit-full-deposit` (red first).
+- Fixed (medium): a scenario lantern with `fuel > 0` and no `lit` was silently unlit; it is lit now (explicit `lit:false` still forces fuel 0). Scenario `p3-fuel-implies-lit` (red first). Both are extensions of Q3-2/Q3-7.
+- Fixed (low): a scenario `target_lantern_id` no longer stays sticky after a drain ends; `capacity_base` now comes from `TUNING.carry_capacity`; the `p1-win-score` log line said "5 +" (it is 10x5); removed an empty placeholder section; `p1-win-score` now also asserts `relight:false` on `lantern_lit`.
+- Not verified by the reviewer: it did not read the `p3-*` expect files line by line or the web code; it did not capture process exit codes for bad scenario values (the scenario tests cover exit 2).
+

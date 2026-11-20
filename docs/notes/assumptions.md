@@ -286,6 +286,8 @@ Scenario folders: `tests/scenarios/p2-*/`. A folder with `"pending"` in `expect.
 - **Pulse score:** a shade in `drain` at the moment of the pulse gives 15 instead of 5.
 - **Capacity** = `min(20, 10 + 2 × successful_lights)`. It is shown as `player.capacity` and is effective in step 4 of the next tick.
 
+- **Scenario extensions (review):** a lantern with `fuel > 0` and no `lit` is lit; an unlit lantern's `deposited` is capped at cost - 1 (10 first light, 5 relight), so it can always be lit.
+
 ### Acceptance criteria → verification
 Scenario folders: `tests/scenarios/p3-*/`, marked `pending` until built. Release requires zero pending.
 

@@ -81,7 +81,7 @@ export class Sim {
       if (!l) continue; // an id this night does not have is ignored
       if (o.pos) l.pos = [...o.pos];
       if (o.deposited !== undefined) l.deposited = o.deposited;
-      const lit = o.lit ?? l.deposited >= TUNING.lantern_cost; // a full lantern is lit
+      const lit = o.lit ?? (l.deposited >= TUNING.lantern_cost || (o.fuel ?? 0) > 0); // a full lantern, or one given fuel, is lit
       if (lit) {
         l.lit = true;
         l.fuelU = Math.round((o.fuel ?? TUNING.fuel_max) * 60); // lit without fuel: 100
@@ -91,6 +91,7 @@ export class Sim {
         l.lit = false;
         l.fuelU = 0; // lit:false forces fuel 0
         l.everLit = o.ever_lit ?? false;
+        l.deposited = Math.min(l.deposited, (l.everLit ? TUNING.relight_cost : TUNING.lantern_cost) - 1); // an unlit lantern is never already full
       }
     }
 
@@ -142,7 +143,7 @@ export class Sim {
 
   /** Carry capacity: 10 + 2 per successful lighting, at most 20. */
   get capacity(): number {
-    return Math.min(TUNING.capacity_max, WORLD.capacity_base + WORLD.capacity_per_light * this.successfulLights);
+    return Math.min(TUNING.capacity_max, TUNING.carry_capacity + WORLD.capacity_per_light * this.successfulLights);
   }
 
   /** A lit lantern keeps its safe zone from 30 fuel up; below that it is weak. */
@@ -531,7 +532,7 @@ export class Sim {
           // leaving drain: lantern out or refuelled to >= 30, shade more than 2 m away, or Maya within 6 m (chase)
           const l = this.lanterns.find((x) => x.id === sh.target);
           const dp = this.fallWait > 0 ? Infinity : Math.hypot(p.pos[0] - nx, p.pos[2] - nz);
-          if (!l || !l.lit || this.hasZone(l) || dist2d(sh.pos, l.pos) > WORLD.drain_range_m + 1e-9) { sh.state = "wander"; sh.drainTicks = 0; }
+          if (!l || !l.lit || this.hasZone(l) || dist2d(sh.pos, l.pos) > WORLD.drain_range_m + 1e-9) { sh.state = "wander"; sh.drainTicks = 0; sh.sticky = false; }
           else if (dp <= WORLD.drain_leave_chase_m) { sh.state = "chase"; sh.drainTicks = 0; sh.target = null; sh.sticky = false; }
           else {
             sh.drainTicks++;
@@ -673,7 +674,7 @@ export class Sim {
       emit("game_over", { result: "lost", reason: "no_flames" });
     } else if (left <= 1e-9) {
       const litCount = this.lanterns.filter((l) => l.lit).length;
-      if (litCount >= Math.ceil((this.lanterns.length * 6) / 10)) { // 60%, in integers
+      if (litCount >= Math.ceil((this.lanterns.length * Math.round(TUNING.win_ratio * 100)) / 100)) { // win_ratio (60%), in integers
         this.state = "won";
         for (const l of this.lanterns) if (l.lit) this.score += WORLD.dawn_lantern_points + Math.floor(l.fuelU / 60);
         this.score += p.flames * TUNING.score.per_flame_left;

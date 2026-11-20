@@ -45,7 +45,6 @@ export const WORLD = {
   relight_points: 40,
   drain_stun_points: 15, // total for a shade hit by a pulse while draining (5 otherwise)
   dawn_lantern_points: 50, // + floor(fuel) per lit lantern at dawn, on a win
-  capacity_base: 10,
   capacity_per_light: 2,
   drain_range_m: 2,
   drain_leave_chase_m: 6,

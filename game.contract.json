@@ -1,9 +1,11 @@
 {
-  "contract_version": "1.2",
+  "contract_version": "1.3",
   "team": "2A202603568-NguyenHoangCuong",
   "build_cmd": "npm ci && npm run build",
-  "run_cmd": "npm run play",
+  "run_cmd": "npx electron .",
   "headless_cmd": "node dist/headless.js",
+  "bench_cmd": "npx electron . --bench",
+  "soak_cmd": "node dist/soak.js",
   "tuning": {
     "player_speed": 6,
     "carry_capacity": 10,

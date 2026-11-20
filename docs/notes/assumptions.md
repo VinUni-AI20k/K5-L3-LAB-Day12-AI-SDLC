@@ -354,6 +354,8 @@ Scenario folders: `tests/scenarios/p3-*/`, marked `pending` until built. Release
   - Equal scores are ordered by `achieved_at` ascending, then by insertion order.
   - `achieved_at` uses local time with offset, e.g. `2026-11-20T15:04:05+07:00`.
 
+- **Electron version (build decision):** pinned exactly to **39.8.10** (released 2026-05-05). Newer majors (40+) have an installer that `require()`s an ES module and fails on Node < 20.19/22.12 (we saw `ERR_REQUIRE_ESM` on Node 21.6.1 with 43.8.7 and 45.2.3); 39.x installs and runs on Node 20/21. It is far older than the 2-week minimum.
+
 ### Acceptance criteria → verification
 | ID | Criterion | Verified by |
 |---|---|---|

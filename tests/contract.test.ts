@@ -18,8 +18,16 @@ function walk(dir: string): string[] {
 
 describe("contract hygiene", () => {
   it("game.contract.json tuning matches src/sim/config.ts", () => {
-    expect(contract.contract_version).toBe("1.2");
+    expect(contract.contract_version).toBe("1.3");
     expect(contract.tuning).toEqual(TUNING);
+  });
+
+  it("v1.3 has the bench and soak commands and keeps the earlier ones", () => {
+    expect(contract.bench_cmd).toBe("npx electron . --bench");
+    expect(contract.soak_cmd).toBe("node dist/soak.js");
+    expect(contract.run_cmd).toBe("npx electron .");
+    expect(contract.headless_cmd).toBe("node dist/headless.js");
+    expect(contract.build_cmd).toBe("npm ci && npm run build");
   });
 
   it("v1.2 tuning has the standard numbers and the new keys", () => {

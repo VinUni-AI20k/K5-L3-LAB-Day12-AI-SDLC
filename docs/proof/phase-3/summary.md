@@ -17,10 +17,10 @@
 Every earlier scenario still passes. 17 were re-derived by arithmetic and 1 deleted because Ticket-03 replaced the rule they tested (night lengths, score values, no early win, lit lanterns as refuel candidates, moving wander shades). Each is one line in `docs/notes/changes.md` with the old value, the new value and the reason. `all_lit` and the time bonus no longer appear in `src/` (grep).
 
 ## Not done / honest notes
-- Web screenshots use the debug handle `window.__ddl.sim` to set fuel, capacity and a shade; a real shade draining a real lantern was verified in headless scenarios only (`p3-drain`), not seen in the browser.
+- Web screenshots use the debug handle `window.__ddl.sim` to set fuel, capacity and a shade; a real shade draining a real lantern was verified in headless scenarios (`p3-drain`); whether it was seen in the author's playtest is not recorded.
 - The torn-paper look is subtle at normal camera distance (the 20% squash is obvious); no colour-blind simulator was used.
 - No new sound effects for refuel / lantern out (existing pickup and lose sounds are reused).
-- No human play-through of Phase 3 is recorded.
+- The author playtested Phase 3 by hand after the release notes were written (self-reported in chat, details not recorded).
 - Q3-1..Q3-8 in `docs/notes/assumptions.md` are our defaults, unconfirmed by the TA.
 
 ## Reproduce

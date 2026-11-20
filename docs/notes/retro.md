@@ -20,10 +20,10 @@ Three to five lines per phase:
 - Where the AI went wrong: step 4 needed `night_start` that the handoff scheduled for step 7; the working directory changed after a `cd` in a command; web teleports were used for screenshots. See `ai-log.md`.
 - Next: ask the TA about the open defaults before Phase 3, and have a human play a full night.
 ### Phase 3
-- Passing: all 79 scenario folders (15 `p3-*`) and 87 tests green; fuel model, dawn win rule, drain shades, v1.2 contract, web fuel bars and colour-blind mode. Not verified: no human play-through of Phase 3; real drain not seen in the browser.
+- Passing: all 79 scenario folders (15 `p3-*`) and 87 tests green; fuel model, dawn win rule, drain shades, v1.2 contract, web fuel bars and colour-blind mode. Author playtested by hand (self-reported); real drain was verified in headless scenarios only.
 - Earlier phases: 17 scenarios re-derived by arithmetic and 1 deleted because the ticket replaced the rules; each has a line in `changes.md`. The p3 expected values were never changed.
 - Where the AI went wrong: my `per_mote` search-and-replace also changed `fuel_per_mote` (caught by the contract test); the perf test still assumed 21,600 ticks.
-- Next: a human should play a full night; ask the TA about Q3-1..Q3-8.
+- Next: ask the TA about Q3-1..Q3-8.
 ### Phase 4
 
 ## Project retro (at CP5)
